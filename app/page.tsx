@@ -71,7 +71,7 @@ export default function Home() {
       <section className="hero" id="top">
         <div className="hero-copy">
           <p className="eyebrow">Online tutoring by two experienced STEM mentors</p>
-          <h1>Personal tutoring that helps students nurture and sprout the seed of inquisitiveness.</h1>
+          <h1>Personal tutoring to nurture and sprout the seed of inquisitiveness.</h1>
           <p className="hero-text">
             NovaSprout Learning connects students directly with experts for live online
             tutoring, practical study support, and guided STEM learning without a complicated platform

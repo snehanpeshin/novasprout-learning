@@ -88,15 +88,15 @@ nav a {
 
 .hero {
   display: grid;
-  gap: clamp(28px, 5vw, 70px);
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
-  min-height: calc(100vh - 68px);
-  padding: clamp(42px, 8vw, 96px) clamp(18px, 4vw, 56px) 34px;
+  gap: clamp(24px, 4vw, 54px);
+  grid-template-columns: minmax(0, 0.9fr) minmax(360px, 1.1fr);
+  min-height: 600px;
+  padding: clamp(34px, 5vw, 72px) clamp(18px, 4vw, 56px) 34px;
 }
 
 .hero-copy {
   align-self: center;
-  max-width: 780px;
+  max-width: 660px;
 }
 
 .eyebrow {
@@ -116,10 +116,10 @@ p {
 }
 
 h1 {
-  font-size: clamp(2.4rem, 6vw, 5.6rem);
-  line-height: 0.98;
-  margin-bottom: 24px;
-  max-width: 900px;
+  font-size: clamp(2.45rem, 4.2vw, 4.35rem);
+  line-height: 1.04;
+  margin-bottom: 22px;
+  max-width: 720px;
 }
 
 h2 {
@@ -202,6 +202,7 @@ h3 {
   border-radius: 8px;
   height: 100%;
   object-fit: cover;
+  object-position: right center;
   width: 100%;
 }
 
@@ -466,6 +467,10 @@ footer span:first-child {
 
   .hero {
     padding-top: 34px;
+  }
+
+  h1 {
+    font-size: clamp(2.25rem, 12vw, 3.7rem);
   }
 
   .hero-actions,
