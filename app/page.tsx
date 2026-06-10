@@ -71,9 +71,9 @@ export default function Home() {
       <section className="hero" id="top">
         <div className="hero-copy">
           <p className="eyebrow">Online tutoring by two experienced STEM mentors</p>
-          <h1>Personal tutoring that helps students feel clear, capable, and ready for the next step.</h1>
+          <h1>Personal tutoring that helps students nurture and sprout the seed of inquisitiveness.</h1>
           <p className="hero-text">
-            NovaSprout Learning connects families directly with Snehan and Shailja for live online
+            NovaSprout Learning connects students directly with experts for live online
             tutoring, practical study support, and guided STEM learning without a complicated platform
             or expensive monthly system.
           </p>
@@ -88,14 +88,14 @@ export default function Home() {
             </a>
           </div>
         </div>
-        <div className="hero-media" aria-label="Online tutoring workspace">
+        <div className="hero-media" aria-label="Seed growing in a nourishing learning environment">
           <img
-            alt="Student studying online with a laptop and notebook"
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80"
+            alt="A seed nourished in healthy soil growing into a bright young plant"
+            src="/novasprout-hero.png"
           />
           <div className="hero-note">
             <Sparkles aria-hidden="true" size={18} />
-            <span>Live video tutoring, custom notes, and parent-friendly follow-up.</span>
+            <span>Live video tutoring, custom notes, and student-friendly follow-up.</span>
           </div>
         </div>
       </section>
@@ -135,11 +135,7 @@ export default function Home() {
       <section className="split-section" id="tutors">
         <div className="section-heading">
           <p className="eyebrow">Tutors</p>
-          <h2>Two mentors, one direct learning relationship.</h2>
-          <p>
-            The first version of NovaSprout can stay intentionally small: students and parents work
-            directly with you and your wife, with simple booking and personal follow-up.
-          </p>
+          <h2>Only one direct learning relationship.</h2>
         </div>
         <div className="tutor-list">
           <article className="tutor-card">
@@ -197,7 +193,7 @@ export default function Home() {
       <section className="resources-section" id="resources">
         <div className="section-heading">
           <p className="eyebrow">Resources</p>
-          <h2>Start with free videos and worksheets, then add private student access later.</h2>
+          <h2>We got you covered with online resources, notes, and parent-teacher sessions.</h2>
         </div>
         <div className="resource-grid">
           <article>
@@ -221,11 +217,6 @@ export default function Home() {
       <section className="booking-section" id="book">
         <div className="booking-copy">
           <p className="eyebrow">Book</p>
-          <h2>Ready to test the first version?</h2>
-          <p>
-            Replace the placeholder links with your real Calendly and intake form URLs. For now,
-            this keeps costs close to zero and still gives parents a complete online path.
-          </p>
           <ul>
             <li>
               <CheckCircle2 aria-hidden="true" size={18} />
