@@ -6,8 +6,8 @@ This is a low-cost custom tutoring site for NovaSprout Learning. It is built as 
 
 - Homepage for NovaSprout Learning
 - Subject/service sections
-- Tutor profiles for Snehan and Shailja based on the CVs, without publishing private phone/address details
-- Booking buttons for separate Calendly links
+- Anonymous in-house tutor profiles, without publishing private phone/address details
+- One shared meeting booking button
 - Intake form button for Google Forms, Tally, or another free form tool
 - Resources section for videos and worksheets
 - AWS Amplify config in `amplify.yml`
@@ -29,8 +29,7 @@ cp .env.example .env.local
 3. Edit `.env.local`:
 
 ```bash
-NEXT_PUBLIC_CALENDLY_SNEHAN=https://calendly.com/your-name/free-consultation
-NEXT_PUBLIC_CALENDLY_SHAILJA=https://calendly.com/your-wife/free-consultation
+NEXT_PUBLIC_BOOKING_URL=https://calendly.com/your-team/free-consultation
 NEXT_PUBLIC_INTAKE_FORM_URL=https://forms.gle/your-form
 NEXT_PUBLIC_CONTACT_EMAIL=hello@novasproutlearning.com
 ```
@@ -52,8 +51,7 @@ http://localhost:3000
 Create these free accounts or links:
 
 1. Calendly
-   - Create one event for Snehan.
-   - Create one event for Shailja.
+   - Create one shared "Book a meeting" event.
    - Use 30-minute "Free Consultation" events.
    - Connect Google Meet or Zoom.
 
@@ -89,8 +87,7 @@ novasprout-learning
 9. Add environment variables in Amplify:
 
 ```text
-NEXT_PUBLIC_CALENDLY_SNEHAN
-NEXT_PUBLIC_CALENDLY_SHAILJA
+NEXT_PUBLIC_BOOKING_URL
 NEXT_PUBLIC_INTAKE_FORM_URL
 NEXT_PUBLIC_CONTACT_EMAIL
 ```

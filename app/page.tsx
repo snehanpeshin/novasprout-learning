@@ -13,11 +13,9 @@ import {
   Users
 } from "lucide-react";
 
-const calendlySnehan =
+const bookingUrl =
+  process.env.NEXT_PUBLIC_BOOKING_URL ??
   process.env.NEXT_PUBLIC_CALENDLY_SNEHAN ??
-  "https://calendly.com/YOUR-CALENDLY/free-consultation";
-const calendlyShailja =
-  process.env.NEXT_PUBLIC_CALENDLY_SHAILJA ??
   "https://calendly.com/YOUR-CALENDLY/free-consultation";
 const intakeForm =
   process.env.NEXT_PUBLIC_INTAKE_FORM_URL ?? "https://forms.gle/YOUR-GOOGLE-FORM";
@@ -70,12 +68,12 @@ export default function Home() {
 
       <section className="hero" id="top">
         <div className="hero-copy">
-          <p className="eyebrow">Online tutoring by two experienced STEM mentors</p>
+          <p className="eyebrow">Online tutoring with in-house subject tutors</p>
           <h1>Personal tutoring to nurture and sprout the seed of inquisitiveness.</h1>
           <p className="hero-text">
-            NovaSprout Learning connects students directly with experts for live online
-            tutoring, practical study support, and guided STEM learning without a complicated platform
-            or expensive monthly system.
+            NovaSprout Learning connects students with carefully selected in-house tutors for live
+            online tutoring, practical study support, and guided STEM learning in a friendly,
+            student-first environment.
           </p>
           <div className="hero-actions">
             <a className="button primary" href="#book">
@@ -111,7 +109,7 @@ export default function Home() {
         </div>
         <div>
           <strong>Small and personal</strong>
-          <span>Work directly with us</span>
+          <span>Work with our in-house tutors</span>
         </div>
       </section>
 
@@ -135,17 +133,17 @@ export default function Home() {
       <section className="split-section" id="tutors">
         <div className="section-heading">
           <p className="eyebrow">Tutors</p>
-          <h2>Only one direct learning relationship.</h2>
+          <h2>A tutoring platform with one direct learning relationship.</h2>
         </div>
         <div className="tutor-list">
           <article className="tutor-card">
-            <div className="avatar">SP</div>
+            <div className="avatar">ST</div>
             <div>
-              <h3>Snehan Peshin, Ph.D.</h3>
+              <h3>Senior STEM Tutor</h3>
               <p>
-                Biomedical R&D leader with deep experience in diagnostics, microfluidics, data
-                analysis, assay development, and applied AI/ML. Strong fit for advanced science,
-                STEM mentoring, research thinking, and technical project guidance.
+                Doctoral-level STEM background with experience in science, engineering, research,
+                data analysis, and technical mentoring. Strong fit for advanced science, STEM
+                confidence, research thinking, and project-based learning.
               </p>
               <div className="tag-row">
                 <span>Science</span>
@@ -156,13 +154,13 @@ export default function Home() {
             </div>
           </article>
           <article className="tutor-card">
-            <div className="avatar">SP</div>
+            <div className="avatar">DT</div>
             <div>
-              <h3>Shailja Pandit</h3>
+              <h3>Data & Math Tutor</h3>
               <p>
-                SQL and business intelligence developer with a master's in information systems and
-                experience across Power BI, Python, SQL, cloud data tools, analytics, and mentoring
-                junior engineers. Strong fit for math, data, coding, dashboards, and study structure.
+                Master's-level information systems background with experience in math support, SQL,
+                Python, dashboards, analytics, cloud data tools, and structured study coaching.
+                Strong fit for math, coding, data skills, and learning organization.
               </p>
               <div className="tag-row">
                 <span>Math</span>
@@ -178,7 +176,7 @@ export default function Home() {
       <section className="process-section">
         <div className="section-heading">
           <p className="eyebrow">How it works</p>
-          <h2>A simple flow for families.</h2>
+          <h2>A simple flow for students and parents.</h2>
         </div>
         <div className="steps">
           {steps.map((step, index) => (
@@ -209,7 +207,7 @@ export default function Home() {
           <article>
             <Users aria-hidden="true" size={24} />
             <h3>Parent updates</h3>
-            <p>Send short progress notes by Gmail after sessions so families always know what changed.</p>
+            <p>Send short progress notes by Gmail after sessions so students and parents know what changed.</p>
           </article>
         </div>
       </section>
@@ -233,12 +231,8 @@ export default function Home() {
           </ul>
         </div>
         <div className="booking-actions">
-          <a className="button primary full" href={calendlySnehan} rel="noreferrer" target="_blank">
-            Book with Snehan
-            <ArrowRight aria-hidden="true" size={18} />
-          </a>
-          <a className="button primary full alt" href={calendlyShailja} rel="noreferrer" target="_blank">
-            Book with Shailja
+          <a className="button primary full" href={bookingUrl} rel="noreferrer" target="_blank">
+            Book a meeting
             <ArrowRight aria-hidden="true" size={18} />
           </a>
           <a className="button secondary full" href={intakeForm} rel="noreferrer" target="_blank">
