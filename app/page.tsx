@@ -248,6 +248,7 @@ export default function Home() {
       <footer>
         <span>NovaSprout Learning</span>
         <span>Online tutoring for curious, growing students.</span>
+        <a href="/privacy">Privacy Policy</a>
       </footer>
     </main>
   );
