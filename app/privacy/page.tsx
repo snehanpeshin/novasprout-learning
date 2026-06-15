@@ -5,7 +5,7 @@ const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "hello@novasproutl
 export const metadata = {
   title: "Privacy Policy | NovaSprout Learning",
   description:
-    "Privacy policy for NovaSprout Learning online tutoring, intake forms, booking, resources, and advertising."
+    "Privacy policy for NovaSprout Learning, a brand of Karigari Home LLC."
 };
 
 export default function PrivacyPolicy() {
@@ -19,9 +19,10 @@ export default function PrivacyPolicy() {
         <p className="eyebrow">Privacy Policy</p>
         <h1>How we protect student and parent information.</h1>
         <p>
-          Effective date: June 14, 2026. This Privacy Policy explains how NovaSprout
-          Learning collects, uses, and protects information when families use our website,
-          forms, booking links, online tutoring resources, and related services.
+          Effective date: June 15, 2026. NovaSprout Learning is a brand of Karigari
+          Home LLC. This Privacy Policy explains how NovaSprout Learning collects, uses,
+          and protects information when families use our website, forms, booking links,
+          online tutoring resources, and related services.
         </p>
       </section>
 
@@ -132,7 +133,8 @@ export default function PrivacyPolicy() {
         <article>
           <h2>Contact Us</h2>
           <p>
-            For privacy questions or requests, contact NovaSprout Learning at:
+            For privacy questions or requests, contact NovaSprout Learning, a brand of
+            Karigari Home LLC, at:
           </p>
           <a className="policy-email" href={`mailto:${contactEmail}`}>
             <Mail aria-hidden="true" size={18} />
