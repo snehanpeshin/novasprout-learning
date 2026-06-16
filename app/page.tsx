@@ -5,50 +5,11 @@ import {
   BookOpen,
   CalendarCheck,
   CheckCircle2,
-  GraduationCap,
-  Laptop,
   Mail,
-  PlayCircle,
-  Sparkles,
-  Users
+  Sparkles
 } from "lucide-react";
-
-const bookingUrl =
-  process.env.NEXT_PUBLIC_BOOKING_URL ??
-  process.env.NEXT_PUBLIC_CALENDLY_SNEHAN ??
-  "https://calendly.com/YOUR-CALENDLY/free-consultation";
-const intakeForm =
-  process.env.NEXT_PUBLIC_INTAKE_FORM_URL ?? "https://forms.gle/YOUR-GOOGLE-FORM";
-const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "hello@novasproutlearning.com";
-
-const subjects = [
-  {
-    title: "Math Confidence",
-    copy: "Focused support for homework, concept gaps, test prep, and step-by-step problem solving.",
-    level: "Elementary to high school"
-  },
-  {
-    title: "Science & STEM",
-    copy: "Biology, biomedical thinking, experimental reasoning, and practical science explanations.",
-    level: "Middle school to college prep"
-  },
-  {
-    title: "Coding & Data Skills",
-    copy: "Python, SQL, data analysis, dashboards, statistics, and project-based technical mentoring.",
-    level: "Teens, college, adult learners"
-  },
-  {
-    title: "Reading, Writing & Study Skills",
-    copy: "Clear writing, research habits, organization, confidence, and learning routines that stick.",
-    level: "Elementary to college prep"
-  }
-];
-
-const steps = [
-  "Tell us about the student with a short intake form.",
-  "Book a free online consultation with the right tutor.",
-  "Start weekly tutoring with notes, resources, and clear next steps."
-];
+import TrackedLink from "./components/TrackedLink";
+import { bookingUrl, contactEmail, intakeForm, pricingPlans, processSteps, resourceItems, subjectTracks } from "./site-data";
 
 export default function Home() {
   return (
@@ -61,7 +22,8 @@ export default function Home() {
         <nav aria-label="Main navigation">
           <a href="#subjects">Subjects</a>
           <a href="#tutors">Tutors</a>
-          <a href="#resources">Resources</a>
+          <a href="/resources">Resources</a>
+          <a href="/pricing">Pricing</a>
           <a href="#book">Book</a>
         </nav>
       </header>
@@ -76,14 +38,14 @@ export default function Home() {
             student-first environment.
           </p>
           <div className="hero-actions">
-            <a className="button primary" href="#book">
+            <TrackedLink className="button primary" eventName="book_meeting_click" href={bookingUrl} target="_blank">
               <CalendarCheck aria-hidden="true" size={18} />
               Book a free consultation
-            </a>
-            <a className="button secondary" href={intakeForm} rel="noreferrer" target="_blank">
+            </TrackedLink>
+            <TrackedLink className="button secondary" eventName="intake_form_click" href={intakeForm} target="_blank">
               <BookOpen aria-hidden="true" size={18} />
               Student intake form
-            </a>
+            </TrackedLink>
           </div>
         </div>
         <div className="hero-media" aria-label="Seed growing in a nourishing learning environment">
@@ -119,13 +81,13 @@ export default function Home() {
           <h2>Support for school, STEM confidence, and real-world technical skills.</h2>
         </div>
         <div className="subject-grid">
-          {subjects.map((subject) => (
-            <article className="subject-card" key={subject.title}>
-              <GraduationCap aria-hidden="true" size={24} />
+          {subjectTracks.map((subject) => (
+            <a className="subject-card" href={`/${subject.slug}`} key={subject.title}>
+              <subject.icon aria-hidden="true" size={24} />
               <h3>{subject.title}</h3>
-              <p>{subject.copy}</p>
+              <p>{subject.summary}</p>
               <span>{subject.level}</span>
-            </article>
+            </a>
           ))}
         </div>
       </section>
@@ -178,11 +140,12 @@ export default function Home() {
           <p className="eyebrow">How it works</p>
           <h2>A simple flow for students and parents.</h2>
         </div>
-        <div className="steps">
-          {steps.map((step, index) => (
-            <div className="step" key={step}>
+        <div className="steps wide-steps">
+          {processSteps.map((step, index) => (
+            <div className="step" key={step.title}>
               <span>{index + 1}</span>
-              <p>{step}</p>
+              <h3>{step.title}</h3>
+              <p>{step.copy}</p>
             </div>
           ))}
         </div>
@@ -194,21 +157,39 @@ export default function Home() {
           <h2>We got you covered with online resources, notes, and parent-teacher sessions.</h2>
         </div>
         <div className="resource-grid">
-          <article>
-            <PlayCircle aria-hidden="true" size={24} />
-            <h3>Unlisted YouTube lessons</h3>
-            <p>Embed your first free or private videos here without paying for video hosting.</p>
-          </article>
-          <article>
-            <Laptop aria-hidden="true" size={24} />
-            <h3>Session notes</h3>
-            <p>Share Google Docs, PDFs, or worksheets manually until a dashboard is worth building.</p>
-          </article>
-          <article>
-            <Users aria-hidden="true" size={24} />
-            <h3>Parent updates</h3>
-            <p>Send short progress notes by Gmail after sessions so students and parents know what changed.</p>
-          </article>
+          {resourceItems.slice(0, 3).map((resource) => (
+            <article key={resource.title}>
+              <resource.icon aria-hidden="true" size={24} />
+              <h3>{resource.title}</h3>
+              <p>{resource.copy}</p>
+              <span className="mini-label">{resource.type}</span>
+            </article>
+          ))}
+        </div>
+        <a className="text-link" href="/resources">Explore all resources</a>
+      </section>
+
+      <section className="section" id="pricing">
+        <div className="section-heading">
+          <p className="eyebrow">Pricing</p>
+          <h2>Start with a free intro call, then choose the support rhythm that fits.</h2>
+        </div>
+        <div className="pricing-grid">
+          {pricingPlans.map((plan) => (
+            <article className="price-card" key={plan.title}>
+              <h3>{plan.title}</h3>
+              <strong>{plan.price}</strong>
+              <p>{plan.copy}</p>
+              <ul>
+                {plan.features.map((feature) => (
+                  <li key={feature}>
+                    <CheckCircle2 aria-hidden="true" size={17} />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -231,13 +212,13 @@ export default function Home() {
           </ul>
         </div>
         <div className="booking-actions">
-          <a className="button primary full" href={bookingUrl} rel="noreferrer" target="_blank">
+          <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
             Book a meeting
             <ArrowRight aria-hidden="true" size={18} />
-          </a>
-          <a className="button secondary full" href={intakeForm} rel="noreferrer" target="_blank">
+          </TrackedLink>
+          <TrackedLink className="button secondary full" eventName="intake_form_click" href={intakeForm} target="_blank">
             Complete intake form
-          </a>
+          </TrackedLink>
           <a className="email-link" href={`mailto:${contactEmail}`}>
             <Mail aria-hidden="true" size={18} />
             {contactEmail}
