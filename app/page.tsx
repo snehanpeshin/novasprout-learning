@@ -5,11 +5,10 @@ import {
   BookOpen,
   CalendarCheck,
   CheckCircle2,
-  Mail,
   Sparkles
 } from "lucide-react";
 import TrackedLink from "./components/TrackedLink";
-import { bookingUrl, contactEmail, intakeForm, pricingPlans, processSteps, resourceItems, subjectTracks } from "./site-data";
+import { bookingUrl, intakeForm, processSteps, subjectTracks } from "./site-data";
 
 export default function Home() {
   return (
@@ -21,10 +20,9 @@ export default function Home() {
         </a>
         <nav aria-label="Main navigation">
           <a href="#subjects">Subjects</a>
-          <a href="#tutors">Tutors</a>
+          <a href="#how-it-works">How it works</a>
           <a href="/resources">Resources</a>
           <a href="/pricing">Pricing</a>
-          <a href="#book">Book</a>
         </nav>
       </header>
 
@@ -92,50 +90,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="split-section" id="tutors">
-        <div className="section-heading">
-          <p className="eyebrow">Tutors</p>
-          <h2>A tutoring platform with one direct learning relationship.</h2>
-        </div>
-        <div className="tutor-list">
-          <article className="tutor-card">
-            <div className="avatar">ST</div>
-            <div>
-              <h3>Senior STEM Tutor</h3>
-              <p>
-                Doctoral-level STEM background with experience in science, engineering, research,
-                data analysis, and technical mentoring. Strong fit for advanced science, STEM
-                confidence, research thinking, and project-based learning.
-              </p>
-              <div className="tag-row">
-                <span>Science</span>
-                <span>STEM</span>
-                <span>Research</span>
-                <span>Python/Data</span>
-              </div>
-            </div>
-          </article>
-          <article className="tutor-card">
-            <div className="avatar">DT</div>
-            <div>
-              <h3>Data & Math Tutor</h3>
-              <p>
-                Master's-level information systems background with experience in math support, SQL,
-                Python, dashboards, analytics, cloud data tools, and structured study coaching.
-                Strong fit for math, coding, data skills, and learning organization.
-              </p>
-              <div className="tag-row">
-                <span>Math</span>
-                <span>SQL</span>
-                <span>Power BI</span>
-                <span>Study Skills</span>
-              </div>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section className="process-section">
+      <section className="process-section" id="how-it-works">
         <div className="section-heading">
           <p className="eyebrow">How it works</p>
           <h2>A simple flow for students and parents.</h2>
@@ -151,51 +106,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="resources-section" id="resources">
-        <div className="section-heading">
-          <p className="eyebrow">Resources</p>
-          <h2>We got you covered with online resources, notes, and parent-teacher sessions.</h2>
-        </div>
-        <div className="resource-grid">
-          {resourceItems.slice(0, 3).map((resource) => (
-            <article key={resource.title}>
-              <resource.icon aria-hidden="true" size={24} />
-              <h3>{resource.title}</h3>
-              <p>{resource.copy}</p>
-              <span className="mini-label">{resource.type}</span>
-            </article>
-          ))}
-        </div>
-        <a className="text-link" href="/resources">Explore all resources</a>
-      </section>
-
-      <section className="section" id="pricing">
-        <div className="section-heading">
-          <p className="eyebrow">Pricing</p>
-          <h2>Start with a free intro call, then choose the support rhythm that fits.</h2>
-        </div>
-        <div className="pricing-grid">
-          {pricingPlans.map((plan) => (
-            <article className="price-card" key={plan.title}>
-              <h3>{plan.title}</h3>
-              <strong>{plan.price}</strong>
-              <p>{plan.copy}</p>
-              <ul>
-                {plan.features.map((feature) => (
-                  <li key={feature}>
-                    <CheckCircle2 aria-hidden="true" size={17} />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section className="booking-section" id="book">
         <div className="booking-copy">
-          <p className="eyebrow">Book</p>
+          <p className="eyebrow">Start</p>
+          <h2>Begin with a free intro call.</h2>
           <ul>
             <li>
               <CheckCircle2 aria-hidden="true" size={18} />
@@ -219,10 +133,6 @@ export default function Home() {
           <TrackedLink className="button secondary full" eventName="intake_form_click" href={intakeForm} target="_blank">
             Complete intake form
           </TrackedLink>
-          <a className="email-link" href={`mailto:${contactEmail}`}>
-            <Mail aria-hidden="true" size={18} />
-            {contactEmail}
-          </a>
         </div>
       </section>
 

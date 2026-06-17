@@ -1,6 +1,6 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import TrackedLink from "../components/TrackedLink";
-import { bookingUrl, intakeForm, pricingPlans } from "../site-data";
+import { bookingUrl, pricingPlans } from "../site-data";
 
 export const metadata = {
   title: "Tutoring Pricing | NovaSprout Learning",
@@ -71,22 +71,6 @@ export default function PricingPage() {
               ) : null}
             </article>
           ))}
-        </div>
-      </section>
-
-      <section className="booking-section">
-        <div className="booking-copy">
-          <p className="eyebrow">Book</p>
-          <h2>Talk through the best option first.</h2>
-        </div>
-        <div className="booking-actions">
-          <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-            Book a free consultation
-            <ArrowRight aria-hidden="true" size={18} />
-          </TrackedLink>
-          <TrackedLink className="button secondary full" eventName="intake_form_click" href={intakeForm} target="_blank">
-            Complete intake form
-          </TrackedLink>
         </div>
       </section>
     </main>

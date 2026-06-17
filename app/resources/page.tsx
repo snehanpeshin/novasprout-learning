@@ -1,6 +1,5 @@
-import { ArrowRight, BookOpen } from "lucide-react";
-import TrackedLink from "../components/TrackedLink";
-import { bookingUrl, intakeForm, resourceItems, subjectTracks } from "../site-data";
+import { BookOpen } from "lucide-react";
+import { resourceItems } from "../site-data";
 
 export const metadata = {
   title: "Learning Resources | NovaSprout Learning",
@@ -16,9 +15,9 @@ export default function ResourcesPage() {
           <span>NovaSprout Learning</span>
         </a>
         <nav aria-label="Main navigation">
+          <a href="/">Home</a>
           <a href="/#subjects">Subjects</a>
           <a href="/pricing">Pricing</a>
-          <a href="/#book">Book</a>
         </nav>
       </header>
 
@@ -52,43 +51,6 @@ export default function ResourcesPage() {
               <span className="mini-label">{item.track} · {item.type}</span>
             </article>
           ))}
-        </div>
-      </section>
-
-      <section className="split-section">
-        <div className="section-heading">
-          <p className="eyebrow">Subjects</p>
-          <h2>Resources are organized by learning track.</h2>
-        </div>
-        <div className="tutor-list">
-          {subjectTracks.map((track) => (
-            <a className="tutor-card" href={`/${track.slug}`} key={track.slug}>
-              <div className="avatar">{track.navTitle.slice(0, 2)}</div>
-              <div>
-                <h3>{track.title}</h3>
-                <p>{track.summary}</p>
-                <div className="tag-row">
-                  <span>{track.level}</span>
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      <section className="booking-section">
-        <div className="booking-copy">
-          <p className="eyebrow">Next step</p>
-          <h2>Use resources with live support.</h2>
-        </div>
-        <div className="booking-actions">
-          <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-            Book a meeting
-            <ArrowRight aria-hidden="true" size={18} />
-          </TrackedLink>
-          <TrackedLink className="button secondary full" eventName="intake_form_click" href={intakeForm} target="_blank">
-            Complete intake form
-          </TrackedLink>
         </div>
       </section>
     </main>
