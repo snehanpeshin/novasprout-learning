@@ -14,14 +14,14 @@ export function getCheckoutConfig(productKey: CheckoutProductKey): CheckoutConfi
     tutoring_session: {
       dbaName: "NovaSprout Learning",
       mode: "payment",
-      priceId: process.env.STRIPE_NOVASPROUT_TUTORING_PRICE_ID,
-      productName: "NovaSprout Learning tutoring session"
+      priceId: process.env.STRIPE_NOVASPROUT_ONE_HOUR_TUTORING_PRICE_ID,
+      productName: "NovaSprout Learning - 1 Hour Tutoring"
     },
     monthly_subscription: {
       dbaName: "NovaSprout Learning",
       mode: "subscription",
-      priceId: process.env.STRIPE_NOVASPROUT_MONTHLY_PRICE_ID,
-      productName: "NovaSprout Learning monthly subscription"
+      priceId: process.env.STRIPE_NOVASPROUT_MONTHLY_PACKAGE_PRICE_ID,
+      productName: "NovaSprout Learning - Monthly Tutoring Package"
     }
   };
 

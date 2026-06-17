@@ -89,7 +89,7 @@ export async function POST(request: Request) {
         customer_email: subscription.metadata?.customer_email ?? null,
         customer_name: subscription.metadata?.customer_name ?? null,
         dba_name: subscription.metadata?.dba_name ?? "NovaSprout Learning",
-        product_name: subscription.metadata?.product_name ?? "NovaSprout Learning monthly subscription",
+        product_name: subscription.metadata?.product_name ?? "NovaSprout Learning - Monthly Tutoring Package",
         status: subscription.status,
         stripe_customer_id: typeof subscription.customer === "string" ? subscription.customer : null,
         stripe_subscription_id: subscription.id

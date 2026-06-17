@@ -131,24 +131,24 @@ export const resourceItems = [
 
 export const pricingPlans = [
   {
-    title: "Free intro call",
+    title: "Free Intro Call",
     price: "$0",
     copy: "A quick fit check for the student's goals, subject needs, schedule, and next step.",
     features: ["15-minute online call", "Subject and goal review", "Recommended tutoring path"]
   },
   {
-    paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_TUTORING_PAYMENT_LINK,
+    paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_ONE_HOUR_TUTORING_PAYMENT_LINK,
     productKey: "tutoring_session",
-    title: "Tutoring session",
-    price: "Contact us",
-    copy: "Best for homework help, a difficult unit, or trying one tutoring session before a package.",
+    title: "1 Hour Tutoring",
+    price: "$40-60",
+    copy: "Best for homework help, a difficult unit, or trying one focused tutoring session before a package.",
     features: ["Live online session", "Personalized notes", "Practice suggestions"]
   },
   {
-    paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_MONTHLY_PAYMENT_LINK,
+    paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_MONTHLY_PACKAGE_PAYMENT_LINK,
     productKey: "monthly_subscription",
-    title: "Monthly subscription",
-    price: "Contact us",
+    title: "Monthly Tutoring Package",
+    price: "$199-499",
     copy: "A recurring support rhythm for students who need weekly tutoring and follow-up.",
     features: ["Recurring online tutoring", "Session notes and practice", "Parent/student progress updates"]
   }
