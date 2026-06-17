@@ -137,3 +137,12 @@ Avoid these until you have real students:
 - Private student dashboard
 - Stripe payment links
 - Tutor availability page
+
+## Payments
+
+Stripe Checkout, Stripe Payment Links, webhooks, Supabase storage, and the admin dashboard are documented in:
+
+```text
+docs/stripe-setup.md
+docs/database-schema.sql
+```

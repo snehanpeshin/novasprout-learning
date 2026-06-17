@@ -1,4 +1,5 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import CheckoutButton from "../components/CheckoutButton";
 import TrackedLink from "../components/TrackedLink";
 import { bookingUrl, intakeForm, pricingPlans } from "../site-data";
 
@@ -53,6 +54,18 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
+              {plan.productKey ? (
+                <div className="payment-actions">
+                  <CheckoutButton className="button primary full" productKey={plan.productKey}>
+                    Pay with Stripe Checkout
+                  </CheckoutButton>
+                  {plan.paymentLink ? (
+                    <a className="button secondary full" href={plan.paymentLink} rel="noreferrer" target="_blank">
+                      Use Stripe Payment Link
+                    </a>
+                  ) : null}
+                </div>
+              ) : null}
             </article>
           ))}
         </div>

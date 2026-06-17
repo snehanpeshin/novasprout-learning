@@ -137,15 +137,26 @@ export const pricingPlans = [
     features: ["15-minute online call", "Subject and goal review", "Recommended tutoring path"]
   },
   {
-    title: "Single session",
+    paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_TUTORING_PAYMENT_LINK,
+    productKey: "tutoring_session",
+    title: "Tutoring session",
     price: "Contact us",
     copy: "Best for homework help, a difficult unit, or trying one tutoring session before a package.",
     features: ["Live online session", "Personalized notes", "Practice suggestions"]
   },
   {
-    title: "Starter pack",
+    paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_MONTHLY_PAYMENT_LINK,
+    productKey: "monthly_subscription",
+    title: "Monthly subscription",
     price: "Contact us",
-    copy: "A focused four-session rhythm to find gaps, build confidence, and create momentum.",
-    features: ["4 online tutoring sessions", "Session notes and practice", "Parent/student progress updates"]
+    copy: "A recurring support rhythm for students who need weekly tutoring and follow-up.",
+    features: ["Recurring online tutoring", "Session notes and practice", "Parent/student progress updates"]
   }
-];
+] satisfies Array<{
+  copy: string;
+  features: string[];
+  paymentLink?: string;
+  price: string;
+  productKey?: "tutoring_session" | "monthly_subscription";
+  title: string;
+}>;
