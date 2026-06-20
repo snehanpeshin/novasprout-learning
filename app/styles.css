@@ -255,6 +255,10 @@ h3 {
   padding: clamp(58px, 9vw, 110px) clamp(18px, 4vw, 56px);
 }
 
+.compact-section {
+  padding-top: clamp(34px, 6vw, 72px);
+}
+
 .section-heading {
   max-width: 790px;
 }

@@ -1,4 +1,5 @@
 import { ArrowRight, BookOpen, CheckCircle2 } from "lucide-react";
+import PricingOptions from "./PricingOptions";
 import TrackedLink from "./TrackedLink";
 import { bookingUrl, intakeForm, subjectTracks } from "../site-data";
 
@@ -65,6 +66,14 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="section compact-section">
+        <div className="section-heading">
+          <p className="eyebrow">Choose support</p>
+          <h2>Pick one of three simple options.</h2>
+        </div>
+        <PricingOptions />
       </section>
 
       <section className="resources-section">
