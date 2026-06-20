@@ -152,6 +152,7 @@ export default function Home() {
         <span>NovaSprout Learning, a brand of Karigari Home LLC</span>
         <span>Online tutoring for curious, growing students.</span>
         <a href="/privacy">Privacy Policy</a>
+        <a href="/refund-policy">Refund Policy</a>
       </footer>
     </main>
   );
