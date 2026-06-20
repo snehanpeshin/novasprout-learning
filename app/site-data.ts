@@ -67,20 +67,16 @@ export const subjectTracks = [
 
 export const processSteps = [
   {
-    title: "Tell us the goal",
-    copy: "Complete a short intake form so we understand the student's grade, subject, confidence level, and current challenges."
+    title: "Book the free demo",
+    copy: "Choose a time online and tell us the subject, grade level, and what feels difficult right now."
   },
   {
-    title: "Book a free intro call",
-    copy: "Meet online, discuss needs, and decide which in-house tutor and weekly rhythm makes sense."
+    title: "Try one live session",
+    copy: "Meet online for a friendly sample lesson with clear explanation and guided practice."
   },
   {
-    title: "Start weekly sessions",
-    copy: "Each session focuses on clear explanations, practice, and a small next step the student can actually finish."
-  },
-  {
-    title: "Receive notes and practice",
-    copy: "Students and parents get simple follow-up notes, resources, and suggested practice after tutoring."
+    title: "Pick the right plan",
+    copy: "Continue with one tutoring session or a monthly package, then receive notes and practice after lessons."
   }
 ];
 
@@ -131,10 +127,10 @@ export const resourceItems = [
 
 export const pricingPlans = [
   {
-    title: "Free Intro Call",
+    title: "Free Demo Class",
     price: "$0",
-    copy: "A quick fit check for the student's goals, subject needs, schedule, and next step.",
-    features: ["15-minute online call", "Subject and goal review", "Recommended tutoring path"]
+    copy: "A simple first class to understand the student's goals, subject needs, and next step.",
+    features: ["Free online demo", "Subject and goal review", "Recommended tutoring path"]
   },
   {
     paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_ONE_HOUR_TUTORING_PAYMENT_LINK,

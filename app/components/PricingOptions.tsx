@@ -18,10 +18,10 @@ export default function PricingOptions() {
               </li>
             ))}
           </ul>
-          {plan.title === "Free Intro Call" ? (
+          {plan.title === "Free Demo Class" ? (
             <div className="payment-actions">
               <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-                Book free intro call
+                Book free demo class
                 <ArrowRight aria-hidden="true" size={18} />
               </TrackedLink>
             </div>

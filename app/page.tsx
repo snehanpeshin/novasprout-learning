@@ -2,13 +2,13 @@
 
 import {
   ArrowRight,
-  BookOpen,
   CalendarCheck,
   CheckCircle2,
+  CreditCard,
   Sparkles
 } from "lucide-react";
 import TrackedLink from "./components/TrackedLink";
-import { bookingUrl, intakeForm, processSteps, subjectTracks } from "./site-data";
+import { bookingUrl, processSteps, subjectTracks } from "./site-data";
 
 export default function Home() {
   return (
@@ -21,29 +21,39 @@ export default function Home() {
         <nav aria-label="Main navigation">
           <a href="#subjects">Subjects</a>
           <a href="#how-it-works">How it works</a>
-          <a href="/resources">Resources</a>
           <a href="/pricing">Pricing</a>
+          <a href="#book">Book</a>
         </nav>
       </header>
 
+      <section className="demo-strip" aria-label="Free demo class announcement">
+        <div className="demo-track">
+          <span>First demo class free</span>
+          <span>Math, science, coding, and study skills</span>
+          <span>Live online tutoring</span>
+          <span>First demo class free</span>
+          <span>Math, science, coding, and study skills</span>
+          <span>Live online tutoring</span>
+        </div>
+      </section>
+
       <section className="hero" id="top">
         <div className="hero-copy">
-          <p className="eyebrow">Online tutoring with in-house subject tutors</p>
-          <h1>Personal tutoring to nurture and sprout the seed of inquisitiveness.</h1>
+          <p className="eyebrow">Friendly online tutoring for curious students</p>
+          <h1>Learn Math, Science, Coding, and Study Skills with live online support.</h1>
           <p className="hero-text">
-            NovaSprout Learning connects students with carefully selected in-house tutors for live
-            online tutoring, practical study support, and guided STEM learning in a friendly,
-            student-first environment.
+            NovaSprout Learning makes tutoring simple: book a free demo class, choose a subject,
+            meet online, and get notes or practice after the session.
           </p>
           <div className="hero-actions">
             <TrackedLink className="button primary" eventName="book_meeting_click" href={bookingUrl} target="_blank">
               <CalendarCheck aria-hidden="true" size={18} />
-              Book a free consultation
+              Book free demo class
             </TrackedLink>
-            <TrackedLink className="button secondary" eventName="intake_form_click" href={intakeForm} target="_blank">
-              <BookOpen aria-hidden="true" size={18} />
-              Student intake form
-            </TrackedLink>
+            <a className="button secondary" href="/pricing">
+              <CreditCard aria-hidden="true" size={18} />
+              View pricing
+            </a>
           </div>
         </div>
         <div className="hero-media" aria-label="Seed growing in a nourishing learning environment">
@@ -53,38 +63,40 @@ export default function Home() {
           />
           <div className="hero-note">
             <Sparkles aria-hidden="true" size={18} />
-            <span>Live video tutoring, custom notes, and student-friendly follow-up.</span>
+            <span>Simple lessons, clear practice, and a free first demo class.</span>
           </div>
         </div>
       </section>
 
       <section className="trust-strip" aria-label="Program highlights">
         <div>
-          <strong>1:1 online sessions</strong>
-          <span>Google Meet or Zoom</span>
+          <strong>Free demo first</strong>
+          <span>Try the format before choosing a plan</span>
         </div>
         <div>
-          <strong>STEM + study support</strong>
-          <span>Math, science, coding, writing</span>
+          <strong>Live online tutoring</strong>
+          <span>Meet through Google Meet or Zoom</span>
         </div>
         <div>
-          <strong>Small and personal</strong>
-          <span>Work with our in-house tutors</span>
+          <strong>Notes and practice</strong>
+          <span>Helpful follow-up after sessions</span>
         </div>
       </section>
 
       <section className="section" id="subjects">
         <div className="section-heading">
           <p className="eyebrow">Subjects</p>
-          <h2>Support for school, STEM confidence, and real-world technical skills.</h2>
+          <h2>Choose the help your student needs today.</h2>
         </div>
         <div className="subject-grid">
           {subjectTracks.map((subject) => (
             <a className="subject-card" href={`/${subject.slug}`} key={subject.title}>
-              <subject.icon aria-hidden="true" size={24} />
+              <span className="subject-icon">
+                <subject.icon aria-hidden="true" size={28} />
+              </span>
               <h3>{subject.title}</h3>
               <p>{subject.summary}</p>
-              <span>{subject.level}</span>
+              <span className="subject-level">{subject.level}</span>
             </a>
           ))}
         </div>
@@ -93,7 +105,7 @@ export default function Home() {
       <section className="process-section" id="how-it-works">
         <div className="section-heading">
           <p className="eyebrow">How it works</p>
-          <h2>A simple flow for students and parents.</h2>
+          <h2>Three easy steps from demo class to regular support.</h2>
         </div>
         <div className="steps wide-steps">
           {processSteps.map((step, index) => (
@@ -109,30 +121,30 @@ export default function Home() {
       <section className="booking-section" id="book">
         <div className="booking-copy">
           <p className="eyebrow">Start</p>
-          <h2>Begin with a free intro call.</h2>
+          <h2>Start with the free demo class.</h2>
           <ul>
             <li>
               <CheckCircle2 aria-hidden="true" size={18} />
-              Free consultation booking
+              Book one meeting and tell us the subject
             </li>
             <li>
               <CheckCircle2 aria-hidden="true" size={18} />
-              Student goals collected before the call
+              Try the online tutoring format
             </li>
             <li>
               <CheckCircle2 aria-hidden="true" size={18} />
-              Online sessions through Google Meet or Zoom
+              Choose one session or a monthly package
             </li>
           </ul>
         </div>
         <div className="booking-actions">
           <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-            Book a meeting
+            Book free demo class
             <ArrowRight aria-hidden="true" size={18} />
           </TrackedLink>
-          <TrackedLink className="button secondary full" eventName="intake_form_click" href={intakeForm} target="_blank">
-            Complete intake form
-          </TrackedLink>
+          <a className="button secondary full" href="/pricing">
+            View tutoring plans
+          </a>
         </div>
       </section>
 

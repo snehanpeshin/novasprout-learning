@@ -1,7 +1,7 @@
-import { ArrowRight, BookOpen, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, CreditCard } from "lucide-react";
 import PricingOptions from "./PricingOptions";
 import TrackedLink from "./TrackedLink";
-import { bookingUrl, intakeForm, subjectTracks } from "../site-data";
+import { bookingUrl, subjectTracks } from "../site-data";
 
 type SubjectLandingProps = {
   slug: string;
@@ -23,11 +23,21 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
         </a>
         <nav aria-label="Main navigation">
           <a href="/#subjects">Subjects</a>
-          <a href="/resources">Resources</a>
           <a href="/pricing">Pricing</a>
           <a href="/#book">Book</a>
         </nav>
       </header>
+
+      <section className="demo-strip" aria-label="Free demo class announcement">
+        <div className="demo-track">
+          <span>First demo class free</span>
+          <span>{subject.navTitle} tutoring online</span>
+          <span>Live lesson plus practice notes</span>
+          <span>First demo class free</span>
+          <span>{subject.navTitle} tutoring online</span>
+          <span>Live lesson plus practice notes</span>
+        </div>
+      </section>
 
       <section className="landing-hero">
         <div>
@@ -36,17 +46,19 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
           <p>{subject.copy}</p>
           <div className="hero-actions">
             <TrackedLink className="button primary" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-              Book a free consultation
+              Book free demo class
               <ArrowRight aria-hidden="true" size={18} />
             </TrackedLink>
-            <TrackedLink className="button secondary" eventName="intake_form_click" href={intakeForm} target="_blank">
-              Student intake form
-              <BookOpen aria-hidden="true" size={18} />
-            </TrackedLink>
+            <a className="button secondary" href="/pricing">
+              <CreditCard aria-hidden="true" size={18} />
+              View pricing
+            </a>
           </div>
         </div>
         <div className="landing-panel">
-          <subject.icon aria-hidden="true" size={42} />
+          <span className="subject-icon subject-icon-large">
+            <subject.icon aria-hidden="true" size={40} />
+          </span>
           <h2>{subject.title}</h2>
           <p>{subject.summary}</p>
         </div>
@@ -60,7 +72,7 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
         <div className="feature-grid">
           {subject.outcomes.map((outcome) => (
             <article className="feature-card" key={outcome}>
-              <CheckCircle2 aria-hidden="true" size={20} />
+              <CheckCircle2 aria-hidden="true" size={22} />
               <h3>{outcome}</h3>
               <p>Clear explanation, guided practice, and a small follow-up step after tutoring.</p>
             </article>

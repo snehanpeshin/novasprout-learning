@@ -18,8 +18,20 @@ export default function ResourcesPage() {
           <a href="/">Home</a>
           <a href="/#subjects">Subjects</a>
           <a href="/pricing">Pricing</a>
+          <a href="/#book">Book</a>
         </nav>
       </header>
+
+      <section className="demo-strip" aria-label="Free demo class announcement">
+        <div className="demo-track">
+          <span>First demo class free</span>
+          <span>Short videos and notes coming soon</span>
+          <span>Learn online with practice support</span>
+          <span>First demo class free</span>
+          <span>Short videos and notes coming soon</span>
+          <span>Learn online with practice support</span>
+        </div>
+      </section>
 
       <section className="landing-hero compact-hero">
         <div>
@@ -27,7 +39,7 @@ export default function ResourcesPage() {
           <h1>Short videos, notes, and worksheets that support tutoring.</h1>
           <p>
             Start with simple resources students can actually use: short unlisted YouTube
-            lessons, one-page notes, practice sheets, and parent-friendly follow-up.
+            lessons, one-page notes, practice sheets, and clear follow-up after class.
           </p>
         </div>
         <div className="landing-panel">
