@@ -61,7 +61,7 @@ export default function AdminDashboard() {
     <main className="admin-page">
       <section className="policy-hero">
         <a className="brand policy-brand" href="/" aria-label="NovaSprout Learning home">
-          <span className="brand-mark">N</span>
+          <img className="brand-logo" src="/novasprout-logo.png" alt="" />
           <span>NovaSprout Learning</span>
         </a>
         <p className="eyebrow">Admin</p>

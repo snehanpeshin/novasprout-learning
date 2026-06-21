@@ -15,7 +15,7 @@ export default function Home() {
     <main>
       <header className="site-header">
         <a className="brand" href="#top" aria-label="NovaSprout Learning home">
-          <span className="brand-mark">N</span>
+          <img className="brand-logo" src="/novasprout-logo.png" alt="" />
           <span>NovaSprout Learning</span>
         </a>
         <nav aria-label="Main navigation">

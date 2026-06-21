@@ -18,7 +18,7 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
     <main className="landing-page">
       <header className="site-header">
         <a className="brand" href="/" aria-label="NovaSprout Learning home">
-          <span className="brand-mark">N</span>
+          <img className="brand-logo" src="/novasprout-logo.png" alt="" />
           <span>NovaSprout Learning</span>
         </a>
         <nav aria-label="Main navigation">
