@@ -31,7 +31,7 @@ cp .env.example .env.local
 ```bash
 NEXT_PUBLIC_BOOKING_URL=https://calendly.com/your-team/free-consultation
 NEXT_PUBLIC_INTAKE_FORM_URL=https://forms.gle/your-form
-NEXT_PUBLIC_CONTACT_EMAIL=hello@novasproutlearning.com
+NEXT_PUBLIC_CONTACT_EMAIL=novasproutlearning@gmail.com
 ```
 
 4. Run the local site:

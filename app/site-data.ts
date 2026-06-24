@@ -8,7 +8,7 @@ export const bookingUrl =
 export const intakeForm =
   process.env.NEXT_PUBLIC_INTAKE_FORM_URL ?? "https://forms.gle/YOUR-GOOGLE-FORM";
 
-export const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "hello@novasproutlearning.com";
+export const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "novasproutlearning@gmail.com";
 
 export const subjectTracks = [
   {

@@ -1,6 +1,6 @@
 import { Mail } from "lucide-react";
 
-const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "hello@novasproutlearning.com";
+const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "novasproutlearning@gmail.com";
 
 export const metadata = {
   title: "Privacy Policy | NovaSprout Learning",
