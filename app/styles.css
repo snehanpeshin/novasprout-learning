@@ -498,6 +498,20 @@ h3 {
   margin-top: 8px;
 }
 
+.resource-action {
+  align-items: center;
+  color: var(--blue);
+  display: inline-flex;
+  font-size: 0.9rem;
+  font-weight: 700;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.resource-action svg {
+  margin: 0;
+}
+
 .text-link {
   display: inline-flex;
   margin-top: 22px;

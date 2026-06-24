@@ -119,7 +119,7 @@ export const resourceItems = [
   {
     title: "Test prep planning sheet",
     track: "Study Skills",
-    type: "Download",
+    type: "Planning note",
     icon: Target,
     copy: "A one-page plan for what to review, when to practice, and how to avoid last-minute panic."
   }

@@ -1,7 +1,7 @@
-import { ArrowRight, CheckCircle2, CreditCard } from "lucide-react";
+import { ArrowRight, CheckCircle2, CreditCard, Mail } from "lucide-react";
 import PricingOptions from "./PricingOptions";
 import TrackedLink from "./TrackedLink";
-import { bookingUrl, subjectTracks } from "../site-data";
+import { bookingUrl, contactEmail, subjectTracks } from "../site-data";
 
 type SubjectLandingProps = {
   slug: string;
@@ -100,6 +100,13 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
               <h3>{resource}</h3>
               <p>Use this as a quick lesson, practice prompt, or tutoring follow-up note.</p>
               <span className="mini-label">Coming soon</span>
+              <a
+                className="resource-action"
+                href={`mailto:${contactEmail}?subject=${encodeURIComponent(`NovaSprout resource request: ${resource}`)}`}
+              >
+                <Mail aria-hidden="true" size={16} />
+                Request resource
+              </a>
             </article>
           ))}
         </div>

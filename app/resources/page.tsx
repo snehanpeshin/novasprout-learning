@@ -1,5 +1,5 @@
-import { BookOpen } from "lucide-react";
-import { resourceItems } from "../site-data";
+import { BookOpen, Mail } from "lucide-react";
+import { contactEmail, resourceItems } from "../site-data";
 
 export const metadata = {
   title: "Learning Resources | NovaSprout Learning",
@@ -39,7 +39,8 @@ export default function ResourcesPage() {
           <h1>Short videos, notes, and worksheets that support tutoring.</h1>
           <p>
             Start with simple resources students can actually use: short unlisted YouTube
-            lessons, one-page notes, practice sheets, and clear follow-up after class.
+            lessons, one-page notes, practice sheets, and clear follow-up after class. Public
+            PDF and document previews will be added after each resource is ready.
           </p>
         </div>
         <div className="landing-panel">
@@ -61,6 +62,13 @@ export default function ResourcesPage() {
               <h3>{item.title}</h3>
               <p>{item.copy}</p>
               <span className="mini-label">{item.track} · {item.type}</span>
+              <a
+                className="resource-action"
+                href={`mailto:${contactEmail}?subject=${encodeURIComponent(`NovaSprout resource request: ${item.title}`)}`}
+              >
+                <Mail aria-hidden="true" size={16} />
+                Request resource
+              </a>
             </article>
           ))}
         </div>
