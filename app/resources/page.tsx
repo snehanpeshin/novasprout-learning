@@ -1,6 +1,6 @@
-import { BookOpen, Mail } from "lucide-react";
+import { BookOpen, CalendarCheck } from "lucide-react";
 import Footer from "../components/Footer";
-import { contactEmail, resourceItems } from "../site-data";
+import { bookingUrl, resourceItems } from "../site-data";
 
 export const metadata = {
   title: "Learning Resources | NovaSprout Learning",
@@ -65,10 +65,12 @@ export default function ResourcesPage() {
               <span className="mini-label">{item.track} · {item.type}</span>
               <a
                 className="resource-action"
-                href={`mailto:${contactEmail}?subject=${encodeURIComponent(`NovaSprout resource request: ${item.title}`)}`}
+                href={bookingUrl}
+                target="_blank"
+                rel="noreferrer"
               >
-                <Mail aria-hidden="true" size={16} />
-                Request resource
+                <CalendarCheck aria-hidden="true" size={16} />
+                Discuss in free demo
               </a>
             </article>
           ))}
