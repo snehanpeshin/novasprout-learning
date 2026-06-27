@@ -88,7 +88,7 @@ export const processSteps = [
   },
   {
     title: "Pick the right plan",
-    copy: "Continue with one tutoring session or a monthly package, then receive notes and practice after lessons."
+    copy: "Continue with one protected tutoring session or a monthly plan, then receive notes and practice after lessons."
   }
 ];
 
@@ -119,7 +119,12 @@ export const tutoringFaqs = [
   {
     question: "What happens after the free demo class?",
     answer:
-      "We recommend either one focused tutoring session or a monthly plan based on the student's goals, schedule, and subject needs."
+      "We recommend either one protected paid session or a monthly plan based on the student's goals, schedule, and subject needs."
+  },
+  {
+    question: "Is there a money-back option?",
+    answer:
+      "Yes. If the first paid session is not a good fit, contact us within 24 hours and we will offer a refund or replacement session."
   },
   {
     question: "Do students get notes or practice?",
@@ -181,9 +186,9 @@ export const resourceItems = [
 export const pricingPlans = [
   {
     title: "Free Demo Class",
-    price: "$0",
-    copy: "A simple first class to understand the student's goals, subject needs, and next step.",
-    features: ["Free online demo", "Subject and goal review", "Recommended tutoring path"]
+    price: "Free",
+    copy: "A no-pressure first class to understand the student's goals, subject needs, and next step.",
+    features: ["Free online demo", "Subject and goal review", "No monthly commitment"]
   },
   {
     paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_ONE_HOUR_TUTORING_PAYMENT_LINK,
@@ -191,15 +196,15 @@ export const pricingPlans = [
     title: "1 Hour Tutoring",
     price: "$40-60",
     copy: "Best for homework help, a difficult unit, or trying one focused tutoring session before a package.",
-    features: ["Live online session", "Personalized notes", "Practice suggestions"]
+    features: ["Live online session", "Personalized notes", "First-session fit guarantee"]
   },
   {
     paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_MONTHLY_PACKAGE_PAYMENT_LINK,
     productKey: "monthly_subscription",
     title: "Monthly Tutoring Package",
-    price: "$199-499",
-    copy: "A recurring support rhythm for students who need weekly tutoring and follow-up.",
-    features: ["Recurring online tutoring", "Session notes and practice", "Parent/student progress updates"]
+    price: "Custom plan",
+    copy: "A recurring support rhythm recommended after the demo or first paid session.",
+    features: ["Weekly or flexible tutoring", "Session notes and practice", "Start after fit is confirmed"]
   }
 ] satisfies Array<{
   copy: string;

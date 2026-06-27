@@ -4,7 +4,7 @@ import PricingOptions from "../components/PricingOptions";
 
 export const metadata = {
   title: "Tutoring Pricing | NovaSprout Learning",
-  description: "Start with a free NovaSprout Learning demo class, then choose single-session or monthly online tutoring support."
+  description: "Start with a free NovaSprout Learning demo class, then choose a protected single session or a custom monthly tutoring plan."
 };
 
 export default function PricingPage() {
@@ -24,27 +24,27 @@ export default function PricingPage() {
       <section className="demo-strip" aria-label="Free demo class announcement">
         <div className="demo-track">
           <span>First demo class free</span>
-          <span>Choose one tutoring session or a monthly plan</span>
-          <span>No account required</span>
+          <span>First paid session fit guarantee</span>
+          <span>Custom monthly plan after fit is confirmed</span>
           <span>First demo class free</span>
-          <span>Choose one tutoring session or a monthly plan</span>
-          <span>No account required</span>
+          <span>First paid session fit guarantee</span>
+          <span>Custom monthly plan after fit is confirmed</span>
         </div>
       </section>
 
       <section className="landing-hero compact-hero">
         <div>
           <p className="eyebrow">Pricing</p>
-          <h1>Start with a free demo class, then choose a simple tutoring plan.</h1>
+          <h1>Start with a free demo class, then continue only if it feels right.</h1>
           <p>
-            After the demo, pick a single session for focused help or a monthly package for steady
-            online support.
+            After the demo, try one protected paid session or choose a custom monthly plan for
+            steady online support.
           </p>
         </div>
         <div className="landing-panel">
           <CheckCircle2 aria-hidden="true" size={42} />
-          <h2>No account required</h2>
-          <p>Book, meet online, receive notes, and decide the next step without a complicated platform.</p>
+          <h2>Low-pressure start</h2>
+          <p>Book, meet online, receive notes, and use the first-session fit guarantee if it is not a match.</p>
         </div>
       </section>
 

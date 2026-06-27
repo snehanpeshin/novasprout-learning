@@ -32,10 +32,10 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
       <section className="demo-strip" aria-label="Free demo class announcement">
         <div className="demo-track">
           <span>First demo class free</span>
-          <span>{subject.navTitle} tutoring online</span>
+          <span>First paid session fit guarantee</span>
           <span>Live lesson plus practice notes</span>
           <span>First demo class free</span>
-          <span>{subject.navTitle} tutoring online</span>
+          <span>First paid session fit guarantee</span>
           <span>Live lesson plus practice notes</span>
         </div>
       </section>

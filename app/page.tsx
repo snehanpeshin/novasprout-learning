@@ -30,10 +30,10 @@ export default function Home() {
       <section className="demo-strip" aria-label="Free demo class announcement">
         <div className="demo-track">
           <span>First demo class free</span>
-          <span>Math, science, coding, and study skills</span>
+          <span>First paid session fit guarantee</span>
           <span>Live online tutoring</span>
           <span>First demo class free</span>
-          <span>Math, science, coding, and study skills</span>
+          <span>First paid session fit guarantee</span>
           <span>Live online tutoring</span>
         </div>
       </section>
@@ -167,7 +167,7 @@ export default function Home() {
             </li>
             <li>
               <CheckCircle2 aria-hidden="true" size={18} />
-              Choose one session or a monthly package
+              Continue with a protected first paid session
             </li>
           </ul>
         </div>

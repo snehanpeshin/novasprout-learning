@@ -6,8 +6,8 @@ NovaSprout Learning uses one Stripe account owned by Karigari Home LLC. NovaSpro
 
 In Stripe Dashboard, create separate products:
 
-1. `NovaSprout Learning - Free Intro Call`
-   - Price: `$0`
+1. `NovaSprout Learning - Free Demo Class`
+   - Price: `Free`
    - This is mainly for catalog/branding consistency. The website sends users to Calendly for this, not paid Stripe Checkout.
 
 2. `NovaSprout Learning - 1 Hour Tutoring`
@@ -18,18 +18,18 @@ In Stripe Dashboard, create separate products:
 
 3. `NovaSprout Learning - Monthly Tutoring Package`
    - Recurring: yes
-   - Display range on site: `$199-499`
-   - Create one exact monthly Stripe price for the checkout button, for example `$199`, `$299`, or `$499`
+   - Display on site: `Custom plan`
+   - Create one exact monthly Stripe price only after the student's schedule and session count are confirmed
    - Copy the product ID and price ID
 
-Stripe Checkout requires exact prices. The website can display a range, but each checkout button must point to one concrete Stripe Price ID.
+Stripe Checkout requires exact prices. The website can show a low-pressure custom plan, but each checkout button or Payment Link must still point to one concrete Stripe Price ID.
 
 ## 2. Optional Stripe Payment Links
 
 Create separate Payment Links in Stripe:
 
 - `1 Hour Tutoring` Payment Link
-- `Monthly Tutoring Package` Payment Link
+- `Monthly Tutoring Package` Payment Link, created after the monthly plan is confirmed
 
 Copy those URLs into the public env vars below. Payment Links are public URLs and are safe to expose.
 

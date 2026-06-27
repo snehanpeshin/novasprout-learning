@@ -18,7 +18,7 @@ export default function RefundPolicy() {
           <span>NovaSprout Learning</span>
         </a>
         <p className="eyebrow">Refund Policy</p>
-        <h1>Simple refund rules for tutoring sessions and packages.</h1>
+        <h1>Simple refund rules and first-session fit guarantee.</h1>
         <p>
           Effective date: June 20, 2026. NovaSprout Learning is a brand of Karigari
           Home LLC. This policy explains how refunds, cancellations, and rescheduling
@@ -43,8 +43,9 @@ export default function RefundPolicy() {
             notice, or missed without notice, are generally non-refundable.
           </p>
           <p>
-            We may allow one reschedule for a late cancellation when there is a reasonable
-            conflict or emergency.
+            First-session fit guarantee: if the first paid tutoring session is not a good
+            fit, contact us within 24 hours after the session. We will offer either a refund
+            for that session or a replacement session.
           </p>
         </article>
 
