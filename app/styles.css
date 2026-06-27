@@ -706,12 +706,24 @@ footer {
   padding: 20px clamp(18px, 4vw, 56px);
 }
 
-footer span:first-child {
+footer div,
+.footer-links {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+footer div span:first-child {
   color: var(--white);
   font-weight: 800;
 }
 
-footer a {
+.footer-links {
+  justify-content: flex-end;
+}
+
+.footer-links a {
   color: var(--white);
   font-weight: 700;
 }
