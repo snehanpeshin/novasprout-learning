@@ -1,4 +1,5 @@
 import { BookOpen, Mail } from "lucide-react";
+import Footer from "../components/Footer";
 import { contactEmail, resourceItems } from "../site-data";
 
 export const metadata = {
@@ -73,6 +74,8 @@ export default function ResourcesPage() {
           ))}
         </div>
       </section>
+
+      <Footer />
     </main>
   );
 }

@@ -329,7 +329,9 @@ h3 {
 }
 
 .subject-grid,
-.resource-grid {
+.resource-grid,
+.support-grid,
+.faq-grid {
   display: grid;
   gap: 14px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -337,7 +339,9 @@ h3 {
 }
 
 .subject-card,
-.resource-grid article {
+.resource-grid article,
+.support-card,
+.faq-item {
   background: var(--white);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -391,7 +395,9 @@ h3 {
 .subject-card p,
 .resource-grid p,
 .tutor-card p,
-.step p {
+.step p,
+.support-card p,
+.faq-item p {
   font-size: 0.95rem;
   color: var(--muted);
   line-height: 1.58;
@@ -480,6 +486,30 @@ h3 {
 
 .resources-section {
   background: var(--sky);
+}
+
+.support-section {
+  background: var(--white);
+}
+
+.support-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.support-card {
+  min-height: 210px;
+}
+
+.faq-section {
+  background: var(--paper);
+}
+
+.faq-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.faq-item {
+  min-height: 0;
 }
 
 .resource-grid {
@@ -891,6 +921,8 @@ footer div span:first-child {
   .subject-grid,
   .pricing-grid,
   .feature-grid,
+  .support-grid,
+  .faq-grid,
   .metric-grid,
   .admin-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -927,6 +959,8 @@ footer div span:first-child {
   .resource-grid,
   .pricing-grid,
   .feature-grid,
+  .support-grid,
+  .faq-grid,
   .metric-grid,
   .admin-grid,
   .steps {

@@ -7,8 +7,9 @@ import {
   CreditCard,
   Sparkles
 } from "lucide-react";
+import Footer from "./components/Footer";
 import TrackedLink from "./components/TrackedLink";
-import { bookingUrl, processSteps, subjectTracks } from "./site-data";
+import { bookingUrl, learningSituations, processSteps, subjectTracks, tutoringFaqs } from "./site-data";
 
 export default function Home() {
   return (
@@ -102,6 +103,24 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="section support-section">
+        <div className="section-heading">
+          <p className="eyebrow">Best for</p>
+          <h2>Focused tutoring for the moments when students need a clearer path.</h2>
+        </div>
+        <div className="support-grid">
+          {learningSituations.map((item) => (
+            <article className="support-card" key={item.title}>
+              <span className="subject-icon">
+                <item.icon aria-hidden="true" size={24} />
+              </span>
+              <h3>{item.title}</h3>
+              <p>{item.copy}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="process-section" id="how-it-works">
         <div className="section-heading">
           <p className="eyebrow">How it works</p>
@@ -114,6 +133,21 @@ export default function Home() {
               <h3>{step.title}</h3>
               <p>{step.copy}</p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="section faq-section">
+        <div className="section-heading">
+          <p className="eyebrow">Questions</p>
+          <h2>What families usually want to know before booking.</h2>
+        </div>
+        <div className="faq-grid">
+          {tutoringFaqs.map((item) => (
+            <article className="faq-item" key={item.question}>
+              <h3>{item.question}</h3>
+              <p>{item.answer}</p>
+            </article>
           ))}
         </div>
       </section>
@@ -148,22 +182,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer>
-        <div>
-          <span>NovaSprout Learning, a brand of Karigari Home LLC</span>
-          <span>Online tutoring for curious, growing students.</span>
-        </div>
-        <nav className="footer-links" aria-label="Footer links">
-          <a href="/privacy">Privacy Policy</a>
-          <a href="/refund-policy">Refund Policy</a>
-          <a href="https://www.facebook.com/profile.php?id=61591516287177" target="_blank" rel="noreferrer">
-            Facebook
-          </a>
-          <a href="https://www.instagram.com/novasprout.learning/" target="_blank" rel="noreferrer">
-            Instagram
-          </a>
-        </nav>
-      </footer>
+      <Footer />
     </main>
   );
 }

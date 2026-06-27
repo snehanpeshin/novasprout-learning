@@ -1,4 +1,5 @@
 import { ArrowRight, CheckCircle2, CreditCard, Mail } from "lucide-react";
+import Footer from "./Footer";
 import PricingOptions from "./PricingOptions";
 import TrackedLink from "./TrackedLink";
 import { bookingUrl, contactEmail, subjectTracks } from "../site-data";
@@ -111,6 +112,8 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
           ))}
         </div>
       </section>
+
+      <Footer />
     </main>
   );
 }

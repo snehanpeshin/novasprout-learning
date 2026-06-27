@@ -1,4 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
+import Footer from "../components/Footer";
 import PricingOptions from "../components/PricingOptions";
 
 export const metadata = {
@@ -50,6 +51,8 @@ export default function PricingPage() {
       <section className="section">
         <PricingOptions />
       </section>
+
+      <Footer />
     </main>
   );
 }

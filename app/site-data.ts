@@ -1,4 +1,16 @@
-import { BarChart3, Beaker, BookOpenCheck, Calculator, Code2, FileText, PlayCircle, Target } from "lucide-react";
+import {
+  BarChart3,
+  Beaker,
+  BookOpenCheck,
+  CalendarClock,
+  Calculator,
+  ClipboardCheck,
+  Code2,
+  FileText,
+  Lightbulb,
+  PlayCircle,
+  Target
+} from "lucide-react";
 
 export const bookingUrl =
   process.env.NEXT_PUBLIC_BOOKING_URL ??
@@ -77,6 +89,47 @@ export const processSteps = [
   {
     title: "Pick the right plan",
     copy: "Continue with one tutoring session or a monthly package, then receive notes and practice after lessons."
+  }
+];
+
+export const learningSituations = [
+  {
+    title: "Homework feels stuck",
+    icon: ClipboardCheck,
+    copy: "Get patient help with the exact worksheet, chapter, or concept causing friction."
+  },
+  {
+    title: "A test is coming",
+    icon: CalendarClock,
+    copy: "Build a short review plan, practice likely question types, and clean up common mistakes."
+  },
+  {
+    title: "Curiosity needs a project",
+    icon: Lightbulb,
+    copy: "Use coding, data, STEM examples, or notes to turn interest into something students can show."
+  }
+];
+
+export const tutoringFaqs = [
+  {
+    question: "Who is NovaSprout Learning best for?",
+    answer:
+      "Students who want clearer explanations, regular practice, and a calm online tutor for math, science, coding, data, or study skills."
+  },
+  {
+    question: "What happens after the free demo class?",
+    answer:
+      "We recommend either one focused tutoring session or a monthly plan based on the student's goals, schedule, and subject needs."
+  },
+  {
+    question: "Do students get notes or practice?",
+    answer:
+      "Yes. Tutoring is designed around live explanation plus simple follow-up notes, examples, or practice suggestions."
+  },
+  {
+    question: "Can we start without creating an account?",
+    answer:
+      "Yes. The first version is intentionally simple: book online, meet through Google Meet or Zoom, then choose the next step."
   }
 ];
 

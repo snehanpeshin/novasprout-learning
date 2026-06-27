@@ -1,4 +1,5 @@
 import { Mail } from "lucide-react";
+import Footer from "../components/Footer";
 
 const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "novasproutlearning@gmail.com";
 
@@ -150,6 +151,8 @@ export default function PrivacyPolicy() {
           </p>
         </article>
       </section>
+
+      <Footer />
     </main>
   );
 }
