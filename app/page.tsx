@@ -23,7 +23,9 @@ export default function Home() {
           <a href="#subjects">Subjects</a>
           <a href="#how-it-works">How it works</a>
           <a href="/pricing">Pricing</a>
-          <a href="#book">Book</a>
+          <TrackedLink className="nav-cta" eventName="book_meeting_click" href={bookingUrl} target="_blank">
+            Book free demo
+          </TrackedLink>
         </nav>
       </header>
 
@@ -46,6 +48,20 @@ export default function Home() {
             NovaSprout Learning makes tutoring simple: book a free demo class, choose a subject,
             meet online, and get notes or practice after the session.
           </p>
+          <div className="hero-highlights" aria-label="Tutoring benefits">
+            <span>
+              <CheckCircle2 aria-hidden="true" size={16} />
+              Free demo first
+            </span>
+            <span>
+              <CheckCircle2 aria-hidden="true" size={16} />
+              Fit guarantee
+            </span>
+            <span>
+              <CheckCircle2 aria-hidden="true" size={16} />
+              Notes after lessons
+            </span>
+          </div>
           <div className="hero-actions">
             <TrackedLink className="button primary" eventName="book_meeting_click" href={bookingUrl} target="_blank">
               <CalendarCheck aria-hidden="true" size={18} />

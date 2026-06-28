@@ -93,6 +93,23 @@ nav a {
   font-weight: 700;
 }
 
+nav a:hover {
+  color: var(--blue);
+}
+
+.nav-cta {
+  background: var(--blue);
+  border-radius: 8px;
+  color: var(--white);
+  font-size: 0.88rem;
+  font-weight: 800;
+  padding: 9px 12px;
+}
+
+.nav-cta:hover {
+  color: var(--white);
+}
+
 .demo-strip {
   background: linear-gradient(90deg, #ffd24a, #7ce0bd, #9ed7ff);
   border-bottom: 1px solid #c8dbe8;
@@ -210,6 +227,31 @@ h3 {
 
 .hero-text {
   max-width: 640px;
+}
+
+.hero-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 18px 0 22px;
+}
+
+.hero-highlights span {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid #cfe4f4;
+  border-radius: 999px;
+  color: var(--ink);
+  display: inline-flex;
+  font-size: 0.9rem;
+  font-weight: 800;
+  gap: 7px;
+  padding: 8px 11px;
+}
+
+.hero-highlights svg {
+  color: var(--mint);
+  flex: 0 0 auto;
 }
 
 .hero-actions,
@@ -350,6 +392,20 @@ h3 {
   border-radius: 8px;
   min-height: 230px;
   padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.subject-card::before,
+.support-card::before,
+.price-card::before {
+  background: linear-gradient(90deg, var(--blue), var(--mint), var(--gold));
+  content: "";
+  height: 4px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 .subject-card {
@@ -574,6 +630,8 @@ h3 {
   border: 1px solid #cfe4f4;
   border-radius: 8px;
   padding: 20px;
+  position: relative;
+  overflow: hidden;
 }
 
 .price-card strong {
