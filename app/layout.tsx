@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./styles.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.novasproutlearning.com"),
   title: "NovaSprout Learning | Online Tutoring",
   description:
     "Personalized online tutoring for math, science, coding, data skills, reading, writing, and study confidence."
