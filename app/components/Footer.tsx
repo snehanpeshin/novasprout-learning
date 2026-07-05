@@ -6,6 +6,8 @@ export default function Footer() {
         <span>Online tutoring for curious, growing students.</span>
       </div>
       <nav className="footer-links" aria-label="Footer links">
+        <a href="/find-a-tutor">Find a Tutor</a>
+        <a href="/become-a-tutor">Become a Tutor</a>
         <a href="/privacy">Privacy Policy</a>
         <a href="/refund-policy">Refund Policy</a>
         <a href="https://www.facebook.com/profile.php?id=61591516287177" target="_blank" rel="noreferrer">

@@ -9,6 +9,7 @@ import {
   FileText,
   Lightbulb,
   PlayCircle,
+  SearchCheck,
   Target
 } from "lucide-react";
 
@@ -21,6 +22,27 @@ export const intakeForm =
   process.env.NEXT_PUBLIC_INTAKE_FORM_URL ?? "https://forms.gle/YOUR-GOOGLE-FORM";
 
 export const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "novasproutlearning@gmail.com";
+
+export const studentRequestEmail = `mailto:${contactEmail}?subject=${encodeURIComponent(
+  "NovaSprout student request"
+)}&body=${encodeURIComponent(`Student name:
+Grade:
+Subject needed:
+Main goal or challenge:
+Preferred days/times:
+Parent/student contact:
+`)}`;
+
+export const tutorApplicationEmail = `mailto:${contactEmail}?subject=${encodeURIComponent(
+  "NovaSprout tutor application"
+)}&body=${encodeURIComponent(`Name:
+Email:
+Subjects you can tutor:
+Grade levels:
+Availability:
+Experience/qualification:
+Link to resume, LinkedIn, or intro video:
+`)}`;
 
 export const subjectTracks = [
   {
@@ -107,6 +129,42 @@ export const learningSituations = [
     title: "Curiosity needs a project",
     icon: Lightbulb,
     copy: "Use coding, data, STEM examples, or notes to turn interest into something students can show."
+  }
+];
+
+export const studentRequestSteps = [
+  {
+    title: "Tell us the need",
+    icon: SearchCheck,
+    copy: "Share the subject, grade level, goals, schedule, and what kind of tutor would help."
+  },
+  {
+    title: "We suggest a fit",
+    icon: ClipboardCheck,
+    copy: "NovaSprout reviews the request and recommends the best available tutor or next step."
+  },
+  {
+    title: "Try the free demo",
+    icon: CalendarClock,
+    copy: "Meet online first, then continue only if the tutor and format feel right."
+  }
+];
+
+export const tutorApplicationSteps = [
+  {
+    title: "Apply to tutor",
+    icon: ClipboardCheck,
+    copy: "Send your subjects, grade levels, availability, experience, and profile links."
+  },
+  {
+    title: "Quality review",
+    icon: SearchCheck,
+    copy: "We review fit, communication style, background, and student support approach."
+  },
+  {
+    title: "Join matched sessions",
+    icon: CalendarClock,
+    copy: "Approved tutors are matched with student requests when subject and schedule align."
   }
 ];
 

@@ -4,6 +4,8 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.novasproutlearn
 
 const routes = [
   "",
+  "/find-a-tutor",
+  "/become-a-tutor",
   "/math-tutoring",
   "/science-tutoring",
   "/coding-data-skills",

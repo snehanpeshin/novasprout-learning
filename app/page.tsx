@@ -21,6 +21,8 @@ export default function Home() {
         </a>
         <nav aria-label="Main navigation">
           <a href="#subjects">Subjects</a>
+          <a href="/find-a-tutor">Find Tutor</a>
+          <a href="/become-a-tutor">Tutor Signup</a>
           <a href="#how-it-works">How it works</a>
           <a href="/pricing">Pricing</a>
           <TrackedLink className="nav-cta" eventName="book_meeting_click" href={bookingUrl} target="_blank">
