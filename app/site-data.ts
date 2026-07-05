@@ -13,10 +13,12 @@ import {
   Target
 } from "lucide-react";
 
+const defaultBookingUrl = "https://calendly.com/novasprout-learning/free-15-min-intro-call";
+
 export const bookingUrl =
-  process.env.NEXT_PUBLIC_BOOKING_URL ??
-  process.env.NEXT_PUBLIC_CALENDLY_SNEHAN ??
-  "https://calendly.com/YOUR-CALENDLY/free-consultation";
+  [process.env.NEXT_PUBLIC_BOOKING_URL, process.env.NEXT_PUBLIC_CALENDLY_SNEHAN].find((url) =>
+    url?.startsWith("https://")
+  ) ?? defaultBookingUrl;
 
 export const intakeForm =
   process.env.NEXT_PUBLIC_INTAKE_FORM_URL ?? "https://forms.gle/YOUR-GOOGLE-FORM";

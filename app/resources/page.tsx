@@ -19,7 +19,7 @@ export default function ResourcesPage() {
           <a href="/">Home</a>
           <a href="/#subjects">Subjects</a>
           <a href="/pricing">Pricing</a>
-          <a href="/#book">Book</a>
+          <a href="/#book">Book demo</a>
         </nav>
       </header>
 

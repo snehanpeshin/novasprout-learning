@@ -17,7 +17,7 @@ export default function PricingPage() {
         </a>
         <nav aria-label="Main navigation">
           <a href="/#subjects">Subjects</a>
-          <a href="/#book">Book</a>
+          <a href="/#book">Book demo</a>
         </nav>
       </header>
 

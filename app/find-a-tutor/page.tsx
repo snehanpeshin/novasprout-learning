@@ -20,7 +20,7 @@ export default function FindATutorPage() {
           <a href="/#subjects">Subjects</a>
           <a href="/become-a-tutor">Become a Tutor</a>
           <a className="nav-cta" href={bookingUrl} target="_blank" rel="noreferrer">
-            Book free demo
+            Book demo
           </a>
         </nav>
       </header>
@@ -35,11 +35,11 @@ export default function FindATutorPage() {
           </p>
           <div className="hero-actions">
             <a className="button primary" href={studentRequestEmail}>
-              Send student request
+              Email student request
               <Mail aria-hidden="true" size={18} />
             </a>
             <a className="button secondary" href={bookingUrl} target="_blank" rel="noreferrer">
-              Book free demo
+              Book demo on Calendly
               <CalendarCheck aria-hidden="true" size={18} />
             </a>
           </div>
@@ -109,11 +109,11 @@ export default function FindATutorPage() {
         </div>
         <div className="booking-actions">
           <a className="button primary full" href={studentRequestEmail}>
-            Send student request
+            Email student request
             <ArrowRight aria-hidden="true" size={18} />
           </a>
           <a className="button secondary full" href={bookingUrl} target="_blank" rel="noreferrer">
-            Book free demo
+            Book demo on Calendly
           </a>
         </div>
       </section>

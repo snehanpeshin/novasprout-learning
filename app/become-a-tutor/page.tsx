@@ -110,7 +110,7 @@ export default function BecomeATutorPage() {
             <ArrowRight aria-hidden="true" size={18} />
           </a>
           <a className="button secondary full" href={`mailto:${contactEmail}`}>
-            Ask a question first
+            Email a question
           </a>
         </div>
       </section>
