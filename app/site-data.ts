@@ -23,7 +23,13 @@ export const bookingUrl =
 export const intakeForm =
   process.env.NEXT_PUBLIC_INTAKE_FORM_URL ?? "https://forms.gle/YOUR-GOOGLE-FORM";
 
-export const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "novasproutlearning@gmail.com";
+const defaultContactEmail = "novasproutlearning@gmail.com";
+const envContactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
+
+export const contactEmail =
+  envContactEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(envContactEmail)
+    ? envContactEmail
+    : defaultContactEmail;
 
 export const studentRequestEmail = `mailto:${contactEmail}?subject=${encodeURIComponent(
   "NovaSprout student request"
