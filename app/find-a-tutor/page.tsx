@@ -1,6 +1,6 @@
-import { ArrowRight, CalendarCheck, CheckCircle2, Mail } from "lucide-react";
+import { ArrowRight, CheckCircle2, Mail } from "lucide-react";
 import Footer from "../components/Footer";
-import { bookingUrl, studentRequestEmail, studentRequestSteps, subjectTracks } from "../site-data";
+import { bookingUrl, contactEmail, studentRequestEmail, studentRequestSteps, subjectTracks } from "../site-data";
 
 export const metadata = {
   title: "Find a Tutor | NovaSprout Learning",
@@ -38,9 +38,9 @@ export default function FindATutorPage() {
               Email student request
               <Mail aria-hidden="true" size={18} />
             </a>
-            <a className="button secondary" href={bookingUrl} target="_blank" rel="noreferrer">
-              Book demo on Calendly
-              <CalendarCheck aria-hidden="true" size={18} />
+            <a className="button secondary" href={`mailto:${contactEmail}`}>
+              Ask by email first
+              <Mail aria-hidden="true" size={18} />
             </a>
           </div>
         </div>
@@ -112,8 +112,8 @@ export default function FindATutorPage() {
             Email student request
             <ArrowRight aria-hidden="true" size={18} />
           </a>
-          <a className="button secondary full" href={bookingUrl} target="_blank" rel="noreferrer">
-            Book demo on Calendly
+          <a className="button secondary full" href={`mailto:${contactEmail}`}>
+            Email a question first
           </a>
         </div>
       </section>
