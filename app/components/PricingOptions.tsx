@@ -18,10 +18,10 @@ export default function PricingOptions() {
               </li>
             ))}
           </ul>
-          {plan.title === "Free Demo Class" ? (
+          {plan.title === "Free Demo" ? (
             <div className="payment-actions">
               <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-                Book free demo class
+                Book a Free Demo
                 <ArrowRight aria-hidden="true" size={18} />
               </TrackedLink>
             </div>
@@ -34,9 +34,10 @@ export default function PricingOptions() {
                 href={plan.paymentLink}
                 target="_blank"
               >
-                Pay with Stripe
+                Payment link after confirmation
                 <ArrowRight aria-hidden="true" size={18} />
               </TrackedLink>
+              <p className="payment-note">Use this only after NovaSprout confirms the tutor, rate, and schedule.</p>
             </div>
           ) : null}
         </article>

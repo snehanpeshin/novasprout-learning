@@ -1,6 +1,5 @@
 import { ArrowRight, CalendarCheck, CheckCircle2, CreditCard } from "lucide-react";
 import Footer from "./Footer";
-import PricingOptions from "./PricingOptions";
 import TrackedLink from "./TrackedLink";
 import { bookingUrl, subjectTracks } from "../site-data";
 
@@ -25,7 +24,7 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
         <nav aria-label="Main navigation">
           <a href="/#subjects">Subjects</a>
           <a href="/pricing">Pricing</a>
-          <a href="/#book">Book demo</a>
+          <a href="/#book">Book a Free Demo</a>
         </nav>
       </header>
 
@@ -47,7 +46,7 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
           <p>{subject.copy}</p>
           <div className="hero-actions">
             <TrackedLink className="button primary" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-              Book free demo class
+              Book a Free Demo
               <ArrowRight aria-hidden="true" size={18} />
             </TrackedLink>
             <a className="button secondary" href="/pricing">
@@ -83,10 +82,17 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
 
       <section className="section compact-section">
         <div className="section-heading">
-          <p className="eyebrow">Choose support</p>
-          <h2>Pick one of three simple options.</h2>
+          <p className="eyebrow">Pricing pathway</p>
+          <h2>Start with the free demo, then confirm the right rate.</h2>
+          <p>
+            Individual sessions are currently listed at $40-$60 per hour, with the final tutor,
+            schedule, and payment link confirmed before booking.
+          </p>
+          <a className="button secondary" href="/pricing">
+            <CreditCard aria-hidden="true" size={18} />
+            View pricing details
+          </a>
         </div>
-        <PricingOptions />
       </section>
 
       <section className="resources-section">

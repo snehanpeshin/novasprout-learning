@@ -4,8 +4,8 @@ import { getPayments, getSubscriptions } from "../../../lib/supabase";
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  const expectedToken = process.env.ADMIN_DASHBOARD_TOKEN;
-  const providedToken = request.headers.get("x-admin-token");
+  const expectedToken = process.env.ADMIN_DASHBOARD_TOKEN?.trim();
+  const providedToken = request.headers.get("x-admin-token")?.trim();
 
   if (!expectedToken || providedToken !== expectedToken) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

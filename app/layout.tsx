@@ -3,9 +3,9 @@ import "./styles.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.novasproutlearning.com"),
-  title: "NovaSprout Learning | Online Tutoring",
+  title: "Online Math, Science and Coding Tutoring | NovaSprout Learning",
   description:
-    "Personalized online tutoring for math, science, coding, data skills, reading, writing, and study confidence."
+    "Personalized online tutoring in math, science, coding, data skills, and study support. Start with a free introductory session."
 };
 
 export default function RootLayout({

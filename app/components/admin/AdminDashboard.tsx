@@ -41,7 +41,7 @@ export default function AdminDashboard() {
 
     try {
       const response = await fetch("/api/admin/metrics", {
-        headers: { "x-admin-token": token }
+        headers: { "x-admin-token": token.trim() }
       });
       const data = await response.json();
 

@@ -3,7 +3,7 @@ import Footer from "../components/Footer";
 import { bookingUrl, contactEmail, studentRequestEmail, studentRequestSteps, subjectTracks } from "../site-data";
 
 export const metadata = {
-  title: "Find a Tutor | NovaSprout Learning",
+  title: "Request a Tutor | NovaSprout Learning",
   description:
     "Request a NovaSprout Learning tutor for math, science, coding, data skills, and study support."
 };
@@ -20,14 +20,14 @@ export default function FindATutorPage() {
           <a href="/#subjects">Subjects</a>
           <a href="/become-a-tutor">Become a Tutor</a>
           <a className="nav-cta" href={bookingUrl} target="_blank" rel="noreferrer">
-            Book demo
+            Book a Free Demo
           </a>
         </nav>
       </header>
 
       <section className="landing-hero compact-hero">
         <div>
-          <p className="eyebrow">Find a tutor</p>
+          <p className="eyebrow">Request a tutor</p>
           <h1>Tell us what your student needs, and we will help match the right support.</h1>
           <p>
             Start with a quick request. We review the subject, grade level, goals, and schedule,

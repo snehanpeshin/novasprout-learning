@@ -4,7 +4,8 @@ import PricingOptions from "../components/PricingOptions";
 
 export const metadata = {
   title: "Tutoring Pricing | NovaSprout Learning",
-  description: "Start with a free NovaSprout Learning demo class, then choose a protected single session or a custom monthly tutoring plan."
+  description:
+    "Review NovaSprout Learning tutoring prices, including a free demo, individual online tutoring, and custom monthly plans."
 };
 
 export default function PricingPage() {
@@ -17,7 +18,7 @@ export default function PricingPage() {
         </a>
         <nav aria-label="Main navigation">
           <a href="/#subjects">Subjects</a>
-          <a href="/#book">Book demo</a>
+          <a href="/#book">Book a Free Demo</a>
         </nav>
       </header>
 
@@ -35,20 +36,28 @@ export default function PricingPage() {
       <section className="landing-hero compact-hero">
         <div>
           <p className="eyebrow">Pricing</p>
-          <h1>Start with a free demo class, then continue only if it feels right.</h1>
+          <h1>Start with a free demo, then confirm the right rate and plan.</h1>
           <p>
-            After the demo, try one protected paid session or choose a custom monthly plan for
-            steady online support.
+            After the demo, NovaSprout confirms the tutor, subject level, schedule, and rate before
+            payment. Individual tutoring is currently listed at $40-$60 per hour.
           </p>
         </div>
         <div className="landing-panel">
           <CheckCircle2 aria-hidden="true" size={42} />
-          <h2>Low-pressure start</h2>
-          <p>Book, meet online, receive notes, and use the first-session fit guarantee if it is not a match.</p>
+          <h2>Payment after confirmation</h2>
+          <p>Use payment links after the tutor, rate, and schedule are confirmed. See the refund policy for the first-session fit guarantee.</p>
         </div>
       </section>
 
       <section className="section">
+        <div className="section-heading">
+          <p className="eyebrow">Options</p>
+          <h2>Three ways to start or continue.</h2>
+          <p>
+            Cancellation, rescheduling, monthly minimums, and unused-session rules should be confirmed
+            before a recurring plan because final operating terms are still being defined.
+          </p>
+        </div>
         <PricingOptions />
       </section>
 

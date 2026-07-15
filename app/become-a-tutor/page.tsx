@@ -17,7 +17,7 @@ export default function BecomeATutorPage() {
           <span>NovaSprout Learning</span>
         </a>
         <nav aria-label="Main navigation">
-          <a href="/find-a-tutor">Find a Tutor</a>
+          <a href="/find-a-tutor">Request a Tutor</a>
           <a href="/#subjects">Subjects</a>
           <a href="/pricing">Pricing</a>
         </nav>

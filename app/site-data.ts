@@ -55,12 +55,12 @@ Link to resume, LinkedIn, or intro video:
 export const subjectTracks = [
   {
     slug: "math-tutoring",
-    title: "Math Confidence",
+    title: "Math Tutoring",
     navTitle: "Math",
     icon: Calculator,
     summary: "Focused support for homework, concept gaps, test prep, and step-by-step problem solving.",
     level: "Elementary to high school",
-    hero: "Math tutoring that turns confusion into small wins.",
+    hero: "Online math tutoring that makes difficult steps clearer.",
     copy:
       "Students build fluency through friendly explanations, worked examples, practice routines, and patient support for the exact topics causing friction.",
     outcomes: ["Number sense and operations", "Fractions, decimals, and percentages", "Pre-algebra and algebra basics", "Word problem strategy"],
@@ -68,7 +68,7 @@ export const subjectTracks = [
   },
   {
     slug: "science-tutoring",
-    title: "Science & STEM",
+    title: "Science and STEM Tutoring",
     navTitle: "Science",
     icon: Beaker,
     summary: "Biology, scientific reasoning, real-world examples, and practical science explanations.",
@@ -85,7 +85,7 @@ export const subjectTracks = [
     navTitle: "Coding/Data",
     icon: Code2,
     summary: "Python, SQL, spreadsheets, data analysis, dashboards, and project-based technical mentoring.",
-    level: "Teens, college, adult learners",
+    level: "Teens, college students, and adult learners",
     hero: "Coding and data skills taught through practical projects.",
     copy:
       "Students learn technical ideas through small projects: code that runs, data they can inspect, and dashboards that make information easier to understand.",
@@ -94,11 +94,11 @@ export const subjectTracks = [
   },
   {
     slug: "study-skills",
-    title: "Study Skills",
+    title: "Study Skills and Academic Support",
     navTitle: "Study Skills",
     icon: BookOpenCheck,
     summary: "Note-taking, test prep, organization, confidence, and learning routines that stick.",
-    level: "Elementary to college prep",
+    level: "Elementary to high school, plus college prep",
     hero: "Study skills that help students feel organized and ready.",
     copy:
       "We coach students on how to prepare, organize, ask questions, track progress, and turn tutoring sessions into habits that carry into school.",
@@ -109,35 +109,79 @@ export const subjectTracks = [
 
 export const processSteps = [
   {
-    title: "Book the free demo",
-    copy: "Choose a time online and tell us the subject, grade level, and what feels difficult right now."
+    title: "Tell us what the student needs",
+    copy: "Share the subject, grade or level, current challenge, availability, and goals."
   },
   {
-    title: "Try one live session",
-    copy: "Meet online for a friendly sample lesson with clear explanation and guided practice."
+    title: "Meet in a free demo",
+    copy: "Use the introductory session to understand the student, explain the format, and confirm whether the match feels appropriate."
   },
   {
-    title: "Pick the right plan",
-    copy: "Continue with one protected tutoring session or a monthly plan, then receive notes and practice after lessons."
+    title: "Confirm the tutor and plan",
+    copy: "Agree on the tutor, rate, schedule, and whether the student needs one session or recurring support."
+  },
+  {
+    title: "Continue with notes and practice",
+    copy: "Attend live online lessons and receive useful follow-up notes, examples, or practice suggestions."
   }
 ];
 
 export const learningSituations = [
   {
-    title: "Homework feels stuck",
+    title: "Homework has become frustrating",
     icon: ClipboardCheck,
-    copy: "Get patient help with the exact worksheet, chapter, or concept causing friction."
+    copy: "Your student needs patient help with the worksheet, chapter, or concept causing friction."
   },
   {
-    title: "A test is coming",
+    title: "A test or exam is approaching",
     icon: CalendarClock,
-    copy: "Build a short review plan, practice likely question types, and clean up common mistakes."
+    copy: "Build a focused review plan, practice likely question types, and clean up common mistakes."
   },
   {
-    title: "Curiosity needs a project",
+    title: "A concept was missed",
+    icon: SearchCheck,
+    copy: "Go back to the missing step so current classwork starts to make more sense."
+  },
+  {
+    title: "A STEM project needs support",
     icon: Lightbulb,
-    copy: "Use coding, data, STEM examples, or notes to turn interest into something students can show."
+    copy: "Explore coding, data, science examples, or a small project with practical guidance."
   }
+];
+
+export const audiencePathways = [
+  {
+    title: "School students",
+    copy: "Homework help, difficult concepts, test preparation, and ongoing subject support.",
+    icon: BookOpenCheck
+  },
+  {
+    title: "Teens exploring STEM and coding",
+    copy: "Project-based support in Python, data, spreadsheets, and technical problem-solving.",
+    icon: Code2
+  },
+  {
+    title: "Students building better study habits",
+    copy: "Organization, note-taking, planning, confidence, and consistent learning routines.",
+    icon: Target
+  }
+];
+
+export const sessionDeliverables = [
+  "Live online explanation",
+  "Guided practice",
+  "Help with current coursework or goals",
+  "Follow-up notes",
+  "Suggested practice",
+  "A pace adapted to the student",
+  "A clear next step after each session"
+];
+
+export const matchingSteps = [
+  "Tutors apply with their subjects, levels, experience, and availability.",
+  "NovaSprout reviews the application and communication fit.",
+  "Student requests are matched based on subject, level, schedule, and learning needs.",
+  "Availability is confirmed before payment or recurring scheduling."
 ];
 
 export const studentRequestSteps = [
@@ -180,27 +224,52 @@ export const tutoringFaqs = [
   {
     question: "Who is NovaSprout Learning best for?",
     answer:
-      "Students who want clearer explanations, regular practice, and a calm online tutor for math, science, coding, data, or study skills."
+      "NovaSprout is primarily for school-age students who need clearer explanations, regular practice, and calm online support. Coding and data-skills mentoring may also fit teens, college students, and adult learners."
   },
   {
-    question: "What happens after the free demo class?",
+    question: "What happens during the free demo?",
     answer:
-      "We recommend either one protected paid session or a monthly plan based on the student's goals, schedule, and subject needs."
+      "The demo is an introductory session to understand the student, discuss the subject and goals, explain the tutoring format, and decide whether the match feels appropriate."
   },
   {
-    question: "Is there a money-back option?",
+    question: "How are tutors selected?",
     answer:
-      "Yes. If the first paid session is not a good fit, contact us within 24 hours and we will offer a refund or replacement session."
+      "NovaSprout uses a curated matching process. Tutors apply, NovaSprout reviews fit and communication style, and student requests are matched by subject, level, schedule, and learning needs."
   },
   {
-    question: "Do students get notes or practice?",
+    question: "How much does tutoring cost?",
+    answer:
+      "Individual sessions are currently listed at $40-$60 per hour, with the final rate confirmed before booking based on the tutoring arrangement. Monthly plans are custom."
+  },
+  {
+    question: "What platforms are used for lessons?",
+    answer:
+      "Sessions are designed for familiar online meeting tools such as Google Meet or Zoom."
+  },
+  {
+    question: "Do students receive notes or practice?",
     answer:
       "Yes. Tutoring is designed around live explanation plus simple follow-up notes, examples, or practice suggestions."
   },
   {
-    question: "Can we start without creating an account?",
+    question: "What is the first-session fit guarantee?",
     answer:
-      "Yes. The first version is intentionally simple: book online, meet through Google Meet or Zoom, then choose the next step."
+      "If the first paid session is not a good fit, contact us within 24 hours and we will offer a refund or replacement session. See the refund policy for details."
+  },
+  {
+    question: "How do cancellation and rescheduling work?",
+    answer:
+      "Detailed cancellation and rescheduling rules still need to be finalized. Families should confirm timing expectations before a paid session or recurring plan."
+  },
+  {
+    question: "Can college students or adults book technical mentoring?",
+    answer:
+      "Yes, for selected coding and data-skills topics when the subject, level, and schedule fit current availability."
+  },
+  {
+    question: "Do I need to create an account?",
+    answer:
+      "No. The first version is intentionally simple: book online, meet through Google Meet or Zoom, then choose the next step."
   }
 ];
 
@@ -251,26 +320,26 @@ export const resourceItems = [
 
 export const pricingPlans = [
   {
-    title: "Free Demo Class",
+    title: "Free Demo",
     price: "Free",
-    copy: "A no-pressure first class to understand the student's goals, subject needs, and next step.",
-    features: ["Free online demo", "Subject and goal review", "No monthly commitment"]
+    copy: "A short introductory session to discuss the student's needs and experience the format.",
+    features: ["Introductory online session", "Subject and goal review", "No monthly commitment"]
   },
   {
     paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_ONE_HOUR_TUTORING_PAYMENT_LINK,
     productKey: "tutoring_session",
     title: "1 Hour Tutoring",
-    price: "$40-60",
-    copy: "Best for homework help, a difficult unit, or trying one focused tutoring session before a package.",
-    features: ["Live online session", "Personalized notes", "First-session fit guarantee"]
+    price: "$40-$60 per hour",
+    copy: "One live online tutoring session with follow-up notes or practice. The final rate is confirmed before booking.",
+    features: ["Live online session", "Follow-up notes or practice", "Rate confirmed before payment"]
   },
   {
     paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_MONTHLY_PACKAGE_PAYMENT_LINK,
     productKey: "monthly_subscription",
     title: "Monthly Tutoring Package",
     price: "Custom plan",
-    copy: "A recurring support rhythm recommended after the demo or first paid session.",
-    features: ["Weekly or flexible tutoring", "Session notes and practice", "Start after fit is confirmed"]
+    copy: "Recurring support based on subject, goals, frequency, and tutor availability.",
+    features: ["Weekly or flexible tutoring", "Session notes and practice", "Discuss after fit is confirmed"]
   }
 ] satisfies Array<{
   copy: string;
