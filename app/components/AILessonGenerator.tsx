@@ -4,9 +4,13 @@ import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  Beaker,
   Bot,
+  BookOpenCheck,
+  Calculator,
   CheckCircle2,
   Clock,
+  Code2,
   CreditCard,
   FileCode2,
   Gift,
@@ -16,7 +20,8 @@ import {
   Printer,
   TimerReset,
   Trophy,
-  X
+  X,
+  type LucideIcon
 } from "lucide-react";
 import { contactEmail } from "../site-data";
 
@@ -64,6 +69,27 @@ type LessonSlide = {
   minutes: number;
   title: string;
   type?: "lesson" | "quiz";
+  visualLabel?: string;
+};
+
+type LessonContext = {
+  grade: string;
+  subject: string;
+  topic: string;
+};
+
+type SubjectTheme = {
+  accent: string;
+  deckLabel: string;
+  icon: LucideIcon;
+  key: "math" | "science" | "ela" | "coding";
+  slideLabels: {
+    concept: string;
+    example: string;
+    practice: string;
+    warmUp: string;
+  };
+  visualHint: string;
 };
 
 const accessStorageKey = "novasprout_ai_access_token";
@@ -89,6 +115,70 @@ const levels = ["Struggling", "On grade level", "Advanced"];
 const goals = ["Homework help", "Concept clarity", "Test preparation", "Enrichment", "Project mentoring"];
 const modes = ["Demo session", "Comprehensive lesson", "Custom study plan", "Timed exam"];
 const durations = ["30 minutes", "45 minutes", "60 minutes"];
+
+function getSubjectTheme(subject: string): SubjectTheme {
+  if (subject === "Science") {
+    return {
+      accent: "Inquiry",
+      deckLabel: "Science Lab Deck",
+      icon: Beaker,
+      key: "science",
+      slideLabels: {
+        concept: "Core science idea",
+        example: "Observe an example",
+        practice: "Apply the idea",
+        warmUp: "Starter question"
+      },
+      visualHint: "Claim · Evidence · Reasoning"
+    };
+  }
+
+  if (subject === "ELA and study support") {
+    return {
+      accent: "Read",
+      deckLabel: "Study Skills Deck",
+      icon: BookOpenCheck,
+      key: "ela",
+      slideLabels: {
+        concept: "Strategy",
+        example: "Model answer",
+        practice: "Your turn",
+        warmUp: "Focus prompt"
+      },
+      visualHint: "Read · Think · Explain"
+    };
+  }
+
+  if (subject === "Coding and data skills") {
+    return {
+      accent: "Build",
+      deckLabel: "Coding/Data Deck",
+      icon: Code2,
+      key: "coding",
+      slideLabels: {
+        concept: "Pattern to notice",
+        example: "Trace the example",
+        practice: "Build it",
+        warmUp: "Debug warm-up"
+      },
+      visualHint: "Input → Process → Output"
+    };
+  }
+
+  return {
+    accent: "Solve",
+    deckLabel: "Math Deck",
+    icon: Calculator,
+    key: "math",
+    slideLabels: {
+      concept: "Big math idea",
+      example: "Worked example",
+      practice: "Practice step",
+      warmUp: "Number warm-up"
+    },
+    visualHint: "See it · Solve it · Check it"
+  };
+}
 
 function LessonSection({
   children,
@@ -122,6 +212,28 @@ function ListBlock({ items }: { items?: string[] }) {
   );
 }
 
+function SubjectLearningCard({
+  children,
+  label,
+  theme
+}: {
+  children: ReactNode;
+  label: string;
+  theme: SubjectTheme;
+}) {
+  const Icon = theme.icon;
+
+  return (
+    <div className={`subject-learning-card ${theme.key}`}>
+      <div className="subject-learning-visual">
+        <Icon aria-hidden="true" size={34} />
+        <span>{label}</span>
+      </div>
+      <div>{children}</div>
+    </div>
+  );
+}
+
 function parseSlideMinutes(time?: string) {
   const matches = time?.match(/\d+/g)?.map(Number) ?? [];
   if (matches.length >= 2) {
@@ -129,6 +241,125 @@ function parseSlideMinutes(time?: string) {
   }
 
   return matches[0] ? Math.max(3, matches[0]) : 5;
+}
+
+function buildLessonSlides(lesson: GeneratedLesson, theme: SubjectTheme, includeQuiz: boolean) {
+  const slides: LessonSlide[] = [
+    {
+      title: lesson.title ?? "NovaSprout Lesson",
+      minutes: 2,
+      visualLabel: theme.deckLabel,
+      content: (
+        <div className="deck-title-card">
+          <span>NovaSprout Learning · {theme.deckLabel}</span>
+          <h3>{lesson.title}</h3>
+          <p>{lesson.studentFit}</p>
+        </div>
+      )
+    },
+    {
+      title: "What you will learn",
+      minutes: 3,
+      visualLabel: theme.visualHint,
+      content: (
+        <SubjectLearningCard label={theme.accent} theme={theme}>
+          <ListBlock items={lesson.learningObjectives} />
+        </SubjectLearningCard>
+      )
+    },
+    {
+      title: "Before we start",
+      minutes: 3,
+      visualLabel: "Ready?",
+      content: (
+        <SubjectLearningCard label="Check" theme={theme}>
+          <ListBlock items={lesson.prerequisiteCheck} />
+        </SubjectLearningCard>
+      )
+    },
+    {
+      title: theme.slideLabels.warmUp,
+      minutes: 4,
+      visualLabel: "Warm up",
+      content: (
+        <SubjectLearningCard label="Start" theme={theme}>
+          <p>{lesson.warmUp}</p>
+        </SubjectLearningCard>
+      )
+    },
+    {
+      title: theme.slideLabels.concept,
+      minutes: 6,
+      visualLabel: theme.visualHint,
+      content: (
+        <SubjectLearningCard label={theme.accent} theme={theme}>
+          <p>{lesson.conceptExplanation}</p>
+        </SubjectLearningCard>
+      )
+    },
+    {
+      title: theme.slideLabels.example,
+      minutes: 6,
+      visualLabel: "Example",
+      content: (
+        <SubjectLearningCard label="Model" theme={theme}>
+          <p>{lesson.guidedExample}</p>
+        </SubjectLearningCard>
+      )
+    },
+    ...(lesson.fullLessonSegments?.map((segment) => ({
+      title: segment.title,
+      minutes: parseSlideMinutes(segment.time),
+      visualLabel: segment.time,
+      content: (
+        <SubjectLearningCard label="Learn" theme={theme}>
+          <p>{segment.activity}</p>
+        </SubjectLearningCard>
+      )
+    })) ?? []),
+    ...(lesson.practiceQuestions?.map((question, index) => ({
+      title: `${theme.slideLabels.practice} ${index + 1}`,
+      minutes: 3,
+      visualLabel: "Try it",
+      content: (
+        <SubjectLearningCard label="Practice" theme={theme}>
+          <p>{question}</p>
+        </SubjectLearningCard>
+      )
+    })) ?? []),
+    ...(lesson.quickAssessment?.map((check, index) => ({
+      title: `Quick check ${index + 1}`,
+      minutes: 2,
+      visualLabel: "Check",
+      content: (
+        <SubjectLearningCard label="Check" theme={theme}>
+          <p>{check}</p>
+        </SubjectLearningCard>
+      )
+    })) ?? []),
+    {
+      title: "Recommended next step",
+      minutes: 2,
+      visualLabel: "Next",
+      content: (
+        <SubjectLearningCard label="Next" theme={theme}>
+          <p>{lesson.recommendedNextSession}</p>
+        </SubjectLearningCard>
+      )
+    }
+  ];
+
+  if (includeQuiz && lesson.timedExam?.questions?.length) {
+    slides.push({
+      title: "Final quiz",
+      minutes: lesson.timedExam.durationMinutes,
+      type: "quiz",
+      visualLabel: "Score",
+      content: null
+    });
+  }
+
+  return slides.filter((slide) => slide.type === "quiz" || slide.content);
 }
 
 function escapeLatex(value?: string) {
@@ -157,7 +388,8 @@ function latexFrame(title: string, body: string) {
   return `\\begin{frame}{${escapeLatex(title)}}\n${body}\n\\end{frame}`;
 }
 
-function generateBeamerTex(lesson: GeneratedLesson) {
+function generateBeamerTex(lesson: GeneratedLesson, context: LessonContext) {
+  const theme = getSubjectTheme(context.subject);
   const segmentFrames =
     lesson.fullLessonSegments
       ?.map((segment) =>
@@ -191,7 +423,7 @@ function generateBeamerTex(lesson: GeneratedLesson) {
 \setbeamercolor{title}{fg=white,bg=NovaInk}
 \setbeamertemplate{navigation symbols}{}
 \title{${escapeLatex(lesson.title ?? "NovaSprout Lesson")}}
-\subtitle{AI-supported tutoring lesson}
+\subtitle{${escapeLatex(`${theme.deckLabel} · ${context.grade} · ${context.topic}`)}}
 \author{NovaSprout Learning}
 \date{\today}
 
@@ -236,9 +468,11 @@ function downloadTextFile(filename: string, content: string) {
 }
 
 function LessonPlayer({
+  context,
   lesson,
   onClose
 }: {
+  context: LessonContext;
   lesson: GeneratedLesson;
   onClose: () => void;
 }) {
@@ -248,60 +482,8 @@ function LessonPlayer({
   const [quizSubmitted, setQuizSubmitted] = useState(false);
 
   const slides = useMemo<LessonSlide[]>(() => {
-    const builtSlides: LessonSlide[] = [
-      {
-        title: "Learning goals",
-        minutes: 3,
-        content: (
-          <>
-            <p>{lesson.studentFit}</p>
-            <ListBlock items={lesson.learningObjectives} />
-          </>
-        )
-      },
-      {
-        title: "Readiness check",
-        minutes: 5,
-        content: <ListBlock items={lesson.prerequisiteCheck} />
-      },
-      {
-        title: "Warm-up",
-        minutes: 5,
-        content: <p>{lesson.warmUp}</p>
-      },
-      {
-        title: "Concept explanation",
-        minutes: 10,
-        content: <p>{lesson.conceptExplanation}</p>
-      },
-      {
-        title: "Guided example",
-        minutes: 8,
-        content: <p>{lesson.guidedExample}</p>
-      },
-      ...(lesson.fullLessonSegments?.map((segment) => ({
-        title: segment.title,
-        minutes: parseSlideMinutes(segment.time),
-        content: <p>{segment.activity}</p>
-      })) ?? []),
-      {
-        title: "Practice",
-        minutes: 8,
-        content: <ListBlock items={lesson.practiceQuestions} />
-      }
-    ];
-
-    if (lesson.timedExam?.questions?.length) {
-      builtSlides.push({
-        title: "Final quiz",
-        minutes: lesson.timedExam.durationMinutes,
-        type: "quiz",
-        content: null
-      });
-    }
-
-    return builtSlides.filter((slide) => slide.type === "quiz" || slide.content);
-  }, [lesson]);
+    return buildLessonSlides(lesson, getSubjectTheme(context.subject), true);
+  }, [context.subject, lesson]);
 
   const activeSlide = slides[activeSlideIndex];
   const [remainingSeconds, setRemainingSeconds] = useState((activeSlide?.minutes ?? 5) * 60);
@@ -467,71 +649,27 @@ function LessonPlayer({
 }
 
 function StudentSlideDeck({
+  context,
   lesson,
   onClose
 }: {
+  context: LessonContext;
   lesson: GeneratedLesson;
   onClose: () => void;
 }) {
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const theme = useMemo(() => getSubjectTheme(context.subject), [context.subject]);
 
   const slides = useMemo<LessonSlide[]>(() => {
-    const deckSlides: LessonSlide[] = [
-      {
-        title: lesson.title ?? "NovaSprout Lesson",
-        minutes: 2,
-        content: (
-          <div className="deck-title-card">
-            <span>NovaSprout Learning</span>
-            <h3>{lesson.title}</h3>
-            <p>{lesson.studentFit}</p>
-          </div>
-        )
-      },
-      {
-        title: "What you will learn",
-        minutes: 3,
-        content: <ListBlock items={lesson.learningObjectives} />
-      },
-      {
-        title: "Warm-up",
-        minutes: 5,
-        content: <p>{lesson.warmUp}</p>
-      },
-      {
-        title: "Big idea",
-        minutes: 8,
-        content: <p>{lesson.conceptExplanation}</p>
-      },
-      {
-        title: "Worked example",
-        minutes: 8,
-        content: <p>{lesson.guidedExample}</p>
-      },
-      ...(lesson.fullLessonSegments?.map((segment) => ({
-        title: segment.title,
-        minutes: parseSlideMinutes(segment.time),
-        content: <p>{segment.activity}</p>
-      })) ?? []),
-      {
-        title: "Try it yourself",
-        minutes: 8,
-        content: <ListBlock items={lesson.practiceQuestions} />
-      },
-      {
-        title: "Quick check",
-        minutes: 5,
-        content: <ListBlock items={lesson.quickAssessment} />
-      }
-    ];
-
+    const deckSlides = buildLessonSlides(lesson, theme, false);
     if (lesson.timedExam?.questions?.length) {
       deckSlides.push({
         title: "Exit quiz",
         minutes: lesson.timedExam.durationMinutes,
+        visualLabel: "Quiz",
         content: (
           <ol className="deck-quiz-list">
-            {lesson.timedExam.questions.slice(0, 4).map((question) => (
+            {lesson.timedExam.questions.slice(0, 6).map((question) => (
               <li key={question.question}>{question.question}</li>
             ))}
           </ol>
@@ -539,11 +677,12 @@ function StudentSlideDeck({
       });
     }
 
-    return deckSlides.filter((slide) => slide.content);
-  }, [lesson]);
+    return deckSlides;
+  }, [lesson, theme]);
 
   const activeSlide = slides[activeSlideIndex];
-  const beamerTex = useMemo(() => generateBeamerTex(lesson), [lesson]);
+  const BeamerIcon = theme.icon;
+  const beamerTex = useMemo(() => generateBeamerTex(lesson, context), [context, lesson]);
   const progress = slides.length > 1 ? Math.round((activeSlideIndex / (slides.length - 1)) * 100) : 100;
   const texFilename = `${(lesson.title ?? "novasprout-lesson")
     .toLowerCase()
@@ -552,7 +691,7 @@ function StudentSlideDeck({
 
   return (
     <div className="lesson-player-backdrop" role="dialog" aria-modal="true" aria-labelledby="student-deck-title">
-      <section className="student-deck">
+      <section className={`student-deck ${theme.key}`}>
         <header className="student-deck-header">
           <div>
             <p className="eyebrow">Student slide deck</p>
@@ -568,12 +707,15 @@ function StudentSlideDeck({
         <div className="lesson-player-progress" aria-label={`${progress}% complete`}>
           <span style={{ width: `${progress}%` }} />
         </div>
-        <article className="student-deck-slide">
+        <article className={`student-deck-slide ${theme.key}`}>
           <div className="deck-visual">
-            <Images aria-hidden="true" size={42} />
+            <BeamerIcon aria-hidden="true" size={42} />
+            <span>{activeSlide?.visualLabel ?? theme.visualHint}</span>
           </div>
           <div className="deck-copy">
-            <p className="mini-label">{activeSlide?.minutes} minute focus</p>
+            <p className="mini-label">
+              {context.grade} · {context.subject} · {activeSlide?.minutes} minute focus
+            </p>
             <h3>{activeSlide?.title}</h3>
             <div className="slide-content">{activeSlide?.content}</div>
           </div>
@@ -842,10 +984,18 @@ Interested in: Free trial / Paid AI-generated lessons
     <>
       {leadPopup}
       {lesson && isLessonPlayerOpen ? (
-        <LessonPlayer lesson={lesson} onClose={() => setIsLessonPlayerOpen(false)} />
+        <LessonPlayer
+          context={{ grade, subject, topic }}
+          lesson={lesson}
+          onClose={() => setIsLessonPlayerOpen(false)}
+        />
       ) : null}
       {lesson && isDeckOpen ? (
-        <StudentSlideDeck lesson={lesson} onClose={() => setIsDeckOpen(false)} />
+        <StudentSlideDeck
+          context={{ grade, subject, topic }}
+          lesson={lesson}
+          onClose={() => setIsDeckOpen(false)}
+        />
       ) : null}
       <section className="section demo-generator-section" id="generator">
       <div className="section-heading">

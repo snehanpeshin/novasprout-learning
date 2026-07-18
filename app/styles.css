@@ -982,14 +982,52 @@ h3 {
     linear-gradient(135deg, #e9fbf4, #e5f5ff);
   border: 1px solid #b9dcff;
   border-radius: 8px;
-  display: flex;
+  display: grid;
+  gap: 12px;
   justify-content: center;
   max-width: 340px;
+  padding: 24px;
+  place-items: center;
   width: 100%;
 }
 
 .deck-visual svg {
   color: var(--blue);
+}
+
+.deck-visual span {
+  color: var(--ink);
+  font-size: 0.94rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.student-deck-slide.math .deck-visual,
+.subject-learning-card.math .subject-learning-visual {
+  background:
+    linear-gradient(135deg, rgba(255, 210, 74, 0.28), rgba(229, 245, 255, 0.95)),
+    var(--white);
+}
+
+.student-deck-slide.science .deck-visual,
+.subject-learning-card.science .subject-learning-visual {
+  background:
+    linear-gradient(135deg, rgba(15, 155, 120, 0.18), rgba(229, 245, 255, 0.95)),
+    var(--white);
+}
+
+.student-deck-slide.ela .deck-visual,
+.subject-learning-card.ela .subject-learning-visual {
+  background:
+    linear-gradient(135deg, rgba(255, 122, 89, 0.16), rgba(255, 240, 245, 0.95)),
+    var(--white);
+}
+
+.student-deck-slide.coding .deck-visual,
+.subject-learning-card.coding .subject-learning-visual {
+  background:
+    linear-gradient(135deg, rgba(25, 118, 210, 0.16), rgba(240, 237, 255, 0.95)),
+    var(--white);
 }
 
 .deck-copy {
@@ -1030,6 +1068,43 @@ h3 {
   font-size: clamp(1.05rem, 2vw, 1.25rem);
   line-height: 1.55;
   padding-left: 24px;
+}
+
+.subject-learning-card {
+  align-items: stretch;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(150px, 0.28fr) minmax(0, 0.72fr);
+}
+
+.subject-learning-visual {
+  align-items: center;
+  border: 1px solid #b9dcff;
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  min-height: 170px;
+  padding: 16px;
+}
+
+.subject-learning-visual svg {
+  color: var(--blue);
+}
+
+.subject-learning-visual span {
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.subject-learning-card > div:last-child {
+  align-self: center;
+}
+
+.subject-learning-card p {
+  margin: 0;
 }
 
 .print-deck {
@@ -1786,6 +1861,7 @@ footer div span:first-child {
 
   .lesson-launch-card,
   .student-deck-slide,
+  .subject-learning-card,
   .lesson-player-body {
     grid-template-columns: 1fr;
   }
