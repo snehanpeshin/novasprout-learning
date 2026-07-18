@@ -9,6 +9,12 @@ frontend:
         - printf "OPENAI_API_KEY=%s\n" "$OPENAI_API_KEY" >> .env.production
         - if [ -n "$OPENAI_MODEL" ]; then printf "OPENAI_MODEL=%s\n" "$OPENAI_MODEL" >> .env.production; fi
         - printf "AI_LESSON_ACCESS_TOKEN=%s\n" "$AI_LESSON_ACCESS_TOKEN" >> .env.production
+        - printf "ADMIN_DASHBOARD_TOKEN=%s\n" "$ADMIN_DASHBOARD_TOKEN" >> .env.production
+        - if [ -n "$SUPABASE_URL" ]; then printf "SUPABASE_URL=%s\n" "$SUPABASE_URL" >> .env.production; fi
+        - if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then printf "SUPABASE_SERVICE_ROLE_KEY=%s\n" "$SUPABASE_SERVICE_ROLE_KEY" >> .env.production; fi
+        - if [ -n "$STRIPE_SECRET_KEY" ]; then printf "STRIPE_SECRET_KEY=%s\n" "$STRIPE_SECRET_KEY" >> .env.production; fi
+        - if [ -n "$STRIPE_WEBHOOK_SECRET" ]; then printf "STRIPE_WEBHOOK_SECRET=%s\n" "$STRIPE_WEBHOOK_SECRET" >> .env.production; fi
+        - env | grep -e STRIPE_NOVASPROUT_ >> .env.production
         - env | grep -e NEXT_PUBLIC_ >> .env.production
         - npm run build
   artifacts:
