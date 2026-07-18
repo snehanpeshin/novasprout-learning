@@ -18,31 +18,23 @@ export default function ResourcesPage() {
         <nav aria-label="Main navigation">
           <a href="/">Home</a>
           <a href="/#subjects">Subjects</a>
+          <a href="/curriculum-demo">Curriculum</a>
           <a href="/pricing">Pricing</a>
           <a href="/#book">Book a Free Demo</a>
         </nav>
       </header>
-
-      <section className="demo-strip" aria-label="Free demo class announcement">
-        <div className="demo-track">
-          <span>First demo class free</span>
-          <span>Short videos and notes coming soon</span>
-          <span>Learn online with practice support</span>
-          <span>First demo class free</span>
-          <span>Short videos and notes coming soon</span>
-          <span>Learn online with practice support</span>
-        </div>
-      </section>
 
       <section className="landing-hero compact-hero">
         <div>
           <p className="eyebrow">Resources</p>
           <h1>Short videos, notes, and worksheets that support tutoring.</h1>
           <p>
-            Start with simple resources students can actually use: short unlisted YouTube
-            lessons, one-page notes, practice sheets, and clear follow-up after class. Public
-            PDF and document previews will be added after each resource is ready.
+            Start with simple resources students can actually use: short lessons, one-page notes,
+            practice sheets, and clear follow-up after class.
           </p>
+          <a className="button secondary" href="/curriculum-demo">
+            View Curriculum Demo Sessions
+          </a>
         </div>
         <div className="landing-panel">
           <BookOpen aria-hidden="true" size={42} />

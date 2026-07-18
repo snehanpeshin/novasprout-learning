@@ -177,6 +177,87 @@ export const sessionDeliverables = [
   "A clear next step after each session"
 ];
 
+export const curriculumSources = [
+  {
+    label: "Common Core Math and ELA",
+    href: "https://corestandards.org/"
+  },
+  {
+    label: "Next Generation Science Standards",
+    href: "https://www.nextgenscience.org/standards"
+  },
+  {
+    label: "K-12 Computer Science Framework",
+    href: "https://k12cs.org/"
+  },
+  {
+    label: "C3 Social Studies Framework",
+    href: "https://eric.ed.gov/?id=ED623634"
+  }
+];
+
+export const curriculumDemoGrades = [
+  {
+    band: "Elementary foundations",
+    grades: "Grades 3-5",
+    focus: "Number sense, fractions, reading comprehension, science observations, and study routines.",
+    demo: "A 30-minute guided lesson with one concept, one worked example, practice, and a short parent summary."
+  },
+  {
+    band: "Middle school bridge",
+    grades: "Grades 6-8",
+    focus: "Ratios, equations, graph reading, scientific reasoning, writing structure, and organization.",
+    demo: "A standards-aligned demo that finds gaps, explains the topic, and recommends the next practice path."
+  },
+  {
+    band: "High school readiness",
+    grades: "Grades 9-12",
+    focus: "Algebra, biology, chemistry foundations, data interpretation, test preparation, and technical projects.",
+    demo: "A focused session built around the student's course, upcoming assessment, or project goal."
+  },
+  {
+    band: "Technical mentoring",
+    grades: "Teens, college, adult learners",
+    focus: "Python, SQL, spreadsheets, dashboards, and project-based data skills.",
+    demo: "A practical intro session that turns a learner's goal into a small project plan."
+  }
+];
+
+export const curriculumDemoSubjects = [
+  {
+    subject: "Math",
+    standardsBase: "Common Core-style skill progression",
+    sampleTopics: ["Fractions and ratios", "Expressions and equations", "Functions and graphs", "Problem-solving strategy"],
+    demoOutput: "Step-by-step explanation, guided problems, quick check, and next-practice set."
+  },
+  {
+    subject: "Science and STEM",
+    standardsBase: "NGSS-style science practices and topic progressions",
+    sampleTopics: ["Scientific method", "Life science", "Physical science", "Data and graph interpretation"],
+    demoOutput: "Concept explanation, diagram or example, reasoning questions, and a short reflection prompt."
+  },
+  {
+    subject: "ELA and study support",
+    standardsBase: "Common Core-style reading, writing, speaking, and language goals",
+    sampleTopics: ["Reading comprehension", "Evidence-based writing", "Vocabulary", "Note-taking and planning"],
+    demoOutput: "Reading or writing strategy, guided practice, feedback, and a simple study routine."
+  },
+  {
+    subject: "Coding and data skills",
+    standardsBase: "K-12 CS Framework-inspired concepts and practices",
+    sampleTopics: ["Python basics", "SQL queries", "Spreadsheets", "Dashboards and data stories"],
+    demoOutput: "Mini project, concept explanation, practice task, and recommended next build."
+  }
+];
+
+export const aiTutoringWorkflow = [
+  "Generate personalized explanations at the student's current level.",
+  "Create practice questions by topic, grade band, and difficulty.",
+  "Prepare lesson plans for tutors before live sessions.",
+  "Draft quick checks, exit tickets, and basic assessment summaries.",
+  "Support attendance, scheduling notes, fee reminders, and parent progress reports."
+];
+
 export const matchingSteps = [
   "Tutors apply with their subjects, levels, experience, and availability.",
   "NovaSprout reviews the application and communication fit.",

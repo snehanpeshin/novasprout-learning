@@ -31,6 +31,7 @@ export default function Home() {
         </a>
         <nav aria-label="Main navigation">
           <a href="#subjects">Subjects</a>
+          <a href="/curriculum-demo">Curriculum</a>
           <a href="#how-it-works">How it works</a>
           <a href="/pricing">Pricing</a>
           <a href="#about">About</a>
@@ -123,6 +124,21 @@ export default function Home() {
               <span className="learn-more">Learn More</span>
             </a>
           ))}
+        </div>
+      </section>
+
+      <section className="section curriculum-callout">
+        <div className="section-heading">
+          <p className="eyebrow">Curriculum-aligned demos</p>
+          <h2>Preview a classwise demo session before choosing regular support.</h2>
+          <p>
+            NovaSprout can organize demo lessons by grade, subject, and topic using public U.S.
+            standards frameworks. Each demo can include an explanation, practice questions, a quick
+            check, and a suggested next step.
+          </p>
+          <a className="button secondary" href="/curriculum-demo">
+            Explore Curriculum Demos
+          </a>
         </div>
       </section>
 
