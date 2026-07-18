@@ -204,6 +204,20 @@ function parseLessonJson(outputText: string) {
   }
 }
 
+async function readJsonResponse(response: Response) {
+  const text = await response.text();
+
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: { message: text.slice(0, 500) } };
+  }
+}
+
 export async function POST(request: Request) {
   const apiKey = process.env.OPENAI_API_KEY;
   const expectedAccessToken = process.env.AI_LESSON_ACCESS_TOKEN?.trim();
@@ -277,43 +291,55 @@ Keep every field brief enough that the full response is complete.
 Keep claims cautious. Do not promise grades, test scores, admissions results, diagnosis, therapy, or guaranteed mastery.
 `;
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      input: prompt,
-      max_output_tokens: 5200,
-      model: process.env.OPENAI_MODEL ?? "gpt-5",
-      text: {
-        format: {
-          type: "json_schema",
-          ...lessonJsonSchema
+  try {
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        input: prompt,
+        max_output_tokens: 5200,
+        model: process.env.OPENAI_MODEL ?? "gpt-5",
+        text: {
+          format: {
+            type: "json_schema",
+            ...lessonJsonSchema
+          }
         }
-      }
-    })
-  });
+      })
+    });
 
-  const payload = await response.json();
+    const payload = await readJsonResponse(response);
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: payload?.error?.message ?? "Could not generate the lesson right now." },
+        { status: response.status }
+      );
+    }
+
+    const outputText = extractOutputText(payload);
+    const lesson = parseLessonJson(outputText);
+
+    if (!lesson) {
+      return NextResponse.json(
+        { error: "The AI response was incomplete. Please try again with a shorter topic or choose Demo session." },
+        { status: 502 }
+      );
+    }
+
+    return NextResponse.json({ lesson });
+  } catch (error) {
     return NextResponse.json(
-      { error: payload.error?.message ?? "Could not generate the lesson right now." },
-      { status: response.status }
+      {
+        error:
+          error instanceof Error
+            ? `Could not reach the AI lesson service: ${error.message}`
+            : "Could not reach the AI lesson service."
+      },
+      { status: 500 }
     );
   }
-
-  const outputText = extractOutputText(payload);
-  const lesson = parseLessonJson(outputText);
-
-  if (!lesson) {
-    return NextResponse.json(
-      { error: "The AI response was incomplete. Please try again with a shorter topic or choose Demo session." },
-      { status: 502 }
-    );
-  }
-
-  return NextResponse.json({ lesson });
 }

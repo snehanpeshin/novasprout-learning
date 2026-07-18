@@ -518,7 +518,14 @@ export default function AILessonGenerator() {
         },
         method: "POST"
       });
-      const data = await response.json();
+      const responseText = await response.text();
+      let data: { error?: string; lesson?: GeneratedLesson; lessonText?: string } = {};
+
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        throw new Error(responseText || "The AI lesson service returned an unreadable response.");
+      }
 
       if (!response.ok) {
         throw new Error(data.error ?? "Could not generate a lesson.");
