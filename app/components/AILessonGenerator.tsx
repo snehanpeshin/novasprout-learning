@@ -39,15 +39,6 @@ type GeneratedLesson = {
     title: string;
   }>;
   guidedExample?: string;
-  lessonSlides?: Array<{
-    bullets?: string[];
-    check?: string;
-    example?: string;
-    latex?: string;
-    teachingPoint?: string;
-    timeMinutes?: number;
-    title: string;
-  }>;
   learningObjectives?: string[];
   mode?: string;
   parentTutorNotes?: string;
@@ -128,14 +119,6 @@ function ListBlock({ items }: { items?: string[] }) {
   );
 }
 
-function MathText({ value }: { value?: string }) {
-  if (!value) {
-    return null;
-  }
-
-  return <code className="latex-line">{value}</code>;
-}
-
 function parseSlideMinutes(time?: string) {
   const matches = time?.match(/\d+/g)?.map(Number) ?? [];
   if (matches.length >= 2) {
@@ -143,28 +126,6 @@ function parseSlideMinutes(time?: string) {
   }
 
   return matches[0] ? Math.max(3, matches[0]) : 5;
-}
-
-function renderGeneratedSlide(slide: NonNullable<GeneratedLesson["lessonSlides"]>[number]) {
-  return (
-    <>
-      {slide.teachingPoint ? <p>{slide.teachingPoint}</p> : null}
-      <MathText value={slide.latex} />
-      <ListBlock items={slide.bullets} />
-      {slide.example ? (
-        <div className="slide-example">
-          <strong>Example</strong>
-          <p>{slide.example}</p>
-        </div>
-      ) : null}
-      {slide.check ? (
-        <div className="slide-check">
-          <strong>Quick check</strong>
-          <p>{slide.check}</p>
-        </div>
-      ) : null}
-    </>
-  );
 }
 
 function LessonPlayer({
@@ -180,25 +141,6 @@ function LessonPlayer({
   const [quizSubmitted, setQuizSubmitted] = useState(false);
 
   const slides = useMemo<LessonSlide[]>(() => {
-    if (lesson.lessonSlides?.length) {
-      const aiSlides: LessonSlide[] = lesson.lessonSlides.map((slide) => ({
-        title: slide.title,
-        minutes: Math.max(2, Number(slide.timeMinutes) || 5),
-        content: renderGeneratedSlide(slide)
-      }));
-
-      if (lesson.timedExam?.questions?.length) {
-        aiSlides.push({
-          title: "Final quiz",
-          minutes: lesson.timedExam.durationMinutes,
-          type: "quiz",
-          content: null
-        });
-      }
-
-      return aiSlides;
-    }
-
     const builtSlides: LessonSlide[] = [
       {
         title: "Learning goals",
@@ -759,18 +701,6 @@ Interested in: Free trial / Paid AI-generated lessons
                     Start Private Lesson
                   </button>
                 </div>
-                {lesson.lessonSlides?.length ? (
-                  <div className="slide-preview-grid" aria-label="Generated lesson slides preview">
-                    {lesson.lessonSlides.map((slide, index) => (
-                      <article className="slide-preview-card" key={`${slide.title}-${index}`}>
-                        <span>Slide {index + 1} · {slide.timeMinutes ?? 5} min</span>
-                        <h4>{slide.title}</h4>
-                        {slide.teachingPoint ? <p>{slide.teachingPoint}</p> : null}
-                        <MathText value={slide.latex} />
-                      </article>
-                    ))}
-                  </div>
-                ) : null}
                 <div className="lesson-timeline">
                   <LessonSection label="Learning objectives">
                     <ListBlock items={lesson.learningObjectives} />

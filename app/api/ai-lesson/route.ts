@@ -87,23 +87,6 @@ const lessonJsonSchema = {
         }
       },
       guidedExample: { type: "string" },
-      lessonSlides: {
-        type: "array",
-        items: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            bullets: { type: "array", items: { type: "string" } },
-            check: { type: "string" },
-            example: { type: "string" },
-            latex: { type: "string" },
-            teachingPoint: { type: "string" },
-            timeMinutes: { type: "number" },
-            title: { type: "string" }
-          },
-          required: ["bullets", "check", "example", "latex", "teachingPoint", "timeMinutes", "title"]
-        }
-      },
       learningObjectives: { type: "array", items: { type: "string" } },
       mode: { type: "string" },
       parentTutorNotes: { type: "string" },
@@ -144,7 +127,6 @@ const lessonJsonSchema = {
       "duration",
       "fullLessonSegments",
       "guidedExample",
-      "lessonSlides",
       "learningObjectives",
       "mode",
       "parentTutorNotes",
@@ -220,26 +202,20 @@ async function readJsonResponse(response: Response) {
 
 async function requestOpenAiLesson({
   apiKey,
-  prompt,
-  useSchema
+  prompt
 }: {
   apiKey: string;
   prompt: string;
-  useSchema: boolean;
 }) {
   const body = {
     input: prompt,
-    max_output_tokens: useSchema ? 5200 : 4200,
+    max_output_tokens: 2800,
     model: process.env.OPENAI_MODEL ?? "gpt-5-mini",
     text: {
-      format: useSchema
-        ? {
-            type: "json_schema",
-            ...lessonJsonSchema
-          }
-        : {
-            type: "json_object"
-          }
+      format: {
+        type: "json_schema",
+        ...lessonJsonSchema
+      }
     }
   };
 
@@ -306,7 +282,7 @@ export async function POST(request: Request) {
 You are an experienced online tutor and curriculum designer for NovaSprout Learning.
 
 Create a personalized tutoring output using original content, aligned to common U.S. learning expectations without copying any school syllabus, textbook, worksheet, or proprietary curriculum.
-The main output must be a student-facing slide deck, not a tutor procedure. Each slide should read like something a student can learn from directly.
+Create a clear lesson plan. The website will automatically convert your sections into private timed slides, so do not create a separate slide deck.
 
 Student context:
 - Grade or level: ${grade}
@@ -318,26 +294,18 @@ Student context:
 - Session length: ${duration}
 - Student question or concern: ${studentQuestion || "No extra question provided."}
 
-Create 5-7 lessonSlides for Demo session and Comprehensive lesson.
-Create 4-6 lessonSlides for Custom study plan, focused on the student's question.
-Create 3-5 lessonSlides before the quiz for Timed exam.
-Use LaTeX in the latex field for math, science formulas, equations, ratios, fractions, exponents, units, or symbolic notation. If no formula is needed, use an empty string.
-Important: LaTeX must be stored as normal JSON string content. Do not use markdown, code fences, or unescaped control characters.
-Write slide content for the learner, not instructions such as "Tutor explains" or "Tutor asks".
-For Timed exam, include 6 multiple-choice questions with one correct answerIndex from 0 to 3.
-For Comprehensive lesson, keep fullLessonSegments concise.
+For Demo session, make a concise 30-minute style lesson.
+For Comprehensive lesson, include 3-4 useful fullLessonSegments.
 For Custom study plan, use the student question heavily.
+For Timed exam, include 6 multiple-choice questions with one correct answerIndex from 0 to 3.
+Use plain text only. Avoid LaTeX backslashes, markdown, code fences, comments, or explanatory text outside the JSON.
 Keep every field brief enough that the full response is complete.
 Return only the JSON object. Do not include markdown, code fences, comments, or explanatory text outside the JSON.
 Keep claims cautious. Do not promise grades, test scores, admissions results, diagnosis, therapy, or guaranteed mastery.
 `;
 
   try {
-    let { payload, response } = await requestOpenAiLesson({ apiKey, prompt, useSchema: true });
-
-    if (!response.ok && [400, 404, 422].includes(response.status)) {
-      ({ payload, response } = await requestOpenAiLesson({ apiKey, prompt, useSchema: false }));
-    }
+    const { payload, response } = await requestOpenAiLesson({ apiKey, prompt });
 
     if (!response.ok) {
       return NextResponse.json(
