@@ -87,6 +87,15 @@ type SlideAsset = {
   type: "image" | "latex";
 };
 
+type CompiledDeck = {
+  assetManifest?: Array<{ filename: string; placement: string }>;
+  compilerStatus?: "compiled" | "compiler_missing" | "compile_failed";
+  error?: string;
+  pdfDataUrl?: string;
+  qualityChecks?: string[];
+  tex?: string;
+};
+
 type SubjectTheme = {
   accent: string;
   deckLabel: string;
@@ -710,6 +719,8 @@ function StudentSlideDeck({
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [assetError, setAssetError] = useState("");
   const [assets, setAssets] = useState<SlideAsset[]>([]);
+  const [compiledDeck, setCompiledDeck] = useState<CompiledDeck | null>(null);
+  const [isCompilingDeck, setIsCompilingDeck] = useState(false);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [isPlanningAssets, setIsPlanningAssets] = useState(false);
   const theme = useMemo(() => getSubjectTheme(context.subject), [context.subject]);
@@ -742,6 +753,7 @@ function StudentSlideDeck({
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "") || "novasprout-lesson"}.tex`;
+  const pdfFilename = texFilename.replace(/\.tex$/, ".pdf");
   const plannedImageCount = assets.filter((asset) => asset.type === "image").length;
 
   async function readDeckResponse<T>(response: Response, fallbackMessage: string) {
@@ -823,6 +835,47 @@ function StudentSlideDeck({
     }
   }
 
+  async function compileLatexDeck() {
+    setAssetError("");
+    setCompiledDeck(null);
+    setIsCompilingDeck(true);
+
+    try {
+      const response = await fetch("/api/ai-lesson-deck", {
+        body: JSON.stringify({
+          assets,
+          context,
+          lesson,
+          slideTitles: slides.map((slide) => slide.title)
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          "x-ai-access-token": accessToken.trim()
+        },
+        method: "POST"
+      });
+      const responseText = await response.text();
+      let data: CompiledDeck = {};
+
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        throw new Error(responseText || "Could not compile the LaTeX deck.");
+      }
+
+      setCompiledDeck(data);
+      if (!response.ok && data.error) {
+        setAssetError(data.error);
+      } else if (!response.ok) {
+        setAssetError("Could not compile the LaTeX deck.");
+      }
+    } catch (error) {
+      setAssetError(error instanceof Error ? error.message : "Could not compile the LaTeX deck.");
+    } finally {
+      setIsCompilingDeck(false);
+    }
+  }
+
   return (
     <div className="lesson-player-backdrop" role="dialog" aria-modal="true" aria-labelledby="student-deck-title">
       <section className={`student-deck ${theme.key}`}>
@@ -855,6 +908,32 @@ function StudentSlideDeck({
           </div>
           {renderSlideAssets(assets, activeSlideIndex)}
         </article>
+        {compiledDeck ? (
+          <aside className="compiled-deck-panel">
+            <div>
+              <p className="mini-label">Backend LaTeX deck</p>
+              <h3>
+                {compiledDeck.compilerStatus === "compiled"
+                  ? "Compiled PDF preview"
+                  : "LaTeX generated, compiler not ready"}
+              </h3>
+              <ul>
+                {compiledDeck.qualityChecks?.map((check) => (
+                  <li key={check}>{check}</li>
+                ))}
+              </ul>
+              {compiledDeck.error ? <p className="form-error">{compiledDeck.error}</p> : null}
+            </div>
+            {compiledDeck.pdfDataUrl ? (
+              <div className="compiled-pdf-frame">
+                <iframe src={compiledDeck.pdfDataUrl} title="Compiled NovaSprout lesson PDF preview" />
+                <a className="button primary" download={pdfFilename} href={compiledDeck.pdfDataUrl}>
+                  Download compiled PDF
+                </a>
+              </div>
+            ) : null}
+          </aside>
+        ) : null}
         <div className="print-deck" aria-hidden="true">
           {slides.map((slide, index) => (
             <section className="print-slide" key={`${slide.title}-print-${index}`}>
@@ -883,13 +962,21 @@ function StudentSlideDeck({
               <Images aria-hidden="true" size={18} />
               {isGeneratingImages ? "Generating..." : `Generate images${plannedImageCount ? ` (${plannedImageCount})` : ""}`}
             </button>
+            <button className="button secondary" disabled={isCompilingDeck} onClick={compileLatexDeck} type="button">
+              <FileCode2 aria-hidden="true" size={18} />
+              {isCompilingDeck ? "Compiling..." : "Compile LaTeX deck"}
+            </button>
           </div>
           {assetError ? <p className="form-error deck-asset-error">{assetError}</p> : null}
           <button className="button secondary" onClick={() => window.print()} type="button">
             <Printer aria-hidden="true" size={18} />
             Download PDF
           </button>
-          <button className="button secondary" onClick={() => downloadTextFile(texFilename, beamerTex)} type="button">
+          <button
+            className="button secondary"
+            onClick={() => downloadTextFile(texFilename, compiledDeck?.tex ?? beamerTex)}
+            type="button"
+          >
             <FileCode2 aria-hidden="true" size={18} />
             Download Beamer .tex
           </button>
