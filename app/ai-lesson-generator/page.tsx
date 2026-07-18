@@ -5,9 +5,9 @@ import TrackedLink from "../components/TrackedLink";
 import { adminAutomationItems, aiTutoringWorkflow, bookingUrl } from "../site-data";
 
 export const metadata = {
-  title: "AI Lesson Generator | NovaSprout Learning",
+  title: "AI-Generated Tutoring | NovaSprout Learning",
   description:
-    "Generate a personalized sample tutoring lesson with warm-up, explanation, guided example, practice questions, quick assessment, and next session plan."
+    "Generate personalized tutoring lessons, study plans, and scored timed exams for NovaSprout Learning students."
 };
 
 export default function AILessonGeneratorPage() {
@@ -31,12 +31,12 @@ export default function AILessonGeneratorPage() {
 
       <section className="landing-hero compact-hero">
         <div>
-          <p className="eyebrow">AI-powered tutoring sample</p>
-          <h1>Generate a personalized tutorial for any class, subject, and topic.</h1>
+          <p className="eyebrow">AI-generated tutoring</p>
+          <h1>Personalized lessons, study plans, and timed exams for online tutoring.</h1>
           <p>
-            Parents or students can preview how NovaSprout might structure a live tutoring session.
-            The AI creates a fresh sample lesson plan each time, while human tutors remain central to
-            live teaching and adaptation.
+            NovaSprout can use AI to prepare fresh tutoring material after login: full lessons,
+            custom plans based on student questions, and scored practice exams. Human tutors remain
+            central to live teaching and final guidance.
           </p>
           <div className="hero-actions">
             <a className="button primary" href="#generator">
@@ -53,8 +53,8 @@ export default function AILessonGeneratorPage() {
           <Bot aria-hidden="true" size={42} />
           <h2>What it generates</h2>
           <p>
-            Warm-up, concept explanation, guided example, practice questions, quick assessment,
-            recommended next session, and parent/tutor notes.
+            Demo sessions, comprehensive lessons, learning plans, practice questions, timed exams,
+            instant scores, and parent/tutor notes.
           </p>
         </div>
       </section>

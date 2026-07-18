@@ -534,8 +534,25 @@ h3 {
   gap: 14px;
 }
 
+.ai-access-card {
+  background: var(--white);
+  border: 1px solid #cfe4f4;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+  max-width: 460px;
+  padding: 22px;
+}
+
+.ai-access-card svg {
+  color: var(--blue);
+}
+
 .generator-controls label,
-.ai-generator-form label {
+.ai-generator-form label,
+.ai-access-card label {
   color: var(--ink);
   display: grid;
   font-size: 0.86rem;
@@ -565,6 +582,22 @@ h3 {
   font: inherit;
   min-height: 44px;
   padding: 10px 12px;
+}
+
+.ai-generator-form textarea,
+.ai-access-card input {
+  background: linear-gradient(135deg, #ffffff, #f8fbff);
+  border: 1px solid #b9dcff;
+  border-radius: 8px;
+  color: var(--ink);
+  font: inherit;
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+.ai-generator-form textarea {
+  min-height: 112px;
+  resize: vertical;
 }
 
 .generator-note {
@@ -624,20 +657,90 @@ h3 {
   white-space: pre-wrap;
 }
 
+.exam-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.exam-header span {
+  align-items: center;
+  background: var(--white);
+  border: 1px solid #b9dcff;
+  border-radius: 999px;
+  color: var(--ink);
+  display: inline-flex;
+  gap: 7px;
+  margin: 0;
+  padding: 7px 10px;
+}
+
+.exam-question-list {
+  display: grid;
+  gap: 14px;
+}
+
+.exam-question {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 14px;
+}
+
+.exam-question legend {
+  color: var(--ink);
+  font-weight: 800;
+  padding: 0 6px;
+}
+
+.exam-question label {
+  align-items: flex-start;
+  color: var(--muted);
+  display: flex;
+  gap: 9px;
+}
+
+.exam-question input {
+  margin-top: 4px;
+}
+
+.answer-correct,
+.answer-wrong,
+.score-card {
+  border-radius: 8px;
+  font-weight: 800;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+}
+
+.answer-correct,
+.score-card {
+  background: #e9fbf4;
+  color: var(--mint-dark);
+}
+
+.answer-wrong {
+  background: #fff0f0;
+  color: #b42318;
+}
+
 .lesson-timeline {
   display: grid;
   gap: 12px;
   margin-top: 18px;
 }
 
-.lesson-timeline div {
+.lesson-timeline > div {
   border-left: 4px solid var(--mint);
   background: #f8fbff;
   border-radius: 8px;
   padding: 14px 16px;
 }
 
-.lesson-timeline span {
+.lesson-timeline > div > span {
   color: var(--blue);
   display: block;
   font-size: 0.8rem;
@@ -645,7 +748,7 @@ h3 {
   margin-bottom: 5px;
 }
 
-.lesson-timeline strong {
+.lesson-timeline > div > strong {
   display: block;
   margin-bottom: 6px;
 }
@@ -661,6 +764,14 @@ h3 {
 .lesson-timeline ul {
   margin-top: 8px;
   padding-left: 18px;
+}
+
+.lesson-timeline .exam-header span {
+  align-items: center;
+  color: var(--ink);
+  display: inline-flex;
+  font-size: 0.86rem;
+  margin: 0;
 }
 
 .split-section {

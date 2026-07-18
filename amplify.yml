@@ -8,6 +8,7 @@ frontend:
       commands:
         - printf "OPENAI_API_KEY=%s\n" "$OPENAI_API_KEY" >> .env.production
         - if [ -n "$OPENAI_MODEL" ]; then printf "OPENAI_MODEL=%s\n" "$OPENAI_MODEL" >> .env.production; fi
+        - printf "AI_LESSON_ACCESS_TOKEN=%s\n" "$AI_LESSON_ACCESS_TOKEN" >> .env.production
         - env | grep -e NEXT_PUBLIC_ >> .env.production
         - npm run build
   artifacts:

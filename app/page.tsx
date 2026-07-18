@@ -63,6 +63,10 @@ export default function Home() {
               <CheckCircle2 aria-hidden="true" size={16} />
               Notes and practice after sessions
             </span>
+            <span>
+              <CheckCircle2 aria-hidden="true" size={16} />
+              AI-generated lessons and exams
+            </span>
           </div>
           <div className="hero-actions">
             <TrackedLink className="button primary" eventName="book_meeting_click" href={bookingUrl} target="_blank">
@@ -130,12 +134,12 @@ export default function Home() {
 
       <section className="section curriculum-callout">
         <div className="section-heading">
-          <p className="eyebrow">Curriculum-aligned demos</p>
-          <h2>Preview a classwise demo session before choosing regular support.</h2>
+          <p className="eyebrow">AI-generated tutoring</p>
+          <h2>Preview lessons, custom plans, and timed exams before regular support.</h2>
           <p>
-            NovaSprout can organize demo lessons by grade, subject, and topic using public U.S.
-            standards frameworks. Each demo can include an explanation, practice questions, a quick
-            check, and a suggested next step.
+            NovaSprout can generate original tutoring material by grade, subject, and topic using
+            public U.S. standards as a guide. Students can get structured explanations, practice,
+            and scored checks while tutors personalize the live support.
           </p>
           <div className="hero-actions">
             <a className="button secondary" href="/curriculum-demo">

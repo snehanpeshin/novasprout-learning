@@ -29,6 +29,13 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
+const platformItems = [
+  "AI lesson generator protected by access code",
+  "Comprehensive lesson, custom plan, and timed exam modes",
+  "Stripe revenue and subscription dashboard",
+  "Next step: save student profiles, generated lessons, and exam scores"
+];
+
 export default function AdminDashboard() {
   const [token, setToken] = useState("");
   const [metrics, setMetrics] = useState<Metrics | null>(null);
@@ -65,8 +72,8 @@ export default function AdminDashboard() {
           <span>NovaSprout Learning</span>
         </a>
         <p className="eyebrow">Admin</p>
-        <h1>Revenue dashboard</h1>
-        <p>Enter the admin token to load Stripe payment and subscription metrics from the database.</p>
+        <h1>Admin console</h1>
+        <p>Enter the admin token to load payment metrics and review the NovaSprout platform controls.</p>
         <div className="admin-login">
           <input
             onChange={(event) => setToken(event.target.value)}
@@ -97,6 +104,18 @@ export default function AdminDashboard() {
               <strong>{metrics.customers.length}</strong>
             </article>
           </div>
+
+          <article className="admin-table">
+            <h2>Learning platform controls</h2>
+            <div>
+              {platformItems.map((item) => (
+                <p className="report-row" key={item}>
+                  <span>{item}</span>
+                  <strong>Active</strong>
+                </p>
+              ))}
+            </div>
+          </article>
 
           <div className="admin-grid">
             <article>
