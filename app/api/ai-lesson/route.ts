@@ -78,6 +78,25 @@ function extractOutputText(payload: unknown) {
   );
 }
 
+function parseLessonJson(outputText: string) {
+  const trimmed = outputText.trim();
+
+  const markdownMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  const unwrappedText = markdownMatch?.[1]?.trim() ?? trimmed;
+  const firstBrace = unwrappedText.indexOf("{");
+  const lastBrace = unwrappedText.lastIndexOf("}");
+
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(unwrappedText.slice(firstBrace, lastBrace + 1));
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: Request) {
   const apiKey = process.env.OPENAI_API_KEY;
   const expectedAccessToken = process.env.AI_LESSON_ACCESS_TOKEN?.trim();
@@ -177,7 +196,10 @@ Return only valid JSON with this exact shape:
   "parentTutorNotes": "short summary for parent or tutor"
 }
 
-For Timed exam, include 6 multiple-choice questions with one correct answerIndex from 0 to 3. For Comprehensive lesson, make fullLessonSegments detailed. For Custom study plan, use the student question heavily.
+For Timed exam, include 6 multiple-choice questions with one correct answerIndex from 0 to 3.
+For Comprehensive lesson, make fullLessonSegments useful but concise.
+For Custom study plan, use the student question heavily.
+Keep every field brief enough that the full JSON response is complete and valid.
 Keep claims cautious. Do not promise grades, test scores, admissions results, diagnosis, therapy, or guaranteed mastery.
 `;
 
@@ -189,7 +211,7 @@ Keep claims cautious. Do not promise grades, test scores, admissions results, di
     },
     body: JSON.stringify({
       input: prompt,
-      max_output_tokens: 1400,
+      max_output_tokens: 3200,
       model: process.env.OPENAI_MODEL ?? "gpt-5"
     })
   });
@@ -204,9 +226,14 @@ Keep claims cautious. Do not promise grades, test scores, admissions results, di
   }
 
   const outputText = extractOutputText(payload);
-  try {
-    return NextResponse.json({ lesson: JSON.parse(outputText) });
-  } catch {
-    return NextResponse.json({ lessonText: outputText });
+  const lesson = parseLessonJson(outputText);
+
+  if (!lesson) {
+    return NextResponse.json(
+      { error: "The AI response was incomplete. Please try again with a shorter topic or choose Demo session." },
+      { status: 502 }
+    );
   }
+
+  return NextResponse.json({ lesson });
 }
