@@ -32,13 +32,29 @@ const assetSchema = {
           type: "object",
           additionalProperties: false,
           properties: {
+            assetId: { type: "string" },
             alt: { type: "string" },
+            aspectRatio: { type: "string" },
+            caption: { type: "string" },
+            educationalPurpose: { type: "string" },
+            filename: { type: "string" },
             latex: { type: "string" },
             placement: { type: "string" },
             prompt: { type: "string" },
             type: { type: "string", enum: ["image", "latex"] }
           },
-          required: ["alt", "latex", "placement", "prompt", "type"]
+          required: [
+            "assetId",
+            "alt",
+            "aspectRatio",
+            "caption",
+            "educationalPurpose",
+            "filename",
+            "latex",
+            "placement",
+            "prompt",
+            "type"
+          ]
         }
       }
     },
@@ -156,6 +172,17 @@ Use two asset types:
 - image: a kid-friendly educational diagram prompt, no text labels inside the image
 - latex: a short formula, symbolic relationship, or structured notation when helpful
 
+Every asset must include:
+- assetId: short stable ID such as slide-4-ratio-bars
+- placement: slide number plus position code
+- filename: deterministic local filename for image assets, such as slide-4-ratio-bars.png; empty string for latex assets
+- prompt: image prompt for image assets; empty string for latex assets
+- latex: formula or notation for latex assets; empty string for image assets
+- alt: concise meaningful alt text
+- educationalPurpose: how this asset helps the student learn
+- aspectRatio: expected shape such as 1:1, 4:3, or 16:9
+- caption: short student-friendly caption, or empty string
+
 Placement codes must be slide number plus position:
 lt, ct, rt, lm, cm, rm, lb, cb, rb.
 Example: 1lb means slide 1, left bottom.
@@ -163,9 +190,11 @@ Example: 1lb means slide 1, left bottom.
 Rules:
 - Create at most 3 image assets.
 - Do not put images on every slide.
+- Do not create decorative images. Every image must clarify the lesson.
 - Prefer images for concept, example, or practice slides.
 - Prefer latex for math/science formulas and concise symbolic notation.
 - If no latex is useful for a slide, do not create a latex asset for that slide.
+- Use only slide numbers that exist in the slide-title list.
 - Return only JSON.
 `;
 

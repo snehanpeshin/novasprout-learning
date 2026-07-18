@@ -4,7 +4,12 @@ export const runtime = "nodejs";
 
 type ImageAssetRequest = {
   assets?: Array<{
+    assetId?: string;
     alt?: string;
+    aspectRatio?: string;
+    caption?: string;
+    educationalPurpose?: string;
+    filename?: string;
     placement?: string;
     prompt?: string;
     type?: string;
@@ -51,7 +56,12 @@ export async function POST(request: Request) {
   const imageAssets = (body.assets ?? [])
     .filter((asset) => asset.type === "image")
     .map((asset) => ({
+      assetId: cleanText(asset.assetId, 40),
       alt: cleanText(asset.alt, 160),
+      aspectRatio: cleanText(asset.aspectRatio, 20),
+      caption: cleanText(asset.caption, 140),
+      educationalPurpose: cleanText(asset.educationalPurpose, 240),
+      filename: cleanText(asset.filename, 80),
       placement: cleanText(asset.placement, 8),
       prompt: cleanText(asset.prompt, 900)
     }))
@@ -94,7 +104,12 @@ export async function POST(request: Request) {
       if (typeof b64Json === "string") {
         images.push({
           alt: asset.alt,
+          assetId: asset.assetId,
+          aspectRatio: asset.aspectRatio,
+          caption: asset.caption,
           dataUrl: `data:image/png;base64,${b64Json}`,
+          educationalPurpose: asset.educationalPurpose,
+          filename: asset.filename,
           placement: asset.placement,
           prompt: asset.prompt,
           type: "image"
