@@ -54,6 +54,113 @@ const allowedModes = new Set([
 
 const allowedDurations = new Set(["30 minutes", "45 minutes", "60 minutes"]);
 
+const lessonJsonSchema = {
+  name: "novasprout_lesson",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      conceptExplanation: { type: "string" },
+      customPlan: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          focusAreas: { type: "array", items: { type: "string" } },
+          recommendedCadence: { type: "string" },
+          summary: { type: "string" },
+          weeklyPlan: { type: "array", items: { type: "string" } }
+        },
+        required: ["focusAreas", "recommendedCadence", "summary", "weeklyPlan"]
+      },
+      duration: { type: "string" },
+      fullLessonSegments: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            activity: { type: "string" },
+            time: { type: "string" },
+            title: { type: "string" }
+          },
+          required: ["activity", "time", "title"]
+        }
+      },
+      guidedExample: { type: "string" },
+      lessonSlides: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            bullets: { type: "array", items: { type: "string" } },
+            check: { type: "string" },
+            example: { type: "string" },
+            latex: { type: "string" },
+            teachingPoint: { type: "string" },
+            timeMinutes: { type: "number" },
+            title: { type: "string" }
+          },
+          required: ["bullets", "check", "example", "latex", "teachingPoint", "timeMinutes", "title"]
+        }
+      },
+      learningObjectives: { type: "array", items: { type: "string" } },
+      mode: { type: "string" },
+      parentTutorNotes: { type: "string" },
+      practiceQuestions: { type: "array", items: { type: "string" } },
+      prerequisiteCheck: { type: "array", items: { type: "string" } },
+      quickAssessment: { type: "array", items: { type: "string" } },
+      recommendedNextSession: { type: "string" },
+      studentFit: { type: "string" },
+      timedExam: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          durationMinutes: { type: "number" },
+          passingScore: { type: "number" },
+          questions: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                answerIndex: { type: "number" },
+                explanation: { type: "string" },
+                options: { type: "array", items: { type: "string" } },
+                question: { type: "string" }
+              },
+              required: ["answerIndex", "explanation", "options", "question"]
+            }
+          }
+        },
+        required: ["durationMinutes", "passingScore", "questions"]
+      },
+      title: { type: "string" },
+      warmUp: { type: "string" }
+    },
+    required: [
+      "conceptExplanation",
+      "customPlan",
+      "duration",
+      "fullLessonSegments",
+      "guidedExample",
+      "lessonSlides",
+      "learningObjectives",
+      "mode",
+      "parentTutorNotes",
+      "practiceQuestions",
+      "prerequisiteCheck",
+      "quickAssessment",
+      "recommendedNextSession",
+      "studentFit",
+      "timedExam",
+      "title",
+      "warmUp"
+    ]
+  },
+  strict: true
+};
+
 function cleanText(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
@@ -157,66 +264,16 @@ Student context:
 - Session length: ${duration}
 - Student question or concern: ${studentQuestion || "No extra question provided."}
 
-Return only valid JSON with this exact shape:
-{
-  "title": "short title",
-  "mode": "${mode}",
-  "duration": "${duration}",
-  "studentFit": "one sentence explaining who this is for",
-  "learningObjectives": ["objective 1", "objective 2", "objective 3"],
-  "prerequisiteCheck": ["short readiness question 1", "short readiness question 2"],
-  "warmUp": "short warm-up",
-  "conceptExplanation": "student-friendly explanation",
-  "guidedExample": "worked example",
-  "lessonSlides": [
-    {
-      "title": "student-facing slide title",
-      "timeMinutes": 4,
-      "teachingPoint": "one clear idea written directly to the student",
-      "latex": "optional LaTeX math, for example \\\\frac{2}{3}=\\\\frac{x}{9}",
-      "bullets": ["short student-facing point", "short student-facing point"],
-      "example": "brief worked example or mini task",
-      "check": "one quick student check question"
-    }
-  ],
-  "fullLessonSegments": [
-    {"time": "0-5 min", "title": "segment title", "activity": "what the tutor and student do"},
-    {"time": "5-15 min", "title": "segment title", "activity": "what the tutor and student do"},
-    {"time": "15-30 min", "title": "segment title", "activity": "what the tutor and student do"}
-  ],
-  "practiceQuestions": ["question 1", "question 2", "question 3", "question 4"],
-  "quickAssessment": ["short check 1", "short check 2"],
-  "timedExam": {
-    "durationMinutes": 12,
-    "passingScore": 70,
-    "questions": [
-      {
-        "question": "multiple choice question",
-        "options": ["A", "B", "C", "D"],
-        "answerIndex": 0,
-        "explanation": "brief explanation"
-      }
-    ]
-  },
-  "customPlan": {
-    "summary": "short plan summary",
-    "focusAreas": ["focus 1", "focus 2", "focus 3"],
-    "weeklyPlan": ["week 1", "week 2", "week 3", "week 4"],
-    "recommendedCadence": "recommended tutoring frequency"
-  },
-  "recommendedNextSession": "specific next lesson recommendation",
-  "parentTutorNotes": "short summary for parent or tutor"
-}
-
-Create 6-9 lessonSlides for Demo session and Comprehensive lesson.
+Create 5-7 lessonSlides for Demo session and Comprehensive lesson.
 Create 4-6 lessonSlides for Custom study plan, focused on the student's question.
 Create 3-5 lessonSlides before the quiz for Timed exam.
-Use LaTeX in the latex field for math, science formulas, equations, ratios, fractions, exponents, units, or symbolic notation. Keep LaTeX plain text only; do not wrap it in markdown code fences.
+Use LaTeX in the latex field for math, science formulas, equations, ratios, fractions, exponents, units, or symbolic notation. If no formula is needed, use an empty string.
+Important: LaTeX must be stored as normal JSON string content. Do not use markdown, code fences, or unescaped control characters.
 Write slide content for the learner, not instructions such as "Tutor explains" or "Tutor asks".
 For Timed exam, include 6 multiple-choice questions with one correct answerIndex from 0 to 3.
-For Comprehensive lesson, make fullLessonSegments useful but concise.
+For Comprehensive lesson, keep fullLessonSegments concise.
 For Custom study plan, use the student question heavily.
-Keep every field brief enough that the full JSON response is complete and valid.
+Keep every field brief enough that the full response is complete.
 Keep claims cautious. Do not promise grades, test scores, admissions results, diagnosis, therapy, or guaranteed mastery.
 `;
 
@@ -228,8 +285,14 @@ Keep claims cautious. Do not promise grades, test scores, admissions results, di
     },
     body: JSON.stringify({
       input: prompt,
-      max_output_tokens: 3200,
-      model: process.env.OPENAI_MODEL ?? "gpt-5"
+      max_output_tokens: 5200,
+      model: process.env.OPENAI_MODEL ?? "gpt-5",
+      text: {
+        format: {
+          type: "json_schema",
+          ...lessonJsonSchema
+        }
+      }
     })
   });
 
