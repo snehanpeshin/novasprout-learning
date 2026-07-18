@@ -48,4 +48,4 @@ Recommended Lambda settings:
 - Ephemeral storage: 1024 MB
 - Function URL auth: `NONE`, protected by `LATEX_COMPILE_SERVICE_TOKEN`
 
-If the Docker build fails because an Amazon Linux TeX package name differs, use `dnf search texlive` inside the Lambda base image and replace the package list with the matching TeX Live package set.
+The Dockerfile intentionally uses `python:3.12-slim` plus `awslambdaric` instead of the Amazon Linux Lambda base image. That avoids region/version-specific `dnf` TeX package names and is more reliable for `pdflatex`, Beamer, TikZ, and `textpos`.

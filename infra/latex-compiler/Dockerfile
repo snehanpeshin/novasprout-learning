@@ -1,19 +1,24 @@
-FROM public.ecr.aws/lambda/python:3.12
+FROM python:3.12-slim
 
-# TeX Live plus Poppler's pdfinfo for page-count quality checks.
-# If your AWS region/base image cannot resolve these packages, use the
-# larger texlive scheme available in that region's Amazon Linux repos.
-RUN dnf install -y \
-    poppler-utils \
-    texlive-beamer \
-    texlive-collection-fontsrecommended \
-    texlive-collection-latex \
-    texlive-collection-latexrecommended \
-    texlive-graphicx \
-    texlive-pgf \
-    texlive-textpos \
-    && dnf clean all
+# Use Debian TeX packages because the Amazon Linux Lambda base image can have
+# region/version-specific TeX package names. This image is larger, but it is
+# much more predictable for Beamer + TikZ + textpos compilation.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+      build-essential \
+      poppler-utils \
+      texlive-fonts-recommended \
+      texlive-latex-base \
+      texlive-latex-extra \
+      texlive-latex-recommended \
+      texlive-pictures \
+    && pip install --no-cache-dir awslambdaric \
+    && apt-get purge -y build-essential \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY handler.py ${LAMBDA_TASK_ROOT}/handler.py
+WORKDIR /var/task
+COPY handler.py /var/task/handler.py
 
+ENTRYPOINT ["/usr/local/bin/python", "-m", "awslambdaric"]
 CMD ["handler.handler"]
