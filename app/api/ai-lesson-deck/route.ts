@@ -374,6 +374,81 @@ function getDensityWarnings(slides: Array<{ body: string; title: string }>) {
     .filter(Boolean);
 }
 
+async function readJsonResponse(response: Response) {
+  const text = await response.text();
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: text.slice(0, 1200) };
+  }
+}
+
+async function compileWithRemoteService({
+  assets,
+  expectedPageCount,
+  tex
+}: {
+  assets: DeckAsset[];
+  expectedPageCount: number;
+  tex: string;
+}) {
+  const compileUrl = process.env.LATEX_COMPILE_SERVICE_URL?.trim();
+  if (!compileUrl) {
+    return null;
+  }
+
+  const serviceToken = process.env.LATEX_COMPILE_SERVICE_TOKEN?.trim();
+  const response = await fetch(compileUrl, {
+    body: JSON.stringify({
+      assets: assets
+        .filter((asset) => asset.type === "image" && asset.dataUrl && asset.filename)
+        .map((asset) => ({
+          dataUrl: asset.dataUrl,
+          filename: asset.filename,
+          placement: asset.placement
+        })),
+      expectedPageCount,
+      tex
+    }),
+    headers: {
+      ...(serviceToken ? { Authorization: `Bearer ${serviceToken}` } : {}),
+      "Content-Type": "application/json"
+    },
+    method: "POST"
+  });
+  const payload = await readJsonResponse(response);
+
+  if (!response.ok) {
+    return {
+      compilerStatus: "compile_failed",
+      error: payload?.error ?? "The external LaTeX compiler service could not compile this deck.",
+      ok: false
+    };
+  }
+
+  if (typeof payload?.pdfDataUrl !== "string" || !payload.pdfDataUrl.startsWith("data:application/pdf;base64,")) {
+    return {
+      compilerStatus: "compile_failed",
+      error: "The external LaTeX compiler service did not return a compiled PDF.",
+      ok: false
+    };
+  }
+
+  return {
+    compilerName: payload?.compilerName ?? "external-latex-service",
+    compilerStatus: "compiled",
+    ok: true,
+    pageCount: Number(payload?.pageCount ?? 0),
+    pdfDataUrl: payload?.pdfDataUrl,
+    pdfSize: Number(payload?.pdfSize ?? 0),
+    warnings: Array.isArray(payload?.warnings) ? payload.warnings : []
+  };
+}
+
 export async function POST(request: Request) {
   const expectedAccessToken = process.env.AI_LESSON_ACCESS_TOKEN?.trim();
   const providedAccessToken = request.headers.get("x-ai-access-token")?.trim();
@@ -407,19 +482,80 @@ export async function POST(request: Request) {
   }
 
   const tex = buildBeamerTex({ ...body, assets });
-  const workDir = await mkdtemp(path.join(tmpdir(), "novasprout-deck-"));
-  const compiler = getCompilerCommand();
-  const writtenAssets = await writeImageAssets(workDir, assets);
   const densityWarnings = getDensityWarnings(slideBodies);
+  const imageAssetCount = assets.filter((asset) => asset.type === "image" && asset.dataUrl && asset.filename).length;
   const qualityChecks = [
     `${slideBodies.length} Beamer slides generated.`,
-    `${writtenAssets.length} image asset${writtenAssets.length === 1 ? "" : "s"} written for indexed placement.`,
+    `${imageAssetCount} image asset${imageAssetCount === 1 ? "" : "s"} prepared for indexed placement.`,
     `${assets.filter((asset) => asset.type === "latex").length} LaTeX overlay asset${
       assets.filter((asset) => asset.type === "latex").length === 1 ? "" : "s"
     } included.`,
-    "Placement codes validated against lt, ct, rt, lm, cm, rm, lb, cb, rb.",
-    "Temporary compile directory isolated under the OS temp folder."
+    "Placement codes validated against lt, ct, rt, lm, cm, rm, lb, cb, rb."
   ];
+
+  const remoteCompile = await compileWithRemoteService({ assets, expectedPageCount: slideBodies.length, tex });
+  if (remoteCompile) {
+    if (!remoteCompile.ok) {
+      return NextResponse.json(
+        {
+          assetManifest: assets.map((asset) => ({
+            alt: asset.alt,
+            assetId: asset.assetId,
+            aspectRatio: asset.aspectRatio,
+            educationalPurpose: asset.educationalPurpose,
+            filename: asset.filename,
+            placement: asset.placement,
+            type: asset.type
+          })),
+          compilerStatus: remoteCompile.compilerStatus,
+          error: remoteCompile.error,
+          qualityChecks,
+          qualityWarnings: densityWarnings,
+          tex
+        },
+        { status: 422 }
+      );
+    }
+
+    const pageCount = remoteCompile.pageCount;
+    const pdfSize = remoteCompile.pdfSize ?? 0;
+    const warnings = [
+      ...densityWarnings,
+      ...remoteCompile.warnings,
+      ...(pageCount === slideBodies.length
+        ? []
+        : [`Expected ${slideBodies.length} pages but remote compiler reported ${pageCount}.`]),
+      ...(pdfSize > 1000 ? [] : ["Compiled PDF is unexpectedly small."])
+    ];
+
+    return NextResponse.json({
+      assetManifest: assets.map((asset) => ({
+        alt: asset.alt,
+        assetId: asset.assetId,
+        aspectRatio: asset.aspectRatio,
+        educationalPurpose: asset.educationalPurpose,
+        filename: asset.filename,
+        placement: asset.placement,
+        type: asset.type
+      })),
+      compilerStatus: "compiled",
+      pageCount,
+      pdfDataUrl: remoteCompile.pdfDataUrl,
+      qualityChecks: [
+        ...qualityChecks,
+        `Compiled successfully with ${remoteCompile.compilerName}.`,
+        `PDF page count checked by remote compiler: ${pageCount}.`,
+        `PDF size: ${pdfSize} bytes.`
+      ],
+      qualityWarnings: warnings,
+      tex
+    });
+  }
+
+  const workDir = await mkdtemp(path.join(tmpdir(), "novasprout-deck-"));
+  const compiler = getCompilerCommand();
+  const writtenAssets = await writeImageAssets(workDir, assets);
+  const localQualityChecks = [...qualityChecks, "Temporary compile directory isolated under the OS temp folder."];
 
   await writeFile(path.join(workDir, "lesson.tex"), tex, "utf8");
 
@@ -456,7 +592,7 @@ export async function POST(request: Request) {
       pageCount,
       pdfDataUrl: `data:application/pdf;base64,${pdf.toString("base64")}`,
       qualityChecks: [
-        ...qualityChecks,
+        ...localQualityChecks,
         `Compiled successfully with ${compiler.name}.`,
         `PDF page count checked with ${pageCheck.method}: ${pageCount}.`,
         `PDF size: ${pdf.length} bytes.`
@@ -475,7 +611,7 @@ export async function POST(request: Request) {
         error: missingCompiler
           ? "LaTeX compiler is not installed in this deployment. Use a TeX-enabled AWS Lambda/container or install pdflatex/tectonic and set LATEX_COMPILER_PATH."
           : message.slice(0, 1200),
-        qualityChecks,
+        qualityChecks: localQualityChecks,
         qualityWarnings: densityWarnings,
         tex
       },

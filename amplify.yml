@@ -9,6 +9,8 @@ frontend:
         - printf "OPENAI_API_KEY=%s\n" "$OPENAI_API_KEY" >> .env.production
         - if [ -n "$OPENAI_MODEL" ]; then printf "OPENAI_MODEL=%s\n" "$OPENAI_MODEL" >> .env.production; fi
         - if [ -n "$OPENAI_IMAGE_MODEL" ]; then printf "OPENAI_IMAGE_MODEL=%s\n" "$OPENAI_IMAGE_MODEL" >> .env.production; fi
+        - if [ -n "$LATEX_COMPILE_SERVICE_URL" ]; then printf "LATEX_COMPILE_SERVICE_URL=%s\n" "$LATEX_COMPILE_SERVICE_URL" >> .env.production; fi
+        - if [ -n "$LATEX_COMPILE_SERVICE_TOKEN" ]; then printf "LATEX_COMPILE_SERVICE_TOKEN=%s\n" "$LATEX_COMPILE_SERVICE_TOKEN" >> .env.production; fi
         - if [ -n "$LATEX_COMPILER_PATH" ]; then printf "LATEX_COMPILER_PATH=%s\n" "$LATEX_COMPILER_PATH" >> .env.production; fi
         - if [ -n "$PDFINFO_PATH" ]; then printf "PDFINFO_PATH=%s\n" "$PDFINFO_PATH" >> .env.production; fi
         - printf "AI_LESSON_ACCESS_TOKEN=%s\n" "$AI_LESSON_ACCESS_TOKEN" >> .env.production
