@@ -1,7 +1,9 @@
 import { ArrowRight, Bot, CalendarCheck, CheckCircle2, ClipboardList, Layers3 } from "lucide-react";
+import CurriculumDemoGenerator from "../components/CurriculumDemoGenerator";
 import Footer from "../components/Footer";
 import TrackedLink from "../components/TrackedLink";
 import {
+  adminAutomationItems,
   aiTutoringWorkflow,
   bookingUrl,
   curriculumDemoGrades,
@@ -40,7 +42,7 @@ export default function CurriculumDemoPage() {
           <p>
             NovaSprout can organize demo lessons by grade, subject, and learning goal using public
             standards frameworks. We do not copy school-owned syllabi; we create original tutoring
-            sessions aligned to widely used expectations.
+            sessions developed with an experienced tutor's structure and aligned to widely used expectations.
           </p>
           <div className="hero-actions">
             <TrackedLink className="button primary" eventName="book_meeting_click" href={bookingUrl} target="_blank">
@@ -49,6 +51,9 @@ export default function CurriculumDemoPage() {
             </TrackedLink>
             <a className="button secondary" href="#demo-library">
               Explore Demo Library
+            </a>
+            <a className="button secondary" href="#demo-generator">
+              Try Demo Generator
             </a>
           </div>
         </div>
@@ -61,6 +66,8 @@ export default function CurriculumDemoPage() {
           </p>
         </div>
       </section>
+
+      <CurriculumDemoGenerator />
 
       <section className="section" id="demo-library">
         <div className="section-heading">
@@ -110,12 +117,12 @@ export default function CurriculumDemoPage() {
 
       <section className="split-section">
         <div>
-          <p className="eyebrow">AI-assisted tutoring operations</p>
+          <p className="eyebrow">AI Tutor Support</p>
           <h2>Use AI for preparation and follow-up, with human tutors leading live support.</h2>
           <p>
-            AI can help generate explanations, practice, lesson plans, quick checks, reports, and
-            routine administration. The public offer should stay clear: students receive live online
-            support, and AI helps make that support more organized and responsive.
+            AI can help generate personalized explanations, practice questions, homework-style
+            examples, tutor lesson plans, basic assessments, and progress notes. The live tutoring
+            experience stays human-led.
           </p>
         </div>
         <div className="tutor-list">
@@ -125,6 +132,25 @@ export default function CurriculumDemoPage() {
                 <Bot aria-hidden="true" size={22} />
               </span>
               <p>{item}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-heading">
+          <p className="eyebrow">Admin Automation</p>
+          <h2>Keep tutoring operations organized behind the scenes.</h2>
+          <p>
+            As NovaSprout grows, routine administration can be automated so tutors spend more time
+            teaching and families receive clearer follow-up.
+          </p>
+        </div>
+        <div className="feature-grid">
+          {adminAutomationItems.map((item) => (
+            <article className="feature-card" key={item}>
+              <CheckCircle2 aria-hidden="true" size={22} />
+              <h3>{item}</h3>
             </article>
           ))}
         </div>

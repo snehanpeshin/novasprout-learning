@@ -251,11 +251,20 @@ export const curriculumDemoSubjects = [
 ];
 
 export const aiTutoringWorkflow = [
-  "Generate personalized explanations at the student's current level.",
-  "Create practice questions by topic, grade band, and difficulty.",
-  "Prepare lesson plans for tutors before live sessions.",
-  "Draft quick checks, exit tickets, and basic assessment summaries.",
-  "Support attendance, scheduling notes, fee reminders, and parent progress reports."
+  "Personalized explanations written at the student's current level.",
+  "Practice questions by topic, grade band, and difficulty.",
+  "Homework-style examples that match the student's current classwork or goal.",
+  "Lesson plans that human tutors can review before live sessions.",
+  "Basic assessments, exit tickets, and progress notes after sessions."
+];
+
+export const adminAutomationItems = [
+  "Attendance tracking for completed and missed sessions.",
+  "Scheduling notes, rescheduling reminders, and tutor availability records.",
+  "Fee collection workflow after tutor, rate, and schedule are confirmed.",
+  "Parent reports summarizing topics, practice, and recommended next steps.",
+  "Tutor notes that preserve what was covered and where the student needs support.",
+  "Session follow-up messages with practice links, notes, or next-session focus."
 ];
 
 export const matchingSteps = [
