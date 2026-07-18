@@ -546,6 +546,77 @@ h3 {
   padding: 22px;
 }
 
+.lead-popup-backdrop {
+  align-items: center;
+  background: rgba(16, 38, 63, 0.54);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 18px;
+  position: fixed;
+  z-index: 40;
+}
+
+.lead-popup {
+  background:
+    linear-gradient(135deg, rgba(255, 246, 201, 0.64), rgba(229, 245, 255, 0.95)),
+    var(--white);
+  border: 1px solid #b9dcff;
+  border-radius: 8px;
+  box-shadow: 0 24px 80px rgba(16, 38, 63, 0.24);
+  display: grid;
+  gap: 13px;
+  max-width: 460px;
+  padding: 24px;
+  position: relative;
+  width: min(100%, 460px);
+}
+
+.lead-popup p {
+  color: var(--muted);
+  line-height: 1.55;
+  margin-bottom: 0;
+}
+
+.lead-popup label {
+  color: var(--ink);
+  display: grid;
+  font-size: 0.86rem;
+  font-weight: 800;
+  gap: 8px;
+}
+
+.lead-popup input {
+  background: var(--white);
+  border: 1px solid #b9dcff;
+  border-radius: 8px;
+  color: var(--ink);
+  font: inherit;
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+.icon-button {
+  align-items: center;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 34px;
+}
+
+.popup-mail-link {
+  justify-content: center;
+  margin-top: 0;
+}
+
 .ai-access-card svg {
   color: var(--blue);
 }

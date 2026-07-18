@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
-import { ArrowRight, Bot, CheckCircle2, Clock, LockKeyhole, Trophy } from "lucide-react";
+import { ArrowRight, Bot, CheckCircle2, Clock, CreditCard, Gift, LockKeyhole, Trophy, X } from "lucide-react";
+import { contactEmail } from "../site-data";
 
 type ExamQuestion = {
   answerIndex: number;
@@ -43,6 +44,7 @@ type GeneratedLesson = {
 };
 
 const accessStorageKey = "novasprout_ai_access_token";
+const leadStorageKey = "novasprout_ai_lead";
 
 const grades = [
   "Grade 3",
@@ -99,7 +101,9 @@ function ListBlock({ items }: { items?: string[] }) {
 
 export default function AILessonGenerator() {
   const [accessToken, setAccessToken] = useState("");
+  const [leadContact, setLeadContact] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [showLeadPopup, setShowLeadPopup] = useState(false);
   const [grade, setGrade] = useState("Grade 7");
   const [subject, setSubject] = useState("Math");
   const [topic, setTopic] = useState("Ratios and proportional relationships");
@@ -121,6 +125,10 @@ export default function AILessonGenerator() {
     if (savedToken) {
       setAccessToken(savedToken);
       setIsUnlocked(true);
+    }
+
+    if (!window.localStorage.getItem(leadStorageKey)) {
+      setShowLeadPopup(true);
     }
   }, []);
 
@@ -148,6 +156,26 @@ export default function AILessonGenerator() {
 
     window.localStorage.setItem(accessStorageKey, cleanedToken);
     setIsUnlocked(true);
+    setError("");
+  }
+
+  function saveLead(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const cleanedContact = leadContact.trim();
+    if (!cleanedContact) {
+      setError("Enter an email or phone number for AI access.");
+      return;
+    }
+
+    window.localStorage.setItem(
+      leadStorageKey,
+      JSON.stringify({
+        contact: cleanedContact,
+        createdAt: new Date().toISOString(),
+        interest: "AI-generated tutoring access"
+      })
+    );
+    setShowLeadPopup(false);
     setError("");
   }
 
@@ -188,9 +216,63 @@ export default function AILessonGenerator() {
     }
   }
 
+  const requestAccessHref = `mailto:${contactEmail}?subject=${encodeURIComponent(
+    "NovaSprout AI generator access"
+  )}&body=${encodeURIComponent(`Hi NovaSprout Learning,
+
+I would like access to the AI-generated tutoring tool.
+
+Email or phone:
+Student grade:
+Subject:
+Interested in: Free trial / Paid AI-generated lessons
+`)}`;
+
+  const leadPopup = showLeadPopup ? (
+    <div className="lead-popup-backdrop" role="dialog" aria-modal="true" aria-labelledby="ai-access-title">
+      <form className="lead-popup" onSubmit={saveLead}>
+        <button
+          aria-label="Close access popup"
+          className="icon-button"
+          onClick={() => setShowLeadPopup(false)}
+          type="button"
+        >
+          <X aria-hidden="true" size={18} />
+        </button>
+        <p className="eyebrow">Free AI access</p>
+        <h3 id="ai-access-title">Try AI-generated tutoring lessons.</h3>
+        <p>
+          Enter an email or phone number to request free access. Paid AI-generated lesson access is
+          available from the pricing page when you want regular use.
+        </p>
+        <label>
+          Email or phone
+          <input
+            onChange={(event) => setLeadContact(event.target.value)}
+            placeholder="parent@email.com or phone"
+            value={leadContact}
+          />
+        </label>
+        <button className="button primary full" type="submit">
+          Continue
+          <Gift aria-hidden="true" size={18} />
+        </button>
+        <a className="button secondary full" href="/pricing">
+          View Paid AI Access
+          <CreditCard aria-hidden="true" size={18} />
+        </a>
+        <a className="text-link popup-mail-link" href={requestAccessHref}>
+          Email NovaSprout for the access code
+        </a>
+      </form>
+    </div>
+  ) : null;
+
   if (!isUnlocked) {
     return (
-      <section className="section demo-generator-section" id="generator">
+      <>
+        {leadPopup}
+        <section className="section demo-generator-section" id="generator">
         <div className="section-heading">
           <p className="eyebrow">Protected AI tutoring tools</p>
           <h2>Enter the NovaSprout access code to generate lessons and exams.</h2>
@@ -217,11 +299,14 @@ export default function AILessonGenerator() {
           {error ? <p className="form-error">{error}</p> : null}
         </form>
       </section>
+      </>
     );
   }
 
   return (
-    <section className="section demo-generator-section" id="generator">
+    <>
+      {leadPopup}
+      <section className="section demo-generator-section" id="generator">
       <div className="section-heading">
         <p className="eyebrow">AI-generated tutoring</p>
         <h2>Create lessons, custom study plans, and scored timed exams.</h2>
@@ -451,6 +536,7 @@ export default function AILessonGenerator() {
           )}
         </article>
       </div>
-    </section>
+      </section>
+    </>
   );
 }

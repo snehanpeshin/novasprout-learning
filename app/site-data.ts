@@ -430,12 +430,20 @@ export const pricingPlans = [
     price: "Custom plan",
     copy: "Recurring support based on subject, goals, frequency, and tutor availability.",
     features: ["Weekly or flexible tutoring", "Session notes and practice", "Discuss after fit is confirmed"]
+  },
+  {
+    paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_AI_LESSONS_PAYMENT_LINK,
+    productKey: "ai_lessons_access",
+    title: "AI-Generated Lesson Access",
+    price: "Free trial, paid access later",
+    copy: "Protected access to AI-generated lessons, custom study plans, practice questions, and timed scored exams.",
+    features: ["Free access by request", "Comprehensive AI lessons", "Timed exams with instant scoring"]
   }
 ] satisfies Array<{
   copy: string;
   features: string[];
   paymentLink?: string;
   price: string;
-  productKey?: "tutoring_session" | "monthly_subscription";
+  productKey?: "tutoring_session" | "monthly_subscription" | "ai_lessons_access";
   title: string;
 }>;

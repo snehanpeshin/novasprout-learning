@@ -40,6 +40,17 @@ export default function PricingOptions() {
               <p className="payment-note">Use this only after NovaSprout confirms the tutor, rate, and schedule.</p>
             </div>
           ) : null}
+          {plan.productKey === "ai_lessons_access" && !plan.paymentLink ? (
+            <div className="payment-actions">
+              <a className="button primary full" href="/ai-lesson-generator">
+                Request Free AI Access
+                <ArrowRight aria-hidden="true" size={18} />
+              </a>
+              <TrackedLink className="button secondary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
+                Discuss Paid Access
+              </TrackedLink>
+            </div>
+          ) : null}
         </article>
       ))}
     </div>
