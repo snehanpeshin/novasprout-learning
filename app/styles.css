@@ -753,6 +753,54 @@ h3 {
   margin: 0;
 }
 
+.slide-preview-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 18px 0;
+}
+
+.slide-preview-card {
+  background: var(--white);
+  border: 1px solid #cfe4f4;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.slide-preview-card span {
+  color: var(--blue);
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.slide-preview-card h4 {
+  font-size: 1rem;
+  margin: 0 0 8px;
+}
+
+.slide-preview-card p {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.latex-line {
+  background: #10263f;
+  border-radius: 8px;
+  color: #ffffff;
+  display: block;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.5;
+  margin: 14px 0;
+  overflow-x: auto;
+  padding: 12px 14px;
+  white-space: pre-wrap;
+}
+
 .lesson-player-backdrop {
   background: rgba(16, 38, 63, 0.72);
   inset: 0;
@@ -913,6 +961,34 @@ h3 {
   display: grid;
   gap: 12px;
   padding-left: 22px;
+}
+
+.slide-example,
+.slide-check {
+  border-radius: 8px;
+  margin-top: 18px;
+  padding: 16px;
+}
+
+.slide-example {
+  background: #fff8dc;
+  border: 1px solid #f4d071;
+}
+
+.slide-check {
+  background: #e9fbf4;
+  border: 1px solid #9edfc9;
+}
+
+.slide-example strong,
+.slide-check strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.slide-example p,
+.slide-check p {
+  margin: 0;
 }
 
 .lesson-player-footer {
@@ -1664,6 +1740,7 @@ footer div span:first-child {
   }
 
   .lesson-launch-card,
+  .slide-preview-grid,
   .lesson-player-body {
     grid-template-columns: 1fr;
   }

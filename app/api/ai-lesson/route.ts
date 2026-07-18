@@ -145,6 +145,7 @@ export async function POST(request: Request) {
 You are an experienced online tutor and curriculum designer for NovaSprout Learning.
 
 Create a personalized tutoring output using original content, aligned to common U.S. learning expectations without copying any school syllabus, textbook, worksheet, or proprietary curriculum.
+The main output must be a student-facing slide deck, not a tutor procedure. Each slide should read like something a student can learn from directly.
 
 Student context:
 - Grade or level: ${grade}
@@ -167,6 +168,17 @@ Return only valid JSON with this exact shape:
   "warmUp": "short warm-up",
   "conceptExplanation": "student-friendly explanation",
   "guidedExample": "worked example",
+  "lessonSlides": [
+    {
+      "title": "student-facing slide title",
+      "timeMinutes": 4,
+      "teachingPoint": "one clear idea written directly to the student",
+      "latex": "optional LaTeX math, for example \\\\frac{2}{3}=\\\\frac{x}{9}",
+      "bullets": ["short student-facing point", "short student-facing point"],
+      "example": "brief worked example or mini task",
+      "check": "one quick student check question"
+    }
+  ],
   "fullLessonSegments": [
     {"time": "0-5 min", "title": "segment title", "activity": "what the tutor and student do"},
     {"time": "5-15 min", "title": "segment title", "activity": "what the tutor and student do"},
@@ -196,6 +208,11 @@ Return only valid JSON with this exact shape:
   "parentTutorNotes": "short summary for parent or tutor"
 }
 
+Create 6-9 lessonSlides for Demo session and Comprehensive lesson.
+Create 4-6 lessonSlides for Custom study plan, focused on the student's question.
+Create 3-5 lessonSlides before the quiz for Timed exam.
+Use LaTeX in the latex field for math, science formulas, equations, ratios, fractions, exponents, units, or symbolic notation. Keep LaTeX plain text only; do not wrap it in markdown code fences.
+Write slide content for the learner, not instructions such as "Tutor explains" or "Tutor asks".
 For Timed exam, include 6 multiple-choice questions with one correct answerIndex from 0 to 3.
 For Comprehensive lesson, make fullLessonSegments useful but concise.
 For Custom study plan, use the student question heavily.
