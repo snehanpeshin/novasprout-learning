@@ -1,0 +1,117 @@
+import { NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+
+type ImageAssetRequest = {
+  assets?: Array<{
+    alt?: string;
+    placement?: string;
+    prompt?: string;
+    type?: string;
+  }>;
+};
+
+function cleanText(value: unknown, maxLength: number) {
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
+
+async function readJsonResponse(response: Response) {
+  const text = await response.text();
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { error: { message: text.slice(0, 500) } };
+  }
+}
+
+export async function POST(request: Request) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  const expectedAccessToken = process.env.AI_LESSON_ACCESS_TOKEN?.trim();
+  const providedAccessToken = request.headers.get("x-ai-access-token")?.trim();
+
+  if (!apiKey) {
+    return NextResponse.json({ error: "OPENAI_API_KEY is not configured." }, { status: 500 });
+  }
+
+  if (!expectedAccessToken || providedAccessToken !== expectedAccessToken) {
+    return NextResponse.json({ error: "Enter the NovaSprout AI access code to use this tool." }, { status: 401 });
+  }
+
+  let body: ImageAssetRequest;
+  try {
+    body = (await request.json()) as ImageAssetRequest;
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  const imageAssets = (body.assets ?? [])
+    .filter((asset) => asset.type === "image")
+    .map((asset) => ({
+      alt: cleanText(asset.alt, 160),
+      placement: cleanText(asset.placement, 8),
+      prompt: cleanText(asset.prompt, 900)
+    }))
+    .filter((asset) => asset.prompt && asset.placement)
+    .slice(0, 3);
+
+  if (!imageAssets.length) {
+    return NextResponse.json({ images: [] });
+  }
+
+  try {
+    const images = [];
+
+    for (const asset of imageAssets) {
+      const response = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: process.env.OPENAI_IMAGE_MODEL ?? "gpt-image-1",
+          n: 1,
+          prompt: `${asset.prompt}. Friendly clean tutoring slide illustration. No embedded words or labels.`,
+          quality: "low",
+          size: "1024x1024"
+        })
+      });
+
+      const payload = await readJsonResponse(response);
+
+      if (!response.ok) {
+        return NextResponse.json(
+          { error: payload?.error?.message ?? "Could not generate slide images." },
+          { status: response.status }
+        );
+      }
+
+      const b64Json = payload?.data?.[0]?.b64_json;
+      if (typeof b64Json === "string") {
+        images.push({
+          alt: asset.alt,
+          dataUrl: `data:image/png;base64,${b64Json}`,
+          placement: asset.placement,
+          prompt: asset.prompt,
+          type: "image"
+        });
+      }
+    }
+
+    return NextResponse.json({ images });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? `Could not reach the AI image service: ${error.message}`
+            : "Could not reach the AI image service."
+      },
+      { status: 500 }
+    );
+  }
+}

@@ -78,6 +78,15 @@ type LessonContext = {
   topic: string;
 };
 
+type SlideAsset = {
+  alt: string;
+  dataUrl?: string;
+  latex: string;
+  placement: string;
+  prompt: string;
+  type: "image" | "latex";
+};
+
 type SubjectTheme = {
   accent: string;
   deckLabel: string;
@@ -457,6 +466,45 @@ ${latexFrame("Next Step", `${escapeLatex(lesson.recommendedNextSession)}\\\\[1em
 `;
 }
 
+function getAssetSlideNumber(placement: string) {
+  const match = placement.trim().toLowerCase().match(/^(\d+)/);
+  return match ? Number(match[1]) : 0;
+}
+
+function getAssetPosition(placement: string) {
+  const position = placement.trim().toLowerCase().replace(/^\d+/, "");
+  return ["lt", "ct", "rt", "lm", "cm", "rm", "lb", "cb", "rb"].includes(position) ? position : "rb";
+}
+
+function renderSlideAssets(assets: SlideAsset[], slideIndex: number) {
+  const slideAssets = assets.filter((asset) => getAssetSlideNumber(asset.placement) === slideIndex + 1);
+
+  if (!slideAssets.length) {
+    return null;
+  }
+
+  return (
+    <div className="deck-assets" aria-hidden="true">
+      {slideAssets.map((asset) => {
+        const position = getAssetPosition(asset.placement);
+        return (
+          <div className={`deck-asset ${asset.type} ${position}`} key={`${asset.placement}-${asset.type}-${asset.prompt}`}>
+            {asset.type === "image" ? (
+              asset.dataUrl ? (
+                <img alt="" src={asset.dataUrl} />
+              ) : (
+                <span>Image planned · {asset.placement}</span>
+              )
+            ) : (
+              <code>{asset.latex}</code>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function downloadTextFile(filename: string, content: string) {
   const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -649,15 +697,21 @@ function LessonPlayer({
 }
 
 function StudentSlideDeck({
+  accessToken,
   context,
   lesson,
   onClose
 }: {
+  accessToken: string;
   context: LessonContext;
   lesson: GeneratedLesson;
   onClose: () => void;
 }) {
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const [assetError, setAssetError] = useState("");
+  const [assets, setAssets] = useState<SlideAsset[]>([]);
+  const [isGeneratingImages, setIsGeneratingImages] = useState(false);
+  const [isPlanningAssets, setIsPlanningAssets] = useState(false);
   const theme = useMemo(() => getSubjectTheme(context.subject), [context.subject]);
 
   const slides = useMemo<LessonSlide[]>(() => {
@@ -688,6 +742,86 @@ function StudentSlideDeck({
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "") || "novasprout-lesson"}.tex`;
+  const plannedImageCount = assets.filter((asset) => asset.type === "image").length;
+
+  async function readDeckResponse<T>(response: Response, fallbackMessage: string) {
+    const responseText = await response.text();
+    let data: T & { error?: string };
+
+    try {
+      data = responseText ? JSON.parse(responseText) : ({} as T & { error?: string });
+    } catch {
+      throw new Error(responseText || fallbackMessage);
+    }
+
+    if (!response.ok) {
+      throw new Error(data.error ?? fallbackMessage);
+    }
+
+    return data;
+  }
+
+  async function planSlideAssets() {
+    setAssetError("");
+    setIsPlanningAssets(true);
+
+    try {
+      const response = await fetch("/api/ai-slide-assets", {
+        body: JSON.stringify({
+          context,
+          lesson,
+          slideTitles: slides.map((slide) => slide.title)
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          "x-ai-access-token": accessToken.trim()
+        },
+        method: "POST"
+      });
+      const data = await readDeckResponse<{ assets?: SlideAsset[] }>(
+        response,
+        "Could not create the slide asset plan."
+      );
+      setAssets(data.assets ?? []);
+    } catch (error) {
+      setAssetError(error instanceof Error ? error.message : "Could not create the slide asset plan.");
+    } finally {
+      setIsPlanningAssets(false);
+    }
+  }
+
+  async function generateSlideImages() {
+    setAssetError("");
+    setIsGeneratingImages(true);
+
+    try {
+      const response = await fetch("/api/ai-slide-images", {
+        body: JSON.stringify({ assets }),
+        headers: {
+          "Content-Type": "application/json",
+          "x-ai-access-token": accessToken.trim()
+        },
+        method: "POST"
+      });
+      const data = await readDeckResponse<{ images?: SlideAsset[] }>(
+        response,
+        "Could not generate slide images."
+      );
+      const generatedImages = data.images ?? [];
+      setAssets((currentAssets) =>
+        currentAssets.map((asset) => {
+          const generated = generatedImages.find(
+            (image) => image.placement === asset.placement && image.prompt === asset.prompt
+          );
+          return generated ? { ...asset, ...generated } : asset;
+        })
+      );
+    } catch (error) {
+      setAssetError(error instanceof Error ? error.message : "Could not generate slide images.");
+    } finally {
+      setIsGeneratingImages(false);
+    }
+  }
 
   return (
     <div className="lesson-player-backdrop" role="dialog" aria-modal="true" aria-labelledby="student-deck-title">
@@ -719,6 +853,7 @@ function StudentSlideDeck({
             <h3>{activeSlide?.title}</h3>
             <div className="slide-content">{activeSlide?.content}</div>
           </div>
+          {renderSlideAssets(assets, activeSlideIndex)}
         </article>
         <div className="print-deck" aria-hidden="true">
           {slides.map((slide, index) => (
@@ -726,6 +861,7 @@ function StudentSlideDeck({
               <p>NovaSprout Learning · {lesson.title}</p>
               <h2>{slide.title}</h2>
               <div>{slide.content}</div>
+              {renderSlideAssets(assets, index)}
               <span>
                 Slide {index + 1} of {slides.length} · {slide.minutes} min suggested
               </span>
@@ -733,6 +869,22 @@ function StudentSlideDeck({
           ))}
         </div>
         <footer className="lesson-player-footer">
+          <div className="deck-ai-tools">
+            <button className="button secondary" disabled={isPlanningAssets} onClick={planSlideAssets} type="button">
+              <Images aria-hidden="true" size={18} />
+              {isPlanningAssets ? "Planning..." : "Plan AI visuals"}
+            </button>
+            <button
+              className="button secondary"
+              disabled={!plannedImageCount || isGeneratingImages}
+              onClick={generateSlideImages}
+              type="button"
+            >
+              <Images aria-hidden="true" size={18} />
+              {isGeneratingImages ? "Generating..." : `Generate images${plannedImageCount ? ` (${plannedImageCount})` : ""}`}
+            </button>
+          </div>
+          {assetError ? <p className="form-error deck-asset-error">{assetError}</p> : null}
           <button className="button secondary" onClick={() => window.print()} type="button">
             <Printer aria-hidden="true" size={18} />
             Download PDF
@@ -992,6 +1144,7 @@ Interested in: Free trial / Paid AI-generated lessons
       ) : null}
       {lesson && isDeckOpen ? (
         <StudentSlideDeck
+          accessToken={accessToken}
           context={{ grade, subject, topic }}
           lesson={lesson}
           onClose={() => setIsDeckOpen(false)}
