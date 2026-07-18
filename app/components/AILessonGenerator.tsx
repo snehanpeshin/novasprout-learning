@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Clock,
   CreditCard,
+  FileCode2,
   Gift,
   Images,
   LockKeyhole,
@@ -128,6 +129,110 @@ function parseSlideMinutes(time?: string) {
   }
 
   return matches[0] ? Math.max(3, matches[0]) : 5;
+}
+
+function escapeLatex(value?: string) {
+  return (value ?? "")
+    .replace(/\\/g, "\\textbackslash{}")
+    .replace(/&/g, "\\&")
+    .replace(/%/g, "\\%")
+    .replace(/\$/g, "\\$")
+    .replace(/#/g, "\\#")
+    .replace(/_/g, "\\_")
+    .replace(/{/g, "\\{")
+    .replace(/}/g, "\\}")
+    .replace(/~/g, "\\textasciitilde{}")
+    .replace(/\^/g, "\\textasciicircum{}");
+}
+
+function latexItems(items?: string[]) {
+  if (!items?.length) {
+    return "\\item No items generated yet.";
+  }
+
+  return items.map((item) => `\\item ${escapeLatex(item)}`).join("\n");
+}
+
+function latexFrame(title: string, body: string) {
+  return `\\begin{frame}{${escapeLatex(title)}}\n${body}\n\\end{frame}`;
+}
+
+function generateBeamerTex(lesson: GeneratedLesson) {
+  const segmentFrames =
+    lesson.fullLessonSegments
+      ?.map((segment) =>
+        latexFrame(
+          segment.title,
+          `${segment.time ? `\\textbf{Suggested time:} ${escapeLatex(segment.time)}\\\\[0.5em]\n` : ""}${escapeLatex(
+            segment.activity
+          )}`
+        )
+      )
+      .join("\n\n") ?? "";
+
+  const quizFrame = lesson.timedExam?.questions?.length
+    ? latexFrame(
+        "Exit Quiz",
+        `\\begin{enumerate}\n${lesson.timedExam.questions
+          .slice(0, 6)
+          .map((question) => `\\item ${escapeLatex(question.question)}`)
+          .join("\n")}\n\\end{enumerate}`
+      )
+    : "";
+
+  return String.raw`\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+\definecolor{NovaBlue}{HTML}{1976D2}
+\definecolor{NovaMint}{HTML}{0F9B78}
+\definecolor{NovaInk}{HTML}{10263F}
+\setbeamercolor{structure}{fg=NovaBlue}
+\setbeamercolor{frametitle}{fg=white,bg=NovaInk}
+\setbeamercolor{title}{fg=white,bg=NovaInk}
+\setbeamertemplate{navigation symbols}{}
+\title{${escapeLatex(lesson.title ?? "NovaSprout Lesson")}}
+\subtitle{AI-supported tutoring lesson}
+\author{NovaSprout Learning}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+  \vfill
+  \small ${escapeLatex(lesson.studentFit)}
+\end{frame}
+
+${latexFrame("What You Will Learn", `\\begin{itemize}\n${latexItems(lesson.learningObjectives)}\n\\end{itemize}`)}
+
+${latexFrame("Warm-Up", escapeLatex(lesson.warmUp))}
+
+${latexFrame("Big Idea", escapeLatex(lesson.conceptExplanation))}
+
+${latexFrame("Worked Example", escapeLatex(lesson.guidedExample))}
+
+${segmentFrames}
+
+${latexFrame("Try It Yourself", `\\begin{enumerate}\n${latexItems(lesson.practiceQuestions)}\n\\end{enumerate}`)}
+
+${latexFrame("Quick Check", `\\begin{enumerate}\n${latexItems(lesson.quickAssessment)}\n\\end{enumerate}`)}
+
+${quizFrame}
+
+${latexFrame("Next Step", `${escapeLatex(lesson.recommendedNextSession)}\\\\[1em]\n\\textbf{Tutor note:} ${escapeLatex(lesson.parentTutorNotes)}`)}
+
+\end{document}
+`;
+}
+
+function downloadTextFile(filename: string, content: string) {
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function LessonPlayer({
@@ -438,7 +543,12 @@ function StudentSlideDeck({
   }, [lesson]);
 
   const activeSlide = slides[activeSlideIndex];
+  const beamerTex = useMemo(() => generateBeamerTex(lesson), [lesson]);
   const progress = slides.length > 1 ? Math.round((activeSlideIndex / (slides.length - 1)) * 100) : 100;
+  const texFilename = `${(lesson.title ?? "novasprout-lesson")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "novasprout-lesson"}.tex`;
 
   return (
     <div className="lesson-player-backdrop" role="dialog" aria-modal="true" aria-labelledby="student-deck-title">
@@ -484,6 +594,10 @@ function StudentSlideDeck({
           <button className="button secondary" onClick={() => window.print()} type="button">
             <Printer aria-hidden="true" size={18} />
             Download PDF
+          </button>
+          <button className="button secondary" onClick={() => downloadTextFile(texFilename, beamerTex)} type="button">
+            <FileCode2 aria-hidden="true" size={18} />
+            Download Beamer .tex
           </button>
           <button
             className="button secondary"
