@@ -1252,6 +1252,61 @@ h3 {
   margin: 0;
 }
 
+.deck-build-status {
+  align-content: center;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 210, 74, 0.22), transparent 30%),
+    linear-gradient(135deg, #f2f8fc, #ffffff);
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  min-height: 0;
+  overflow: auto;
+  padding: clamp(28px, 6vw, 72px);
+  text-align: center;
+}
+
+.deck-build-status svg {
+  color: var(--blue);
+}
+
+.deck-build-status h3 {
+  font-size: clamp(1.55rem, 3vw, 2.4rem);
+  margin: 0;
+}
+
+.deck-build-status ol {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 10px 0 0;
+  max-width: 420px;
+  padding: 0;
+  width: 100%;
+}
+
+.deck-build-status li {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 800;
+  padding: 10px 12px;
+}
+
+.deck-build-status li.active {
+  border-color: var(--blue);
+  color: var(--ink);
+  box-shadow: 0 10px 24px rgba(25, 118, 210, 0.14);
+}
+
+.deck-build-status li.done {
+  background: #e9fbf4;
+  border-color: rgba(15, 155, 120, 0.34);
+  color: #0f6f57;
+}
+
 .compiled-deck-panel {
   background: #f2f8fc;
   border-top: 1px solid var(--line);

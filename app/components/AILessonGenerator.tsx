@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -729,12 +729,13 @@ function StudentSlideDeck({
   const [assets, setAssets] = useState<SlideAsset[]>([]);
   const [compiledDeck, setCompiledDeck] = useState<CompiledDeck | null>(null);
   const [deckStage, setDeckStage] = useState("");
-  const [isCompilingDeck, setIsCompilingDeck] = useState(false);
+  const [, setIsCompilingDeck] = useState(false);
   const [isFullPipelineRunning, setIsFullPipelineRunning] = useState(false);
-  const [isGeneratingImages, setIsGeneratingImages] = useState(false);
-  const [isPlanningAssets, setIsPlanningAssets] = useState(false);
+  const [, setIsGeneratingImages] = useState(false);
+  const [, setIsPlanningAssets] = useState(false);
   const [pdfPage, setPdfPage] = useState(1);
   const [pdfZoom, setPdfZoom] = useState(100);
+  const hasStartedBuild = useRef(false);
   const theme = useMemo(() => getSubjectTheme(context.subject), [context.subject]);
 
   const slides = useMemo<LessonSlide[]>(() => {
@@ -759,15 +760,14 @@ function StudentSlideDeck({
 
   const activeSlide = slides[activeSlideIndex];
   const BeamerIcon = theme.icon;
-  const beamerTex = useMemo(() => generateBeamerTex(lesson, context), [context, lesson]);
   const progress = slides.length > 1 ? Math.round((activeSlideIndex / (slides.length - 1)) * 100) : 100;
   const texFilename = `${(lesson.title ?? "novasprout-lesson")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "") || "novasprout-lesson"}.tex`;
   const pdfFilename = texFilename.replace(/\.tex$/, ".pdf");
-  const plannedImageCount = assets.filter((asset) => asset.type === "image").length;
   const pdfViewerSrc = compiledDeck?.pdfDataUrl ? `${compiledDeck.pdfDataUrl}#page=${pdfPage}&zoom=${pdfZoom}` : "";
+  const buildStages = ["Generating LaTeX", "Planning visuals", "Generating images", "Compiling PDF", "Checking quality", "Ready"];
 
   async function readDeckResponse<T>(response: Response, fallbackMessage: string) {
     const responseText = await response.text();
@@ -928,6 +928,15 @@ function StudentSlideDeck({
     }
   }
 
+  useEffect(() => {
+    if (hasStartedBuild.current) {
+      return;
+    }
+
+    hasStartedBuild.current = true;
+    void buildPdfLesson();
+  }, []);
+
   return (
     <div className="lesson-player-backdrop" role="dialog" aria-modal="true" aria-labelledby="student-deck-title">
       <section className={`student-deck ${theme.key}`}>
@@ -949,6 +958,23 @@ function StudentSlideDeck({
         {compiledDeck?.pdfDataUrl ? (
           <article className="compiled-pdf-primary" id="compiled-pdf-viewer">
             <iframe src={pdfViewerSrc} title="Compiled NovaSprout lesson PDF" />
+          </article>
+        ) : isFullPipelineRunning ? (
+          <article className="deck-build-status">
+            <FileCode2 aria-hidden="true" size={42} />
+            <p className="eyebrow">Preparing private lesson</p>
+            <h3>{deckStage || "Building PDF lesson"}</h3>
+            <ol>
+              {buildStages.map((stage) => {
+                const currentIndex = buildStages.indexOf(deckStage);
+                const stageIndex = buildStages.indexOf(stage);
+                return (
+                  <li className={stage === deckStage ? "active" : stageIndex < currentIndex ? "done" : ""} key={stage}>
+                    {stage}
+                  </li>
+                );
+              })}
+            </ol>
           </article>
         ) : (
           <article className={`student-deck-slide ${theme.key}`}>
@@ -1009,31 +1035,16 @@ function StudentSlideDeck({
           ))}
         </div>
         <footer className="lesson-player-footer">
-          <div className="deck-ai-tools">
-            <button className="button primary" disabled={isFullPipelineRunning} onClick={buildPdfLesson} type="button">
-              <FileCode2 aria-hidden="true" size={18} />
-              {isFullPipelineRunning ? deckStage || "Building..." : "Build PDF lesson"}
-            </button>
-            <button className="button secondary" disabled={isPlanningAssets} onClick={planSlideAssets} type="button">
-              <Images aria-hidden="true" size={18} />
-              {isPlanningAssets ? "Planning..." : "Plan AI visuals"}
-            </button>
-            <button
-              className="button secondary"
-              disabled={!plannedImageCount || isGeneratingImages}
-              onClick={() => generateSlideImages()}
-              type="button"
-            >
-              <Images aria-hidden="true" size={18} />
-              {isGeneratingImages ? "Generating..." : `Generate images${plannedImageCount ? ` (${plannedImageCount})` : ""}`}
-            </button>
-            <button className="button secondary" disabled={isCompilingDeck} onClick={() => compileLatexDeck()} type="button">
-              <FileCode2 aria-hidden="true" size={18} />
-              {isCompilingDeck ? "Compiling..." : "Compile LaTeX deck"}
-            </button>
+          <div className="deck-ai-tools" aria-live="polite">
+            <p className="deck-stage">{assetError ? "Needs attention" : deckStage || "Preparing lesson"}</p>
+            {assetError ? (
+              <button className="button primary" disabled={isFullPipelineRunning} onClick={buildPdfLesson} type="button">
+                <FileCode2 aria-hidden="true" size={18} />
+                Retry PDF lesson
+              </button>
+            ) : null}
           </div>
           {assetError ? <p className="form-error deck-asset-error">{assetError}</p> : null}
-          {deckStage ? <p className="deck-stage">{deckStage}</p> : null}
           {compiledDeck?.pdfDataUrl ? (
             <>
               <button
@@ -1082,29 +1093,33 @@ function StudentSlideDeck({
               </a>
             </>
           ) : (
-            <button className="button secondary" onClick={() => window.print()} type="button">
+            <button className="button secondary" disabled={isFullPipelineRunning} onClick={() => window.print()} type="button">
               <Printer aria-hidden="true" size={18} />
               Preview PDF
             </button>
           )}
-          <button
-            className="button secondary"
-            disabled={activeSlideIndex === 0}
-            onClick={() => setActiveSlideIndex((index) => Math.max(0, index - 1))}
-            type="button"
-          >
-            <ArrowLeft aria-hidden="true" size={18} />
-            Previous
-          </button>
-          <button
-            className="button primary"
-            disabled={activeSlideIndex === slides.length - 1}
-            onClick={() => setActiveSlideIndex((index) => Math.min(slides.length - 1, index + 1))}
-            type="button"
-          >
-            Next Slide
-            <ArrowRight aria-hidden="true" size={18} />
-          </button>
+          {!compiledDeck?.pdfDataUrl && !isFullPipelineRunning ? (
+            <>
+              <button
+                className="button secondary"
+                disabled={activeSlideIndex === 0}
+                onClick={() => setActiveSlideIndex((index) => Math.max(0, index - 1))}
+                type="button"
+              >
+                <ArrowLeft aria-hidden="true" size={18} />
+                Previous
+              </button>
+              <button
+                className="button primary"
+                disabled={activeSlideIndex === slides.length - 1}
+                onClick={() => setActiveSlideIndex((index) => Math.min(slides.length - 1, index + 1))}
+                type="button"
+              >
+                Next Slide
+                <ArrowRight aria-hidden="true" size={18} />
+              </button>
+            </>
+          ) : null}
         </footer>
       </section>
     </div>
