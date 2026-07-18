@@ -11,7 +11,26 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [payments, subscriptions] = await Promise.all([getPayments(), getSubscriptions()]);
+  let payments;
+  let subscriptions;
+
+  try {
+    [payments, subscriptions] = await Promise.all([getPayments(), getSubscriptions()]);
+  } catch (error) {
+    const setupWarning =
+      error instanceof Error ? error.message : "Could not connect to the payment database.";
+
+    return NextResponse.json({
+      activeSubscriptions: [],
+      customers: [],
+      payments: [],
+      revenueByDba: {},
+      revenueByMonth: {},
+      setupWarning,
+      totalRevenue: 0
+    });
+  }
+
   const totalRevenue = payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
   const revenueByDba = payments.reduce<Record<string, number>>((acc, payment) => {
     acc[payment.dba_name] = (acc[payment.dba_name] ?? 0) + Number(payment.amount);

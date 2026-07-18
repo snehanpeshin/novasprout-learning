@@ -1395,6 +1395,17 @@ footer div span:first-child {
   color: var(--ink);
 }
 
+.setup-warning {
+  background: #fff8dc;
+  border-color: #f4d071;
+}
+
+.setup-warning p {
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 0;
+}
+
 @media (max-width: 980px) {
   .hero,
   .split-section,

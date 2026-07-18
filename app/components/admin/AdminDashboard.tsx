@@ -19,6 +19,7 @@ type Metrics = {
   }>;
   revenueByDba: Record<string, number>;
   revenueByMonth: Record<string, number>;
+  setupWarning?: string;
   totalRevenue: number;
 };
 
@@ -50,7 +51,8 @@ export default function AdminDashboard() {
       const response = await fetch("/api/admin/metrics", {
         headers: { "x-admin-token": token.trim() }
       });
-      const data = await response.json();
+      const responseText = await response.text();
+      const data = responseText ? JSON.parse(responseText) : {};
 
       if (!response.ok) {
         throw new Error(data.error ?? "Could not load dashboard.");
@@ -58,7 +60,13 @@ export default function AdminDashboard() {
 
       setMetrics(data as Metrics);
     } catch (dashboardError) {
-      setError(dashboardError instanceof Error ? dashboardError.message : "Could not load dashboard.");
+      setError(
+        dashboardError instanceof SyntaxError
+          ? "The admin API returned an unreadable response. Please redeploy and try again."
+          : dashboardError instanceof Error
+            ? dashboardError.message
+            : "Could not load dashboard."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -90,6 +98,17 @@ export default function AdminDashboard() {
 
       {metrics ? (
         <section className="admin-content">
+          {metrics.setupWarning ? (
+            <article className="admin-table setup-warning">
+              <h2>Setup needed</h2>
+              <p>
+                The admin console is unlocked, but payment metrics are not connected yet:
+                {" "}
+                {metrics.setupWarning}
+              </p>
+            </article>
+          ) : null}
+
           <div className="metric-grid">
             <article>
               <span>Total revenue</span>
