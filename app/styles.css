@@ -509,8 +509,17 @@ h3 {
   margin-top: 28px;
 }
 
+.ai-generator-layout {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(280px, 0.34fr) minmax(0, 0.66fr);
+  margin-top: 28px;
+}
+
 .generator-controls,
-.generated-lesson {
+.generated-lesson,
+.ai-generator-form,
+.ai-output {
   background: var(--white);
   border: 1px solid #cfe4f4;
   border-radius: 8px;
@@ -518,13 +527,15 @@ h3 {
   padding: 20px;
 }
 
-.generator-controls {
+.generator-controls,
+.ai-generator-form {
   align-self: start;
   display: grid;
   gap: 14px;
 }
 
-.generator-controls label {
+.generator-controls label,
+.ai-generator-form label {
   color: var(--ink);
   display: grid;
   font-size: 0.86rem;
@@ -532,7 +543,8 @@ h3 {
   gap: 8px;
 }
 
-.generator-controls select {
+.generator-controls select,
+.ai-generator-form select {
   appearance: none;
   background:
     linear-gradient(45deg, transparent 50%, var(--blue) 50%) calc(100% - 18px) 55% / 7px 7px no-repeat,
@@ -545,8 +557,71 @@ h3 {
   padding: 10px 36px 10px 12px;
 }
 
+.ai-generator-form input {
+  background: linear-gradient(135deg, #ffffff, #f8fbff);
+  border: 1px solid #b9dcff;
+  border-radius: 8px;
+  color: var(--ink);
+  font: inherit;
+  min-height: 44px;
+  padding: 10px 12px;
+}
+
+.generator-note {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  margin: 0;
+}
+
 .generated-lesson h3 {
   font-size: 1.45rem;
+}
+
+.empty-generator-state {
+  display: grid;
+  gap: 12px;
+  min-height: 320px;
+  place-content: center;
+  text-align: left;
+}
+
+.empty-generator-state svg {
+  color: var(--blue);
+}
+
+.empty-generator-state p {
+  color: var(--muted);
+  line-height: 1.55;
+  max-width: 560px;
+}
+
+.empty-generator-state ul {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.empty-generator-state li {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  gap: 8px;
+}
+
+.lesson-text-fallback {
+  background: #f8fbff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  font: inherit;
+  line-height: 1.6;
+  margin: 18px 0 0;
+  overflow: auto;
+  padding: 16px;
+  white-space: pre-wrap;
 }
 
 .lesson-timeline {
@@ -1143,6 +1218,7 @@ footer div span:first-child {
   .split-section,
   .landing-hero,
   .demo-generator,
+  .ai-generator-layout,
   .booking-section {
     grid-template-columns: 1fr;
   }

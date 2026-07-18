@@ -6,6 +6,7 @@ const routes = [
   "",
   "/find-a-tutor",
   "/curriculum-demo",
+  "/ai-lesson-generator",
   "/become-a-tutor",
   "/math-tutoring",
   "/science-tutoring",

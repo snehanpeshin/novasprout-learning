@@ -27,6 +27,7 @@ export default function CurriculumDemoPage() {
         </a>
         <nav aria-label="Main navigation">
           <a href="/#subjects">Subjects</a>
+          <a href="/ai-lesson-generator">AI Lesson</a>
           <a href="/#how-it-works">How it works</a>
           <a href="/pricing">Pricing</a>
           <TrackedLink className="nav-cta" eventName="book_meeting_click" href={bookingUrl} target="_blank">
@@ -54,6 +55,9 @@ export default function CurriculumDemoPage() {
             </a>
             <a className="button secondary" href="#demo-generator">
               Try Demo Generator
+            </a>
+            <a className="button secondary" href="/ai-lesson-generator">
+              Generate Live AI Lesson
             </a>
           </div>
         </div>

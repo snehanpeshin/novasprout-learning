@@ -32,6 +32,7 @@ export default function Home() {
         <nav aria-label="Main navigation">
           <a href="#subjects">Subjects</a>
           <a href="/curriculum-demo">Curriculum</a>
+          <a href="/ai-lesson-generator">AI Lesson</a>
           <a href="#how-it-works">How it works</a>
           <a href="/pricing">Pricing</a>
           <a href="#about">About</a>
@@ -136,9 +137,15 @@ export default function Home() {
             standards frameworks. Each demo can include an explanation, practice questions, a quick
             check, and a suggested next step.
           </p>
-          <a className="button secondary" href="/curriculum-demo">
-            Explore Curriculum Demos
-          </a>
+          <div className="hero-actions">
+            <a className="button secondary" href="/curriculum-demo">
+              Explore Curriculum Demos
+            </a>
+            <a className="button primary" href="/ai-lesson-generator">
+              Try AI Lesson Generator
+              <ArrowRight aria-hidden="true" size={18} />
+            </a>
+          </div>
         </div>
       </section>
 
