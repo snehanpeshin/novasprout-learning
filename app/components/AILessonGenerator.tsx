@@ -1,7 +1,20 @@
 "use client";
 
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
-import { ArrowRight, Bot, CheckCircle2, Clock, CreditCard, Gift, LockKeyhole, Trophy, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Bot,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  Gift,
+  LockKeyhole,
+  PlayCircle,
+  TimerReset,
+  Trophy,
+  X
+} from "lucide-react";
 import { contactEmail } from "../site-data";
 
 type ExamQuestion = {
@@ -41,6 +54,13 @@ type GeneratedLesson = {
   };
   title?: string;
   warmUp?: string;
+};
+
+type LessonSlide = {
+  content: ReactNode;
+  minutes: number;
+  title: string;
+  type?: "lesson" | "quiz";
 };
 
 const accessStorageKey = "novasprout_ai_access_token";
@@ -99,6 +119,246 @@ function ListBlock({ items }: { items?: string[] }) {
   );
 }
 
+function parseSlideMinutes(time?: string) {
+  const matches = time?.match(/\d+/g)?.map(Number) ?? [];
+  if (matches.length >= 2) {
+    return Math.max(3, matches[1] - matches[0]);
+  }
+
+  return matches[0] ? Math.max(3, matches[0]) : 5;
+}
+
+function LessonPlayer({
+  lesson,
+  onClose
+}: {
+  lesson: GeneratedLesson;
+  onClose: () => void;
+}) {
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [isRunning, setIsRunning] = useState(true);
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+
+  const slides = useMemo<LessonSlide[]>(() => {
+    const builtSlides: LessonSlide[] = [
+      {
+        title: "Learning goals",
+        minutes: 3,
+        content: (
+          <>
+            <p>{lesson.studentFit}</p>
+            <ListBlock items={lesson.learningObjectives} />
+          </>
+        )
+      },
+      {
+        title: "Readiness check",
+        minutes: 5,
+        content: <ListBlock items={lesson.prerequisiteCheck} />
+      },
+      {
+        title: "Warm-up",
+        minutes: 5,
+        content: <p>{lesson.warmUp}</p>
+      },
+      {
+        title: "Concept explanation",
+        minutes: 10,
+        content: <p>{lesson.conceptExplanation}</p>
+      },
+      {
+        title: "Guided example",
+        minutes: 8,
+        content: <p>{lesson.guidedExample}</p>
+      },
+      ...(lesson.fullLessonSegments?.map((segment) => ({
+        title: segment.title,
+        minutes: parseSlideMinutes(segment.time),
+        content: <p>{segment.activity}</p>
+      })) ?? []),
+      {
+        title: "Practice",
+        minutes: 8,
+        content: <ListBlock items={lesson.practiceQuestions} />
+      }
+    ];
+
+    if (lesson.timedExam?.questions?.length) {
+      builtSlides.push({
+        title: "Final quiz",
+        minutes: lesson.timedExam.durationMinutes,
+        type: "quiz",
+        content: null
+      });
+    }
+
+    return builtSlides.filter((slide) => slide.type === "quiz" || slide.content);
+  }, [lesson]);
+
+  const activeSlide = slides[activeSlideIndex];
+  const [remainingSeconds, setRemainingSeconds] = useState((activeSlide?.minutes ?? 5) * 60);
+  const questions = lesson.timedExam?.questions ?? [];
+  const quizScore = useMemo(() => {
+    if (!questions.length) {
+      return null;
+    }
+
+    const correct = questions.filter((question, index) => answers[index] === question.answerIndex).length;
+    return {
+      correct,
+      percent: Math.round((correct / questions.length) * 100),
+      total: questions.length
+    };
+  }, [answers, questions]);
+
+  useEffect(() => {
+    setRemainingSeconds((slides[activeSlideIndex]?.minutes ?? 5) * 60);
+    setIsRunning(true);
+  }, [activeSlideIndex, slides]);
+
+  useEffect(() => {
+    if (!isRunning || remainingSeconds <= 0) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setRemainingSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [isRunning, remainingSeconds]);
+
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
+  const progress = slides.length > 1 ? Math.round((activeSlideIndex / (slides.length - 1)) * 100) : 100;
+
+  return (
+    <div className="lesson-player-backdrop" role="dialog" aria-modal="true" aria-labelledby="lesson-player-title">
+      <section className="lesson-player">
+        <header className="lesson-player-header">
+          <div>
+            <p className="eyebrow">Private lesson window</p>
+            <h2 id="lesson-player-title">{lesson.title}</h2>
+            <p>
+              Slide {activeSlideIndex + 1} of {slides.length}
+            </p>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button" aria-label="Close lesson player">
+            <X aria-hidden="true" size={18} />
+          </button>
+        </header>
+
+        <div className="lesson-player-progress" aria-label={`${progress}% complete`}>
+          <span style={{ width: `${progress}%` }} />
+        </div>
+
+        <div className="lesson-player-body">
+          <aside className="lesson-player-sidebar">
+            <div className="timer-card">
+              <Clock aria-hidden="true" size={22} />
+              <strong>
+                {minutes}:{seconds.toString().padStart(2, "0")}
+              </strong>
+              <span>{activeSlide?.minutes} min suggested</span>
+            </div>
+            <button className="button secondary full" onClick={() => setIsRunning((running) => !running)} type="button">
+              {isRunning ? "Pause timer" : "Start timer"}
+            </button>
+            <button
+              className="button secondary full"
+              onClick={() => setRemainingSeconds((activeSlide?.minutes ?? 5) * 60)}
+              type="button"
+            >
+              <TimerReset aria-hidden="true" size={18} />
+              Reset slide
+            </button>
+            <ol className="slide-list">
+              {slides.map((slide, index) => (
+                <li className={index === activeSlideIndex ? "active" : ""} key={`${slide.title}-${index}`}>
+                  <button onClick={() => setActiveSlideIndex(index)} type="button">
+                    <span>{index + 1}</span>
+                    {slide.title}
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </aside>
+
+          <article className="lesson-slide">
+            <p className="mini-label">{activeSlide?.type === "quiz" ? "Final check" : "Lesson slide"}</p>
+            <h3>{activeSlide?.title}</h3>
+            {activeSlide?.type === "quiz" ? (
+              <div className="exam-question-list">
+                {questions.map((question, questionIndex) => (
+                  <fieldset className="exam-question" key={question.question}>
+                    <legend>{question.question}</legend>
+                    {question.options.map((option, optionIndex) => (
+                      <label key={option}>
+                        <input
+                          checked={answers[questionIndex] === optionIndex}
+                          disabled={quizSubmitted}
+                          name={`player-question-${questionIndex}`}
+                          onChange={() =>
+                            setAnswers((currentAnswers) => ({
+                              ...currentAnswers,
+                              [questionIndex]: optionIndex
+                            }))
+                          }
+                          type="radio"
+                        />
+                        {option}
+                      </label>
+                    ))}
+                    {quizSubmitted ? (
+                      <p className={answers[questionIndex] === question.answerIndex ? "answer-correct" : "answer-wrong"}>
+                        {answers[questionIndex] === question.answerIndex ? "Correct. " : "Review. "}
+                        {question.explanation}
+                      </p>
+                    ) : null}
+                  </fieldset>
+                ))}
+                {quizSubmitted && quizScore ? (
+                  <p className="score-card">
+                    Score: {quizScore.correct}/{quizScore.total} ({quizScore.percent}%)
+                  </p>
+                ) : (
+                  <button className="button primary" onClick={() => setQuizSubmitted(true)} type="button">
+                    Submit Quiz
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="slide-content">{activeSlide?.content}</div>
+            )}
+          </article>
+        </div>
+
+        <footer className="lesson-player-footer">
+          <button
+            className="button secondary"
+            disabled={activeSlideIndex === 0}
+            onClick={() => setActiveSlideIndex((index) => Math.max(0, index - 1))}
+            type="button"
+          >
+            <ArrowLeft aria-hidden="true" size={18} />
+            Previous
+          </button>
+          <button
+            className="button primary"
+            disabled={activeSlideIndex === slides.length - 1}
+            onClick={() => setActiveSlideIndex((index) => Math.min(slides.length - 1, index + 1))}
+            type="button"
+          >
+            Next Slide
+            <ArrowRight aria-hidden="true" size={18} />
+          </button>
+        </footer>
+      </section>
+    </div>
+  );
+}
+
 export default function AILessonGenerator() {
   const [accessToken, setAccessToken] = useState("");
   const [leadContact, setLeadContact] = useState("");
@@ -114,6 +374,7 @@ export default function AILessonGenerator() {
   const [studentQuestion, setStudentQuestion] = useState("");
   const [lesson, setLesson] = useState<GeneratedLesson | null>(null);
   const [lessonText, setLessonText] = useState("");
+  const [isLessonPlayerOpen, setIsLessonPlayerOpen] = useState(false);
   const [examAnswers, setExamAnswers] = useState<Record<number, number>>({});
   const [examStartedAt, setExamStartedAt] = useState<number | null>(null);
   const [examSubmitted, setExamSubmitted] = useState(false);
@@ -184,6 +445,7 @@ export default function AILessonGenerator() {
     setError("");
     setLesson(null);
     setLessonText("");
+    setIsLessonPlayerOpen(false);
     setExamAnswers({});
     setExamStartedAt(null);
     setExamSubmitted(false);
@@ -306,6 +568,9 @@ Interested in: Free trial / Paid AI-generated lessons
   return (
     <>
       {leadPopup}
+      {lesson && isLessonPlayerOpen ? (
+        <LessonPlayer lesson={lesson} onClose={() => setIsLessonPlayerOpen(false)} />
+      ) : null}
       <section className="section demo-generator-section" id="generator">
       <div className="section-heading">
         <p className="eyebrow">AI-generated tutoring</p>
@@ -415,6 +680,20 @@ Interested in: Free trial / Paid AI-generated lessons
               <h3>{lesson?.title ?? "Generated tutoring material"}</h3>
               {lesson?.studentFit ? <p>{lesson.studentFit}</p> : null}
               {lesson ? (
+                <>
+                <div className="lesson-launch-card">
+                  <div>
+                    <p className="eyebrow">Ready to teach</p>
+                    <h4>Review the plan, then start the private timed lesson.</h4>
+                    <p>
+                      The lesson player opens as a focused window with timed slides and the quiz at the end.
+                    </p>
+                  </div>
+                  <button className="button primary" onClick={() => setIsLessonPlayerOpen(true)} type="button">
+                    <PlayCircle aria-hidden="true" size={18} />
+                    Start Private Lesson
+                  </button>
+                </div>
                 <div className="lesson-timeline">
                   <LessonSection label="Learning objectives">
                     <ListBlock items={lesson.learningObjectives} />
@@ -515,6 +794,7 @@ Interested in: Free trial / Paid AI-generated lessons
                     <p>{lesson.parentTutorNotes}</p>
                   </LessonSection>
                 </div>
+                </>
               ) : (
                 <pre className="lesson-text-fallback">{lessonText}</pre>
               )}
