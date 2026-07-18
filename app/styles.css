@@ -753,6 +753,13 @@ h3 {
   margin: 0;
 }
 
+.lesson-launch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .lesson-player-backdrop {
   background: rgba(16, 38, 63, 0.72);
   inset: 0;
@@ -772,6 +779,46 @@ h3 {
   margin: 0 auto;
   max-width: 1220px;
   overflow: hidden;
+}
+
+.student-deck {
+  background: var(--white);
+  border: 1px solid #b9dcff;
+  border-radius: 8px;
+  box-shadow: 0 24px 90px rgba(16, 38, 63, 0.28);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  height: 100%;
+  margin: 0 auto;
+  max-width: 1220px;
+  overflow: hidden;
+}
+
+.student-deck-header {
+  align-items: flex-start;
+  background:
+    linear-gradient(135deg, #10263f, #0f6f8f 58%, #0f9b78),
+    #10263f;
+  color: var(--white);
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  padding: 20px;
+  position: relative;
+}
+
+.student-deck-header .eyebrow {
+  color: #ffd24a;
+}
+
+.student-deck-header h2 {
+  font-size: clamp(1.25rem, 2.2vw, 1.9rem);
+  margin-bottom: 8px;
+}
+
+.student-deck-header p {
+  color: rgba(255, 255, 255, 0.76);
+  margin-bottom: 0;
 }
 
 .lesson-player-header {
@@ -913,6 +960,80 @@ h3 {
   display: grid;
   gap: 12px;
   padding-left: 22px;
+}
+
+.student-deck-slide {
+  background:
+    linear-gradient(135deg, rgba(229, 245, 255, 0.88), rgba(255, 246, 201, 0.7)),
+    var(--paper);
+  display: grid;
+  gap: clamp(18px, 4vw, 42px);
+  grid-template-columns: minmax(220px, 0.34fr) minmax(0, 0.66fr);
+  min-height: 0;
+  overflow: auto;
+  padding: clamp(24px, 5vw, 56px);
+}
+
+.deck-visual {
+  align-items: center;
+  aspect-ratio: 1;
+  background:
+    radial-gradient(circle at 30% 24%, #ffd24a 0 12%, transparent 13%),
+    linear-gradient(135deg, #e9fbf4, #e5f5ff);
+  border: 1px solid #b9dcff;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  max-width: 340px;
+  width: 100%;
+}
+
+.deck-visual svg {
+  color: var(--blue);
+}
+
+.deck-copy {
+  align-self: center;
+  max-width: 780px;
+}
+
+.deck-copy h3 {
+  font-size: clamp(2rem, 5vw, 4.2rem);
+  line-height: 1.05;
+  margin-bottom: 22px;
+}
+
+.deck-title-card {
+  display: grid;
+  gap: 16px;
+}
+
+.deck-title-card span {
+  color: var(--blue);
+  font-weight: 800;
+}
+
+.deck-title-card h3 {
+  font-size: clamp(2rem, 5vw, 4.2rem);
+}
+
+.deck-title-card p {
+  color: var(--muted);
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  line-height: 1.6;
+}
+
+.deck-quiz-list {
+  color: var(--ink);
+  display: grid;
+  gap: 14px;
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  line-height: 1.55;
+  padding-left: 24px;
+}
+
+.print-deck {
+  display: none;
 }
 
 .lesson-player-footer {
@@ -1664,11 +1785,13 @@ footer div span:first-child {
   }
 
   .lesson-launch-card,
+  .student-deck-slide,
   .lesson-player-body {
     grid-template-columns: 1fr;
   }
 
-  .lesson-player {
+  .lesson-player,
+  .student-deck {
     overflow: auto;
   }
 
@@ -1710,5 +1833,81 @@ footer div span:first-child {
     align-items: flex-start;
     flex-direction: column;
     gap: 8px;
+  }
+}
+
+@media print {
+  @page {
+    margin: 0.35in;
+    size: landscape;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-deck,
+  .print-deck * {
+    visibility: visible;
+  }
+
+  .print-deck {
+    background: #ffffff;
+    display: block;
+    inset: 0;
+    position: absolute;
+  }
+
+  .print-slide {
+    background:
+      linear-gradient(135deg, rgba(229, 245, 255, 0.92), rgba(255, 246, 201, 0.74)),
+      #ffffff;
+    border: 1px solid #cfe4f4;
+    break-after: page;
+    color: #10263f;
+    display: grid;
+    min-height: 6.8in;
+    padding: 0.45in;
+  }
+
+  .print-slide p:first-child {
+    color: #1976d2;
+    font-size: 11pt;
+    font-weight: 800;
+    margin: 0 0 0.2in;
+    text-transform: uppercase;
+  }
+
+  .print-slide h2 {
+    font-size: 32pt;
+    line-height: 1.08;
+    margin: 0 0 0.28in;
+  }
+
+  .print-slide div,
+  .print-slide li,
+  .print-slide p {
+    font-size: 15pt;
+    line-height: 1.45;
+  }
+
+  .print-slide ul,
+  .print-slide ol {
+    display: grid;
+    gap: 0.12in;
+    margin: 0.12in 0 0;
+    padding-left: 0.28in;
+  }
+
+  .print-slide span {
+    align-self: end;
+    color: #5a6b7c;
+    font-size: 10pt;
+    font-weight: 800;
+    margin-top: 0.3in;
   }
 }

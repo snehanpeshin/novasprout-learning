@@ -9,8 +9,10 @@ import {
   Clock,
   CreditCard,
   Gift,
+  Images,
   LockKeyhole,
   PlayCircle,
+  Printer,
   TimerReset,
   Trophy,
   X
@@ -359,6 +361,154 @@ function LessonPlayer({
   );
 }
 
+function StudentSlideDeck({
+  lesson,
+  onClose
+}: {
+  lesson: GeneratedLesson;
+  onClose: () => void;
+}) {
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+
+  const slides = useMemo<LessonSlide[]>(() => {
+    const deckSlides: LessonSlide[] = [
+      {
+        title: lesson.title ?? "NovaSprout Lesson",
+        minutes: 2,
+        content: (
+          <div className="deck-title-card">
+            <span>NovaSprout Learning</span>
+            <h3>{lesson.title}</h3>
+            <p>{lesson.studentFit}</p>
+          </div>
+        )
+      },
+      {
+        title: "What you will learn",
+        minutes: 3,
+        content: <ListBlock items={lesson.learningObjectives} />
+      },
+      {
+        title: "Warm-up",
+        minutes: 5,
+        content: <p>{lesson.warmUp}</p>
+      },
+      {
+        title: "Big idea",
+        minutes: 8,
+        content: <p>{lesson.conceptExplanation}</p>
+      },
+      {
+        title: "Worked example",
+        minutes: 8,
+        content: <p>{lesson.guidedExample}</p>
+      },
+      ...(lesson.fullLessonSegments?.map((segment) => ({
+        title: segment.title,
+        minutes: parseSlideMinutes(segment.time),
+        content: <p>{segment.activity}</p>
+      })) ?? []),
+      {
+        title: "Try it yourself",
+        minutes: 8,
+        content: <ListBlock items={lesson.practiceQuestions} />
+      },
+      {
+        title: "Quick check",
+        minutes: 5,
+        content: <ListBlock items={lesson.quickAssessment} />
+      }
+    ];
+
+    if (lesson.timedExam?.questions?.length) {
+      deckSlides.push({
+        title: "Exit quiz",
+        minutes: lesson.timedExam.durationMinutes,
+        content: (
+          <ol className="deck-quiz-list">
+            {lesson.timedExam.questions.slice(0, 4).map((question) => (
+              <li key={question.question}>{question.question}</li>
+            ))}
+          </ol>
+        )
+      });
+    }
+
+    return deckSlides.filter((slide) => slide.content);
+  }, [lesson]);
+
+  const activeSlide = slides[activeSlideIndex];
+  const progress = slides.length > 1 ? Math.round((activeSlideIndex / (slides.length - 1)) * 100) : 100;
+
+  return (
+    <div className="lesson-player-backdrop" role="dialog" aria-modal="true" aria-labelledby="student-deck-title">
+      <section className="student-deck">
+        <header className="student-deck-header">
+          <div>
+            <p className="eyebrow">Student slide deck</p>
+            <h2 id="student-deck-title">{lesson.title}</h2>
+            <p>
+              Slide {activeSlideIndex + 1} of {slides.length} · {activeSlide?.minutes} min suggested
+            </p>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button" aria-label="Close student deck">
+            <X aria-hidden="true" size={18} />
+          </button>
+        </header>
+        <div className="lesson-player-progress" aria-label={`${progress}% complete`}>
+          <span style={{ width: `${progress}%` }} />
+        </div>
+        <article className="student-deck-slide">
+          <div className="deck-visual">
+            <Images aria-hidden="true" size={42} />
+          </div>
+          <div className="deck-copy">
+            <p className="mini-label">{activeSlide?.minutes} minute focus</p>
+            <h3>{activeSlide?.title}</h3>
+            <div className="slide-content">{activeSlide?.content}</div>
+          </div>
+        </article>
+        <div className="print-deck" aria-hidden="true">
+          {slides.map((slide, index) => (
+            <section className="print-slide" key={`${slide.title}-print-${index}`}>
+              <p>NovaSprout Learning · {lesson.title}</p>
+              <h2>{slide.title}</h2>
+              <div>{slide.content}</div>
+              <span>
+                Slide {index + 1} of {slides.length} · {slide.minutes} min suggested
+              </span>
+            </section>
+          ))}
+        </div>
+        <footer className="lesson-player-footer">
+          <button className="button secondary" onClick={() => window.print()} type="button">
+            <Printer aria-hidden="true" size={18} />
+            Download PDF
+          </button>
+          <button
+            className="button secondary"
+            disabled={activeSlideIndex === 0}
+            onClick={() => setActiveSlideIndex((index) => Math.max(0, index - 1))}
+            type="button"
+          >
+            <ArrowLeft aria-hidden="true" size={18} />
+            Previous
+          </button>
+          <button
+            className="button primary"
+            disabled={activeSlideIndex === slides.length - 1}
+            onClick={() => setActiveSlideIndex((index) => Math.min(slides.length - 1, index + 1))}
+            type="button"
+          >
+            Next Slide
+            <ArrowRight aria-hidden="true" size={18} />
+          </button>
+        </footer>
+      </section>
+    </div>
+  );
+}
+
 export default function AILessonGenerator() {
   const [accessToken, setAccessToken] = useState("");
   const [leadContact, setLeadContact] = useState("");
@@ -374,6 +524,7 @@ export default function AILessonGenerator() {
   const [studentQuestion, setStudentQuestion] = useState("");
   const [lesson, setLesson] = useState<GeneratedLesson | null>(null);
   const [lessonText, setLessonText] = useState("");
+  const [isDeckOpen, setIsDeckOpen] = useState(false);
   const [isLessonPlayerOpen, setIsLessonPlayerOpen] = useState(false);
   const [examAnswers, setExamAnswers] = useState<Record<number, number>>({});
   const [examStartedAt, setExamStartedAt] = useState<number | null>(null);
@@ -445,6 +596,7 @@ export default function AILessonGenerator() {
     setError("");
     setLesson(null);
     setLessonText("");
+    setIsDeckOpen(false);
     setIsLessonPlayerOpen(false);
     setExamAnswers({});
     setExamStartedAt(null);
@@ -578,6 +730,9 @@ Interested in: Free trial / Paid AI-generated lessons
       {lesson && isLessonPlayerOpen ? (
         <LessonPlayer lesson={lesson} onClose={() => setIsLessonPlayerOpen(false)} />
       ) : null}
+      {lesson && isDeckOpen ? (
+        <StudentSlideDeck lesson={lesson} onClose={() => setIsDeckOpen(false)} />
+      ) : null}
       <section className="section demo-generator-section" id="generator">
       <div className="section-heading">
         <p className="eyebrow">AI-generated tutoring</p>
@@ -696,10 +851,16 @@ Interested in: Free trial / Paid AI-generated lessons
                       The lesson player opens as a focused window with timed slides and the quiz at the end.
                     </p>
                   </div>
-                  <button className="button primary" onClick={() => setIsLessonPlayerOpen(true)} type="button">
-                    <PlayCircle aria-hidden="true" size={18} />
-                    Start Private Lesson
-                  </button>
+                  <div className="lesson-launch-actions">
+                    <button className="button primary" onClick={() => setIsDeckOpen(true)} type="button">
+                      <Images aria-hidden="true" size={18} />
+                      Create Student Slide Deck
+                    </button>
+                    <button className="button secondary" onClick={() => setIsLessonPlayerOpen(true)} type="button">
+                      <PlayCircle aria-hidden="true" size={18} />
+                      Start Timed Lesson
+                    </button>
+                  </div>
                 </div>
                 <div className="lesson-timeline">
                   <LessonSection label="Learning objectives">
