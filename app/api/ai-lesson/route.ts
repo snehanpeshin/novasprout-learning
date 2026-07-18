@@ -218,6 +218,46 @@ async function readJsonResponse(response: Response) {
   }
 }
 
+async function requestOpenAiLesson({
+  apiKey,
+  prompt,
+  useSchema
+}: {
+  apiKey: string;
+  prompt: string;
+  useSchema: boolean;
+}) {
+  const body = {
+    input: prompt,
+    max_output_tokens: useSchema ? 5200 : 4200,
+    model: process.env.OPENAI_MODEL ?? "gpt-5-mini",
+    text: {
+      format: useSchema
+        ? {
+            type: "json_schema",
+            ...lessonJsonSchema
+          }
+        : {
+            type: "json_object"
+          }
+    }
+  };
+
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+
+  return {
+    payload: await readJsonResponse(response),
+    response
+  };
+}
+
 export async function POST(request: Request) {
   const apiKey = process.env.OPENAI_API_KEY;
   const expectedAccessToken = process.env.AI_LESSON_ACCESS_TOKEN?.trim();
@@ -288,34 +328,25 @@ For Timed exam, include 6 multiple-choice questions with one correct answerIndex
 For Comprehensive lesson, keep fullLessonSegments concise.
 For Custom study plan, use the student question heavily.
 Keep every field brief enough that the full response is complete.
+Return only the JSON object. Do not include markdown, code fences, comments, or explanatory text outside the JSON.
 Keep claims cautious. Do not promise grades, test scores, admissions results, diagnosis, therapy, or guaranteed mastery.
 `;
 
   try {
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        input: prompt,
-        max_output_tokens: 5200,
-        model: process.env.OPENAI_MODEL ?? "gpt-5",
-        text: {
-          format: {
-            type: "json_schema",
-            ...lessonJsonSchema
-          }
-        }
-      })
-    });
+    let { payload, response } = await requestOpenAiLesson({ apiKey, prompt, useSchema: true });
 
-    const payload = await readJsonResponse(response);
+    if (!response.ok && [400, 404, 422].includes(response.status)) {
+      ({ payload, response } = await requestOpenAiLesson({ apiKey, prompt, useSchema: false }));
+    }
 
     if (!response.ok) {
       return NextResponse.json(
-        { error: payload?.error?.message ?? "Could not generate the lesson right now." },
+        {
+          error:
+            payload?.error?.message ??
+            payload?.message ??
+            `OpenAI returned ${response.status}. Please check billing, model, and API key settings.`
+        },
         { status: response.status }
       );
     }
@@ -325,7 +356,10 @@ Keep claims cautious. Do not promise grades, test scores, admissions results, di
 
     if (!lesson) {
       return NextResponse.json(
-        { error: "The AI response was incomplete. Please try again with a shorter topic or choose Demo session." },
+        {
+          error:
+            "The AI response was incomplete or not valid lesson JSON. Please try Demo session or shorten the topic."
+        },
         { status: 502 }
       );
     }
