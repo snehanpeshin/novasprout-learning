@@ -804,7 +804,7 @@ export async function POST(request: Request) {
   }
 
   const grade = cleanText(body.grade, 40);
-  const duration = cleanText(body.duration, 20);
+  const duration = cleanText(body.duration, 60);
   const subject = cleanText(body.subject, 60);
   const topic = cleanText(body.topic, 90);
   const level = cleanText(body.level, 40);
