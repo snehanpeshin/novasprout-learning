@@ -124,6 +124,7 @@ const accessStorageKey = "novasprout_ai_access_token";
 const leadStorageKey = "novasprout_ai_lead";
 const assetPlanningTimeoutMs = 18000;
 const imageGenerationTimeoutMs = 240000;
+const minimumCompiledPdfBytes = 12000;
 const minimumBuildStageMs = {
   compile: 7000,
   images: 12000,
@@ -939,12 +940,16 @@ function StudentSlideDeck({
       throw new Error("The compiled PDF has fewer pages than expected.");
     }
 
-    if ((deck.pdfSize ?? 0) < 25000) {
+    if ((deck.pdfSize ?? 0) < minimumCompiledPdfBytes) {
       throw new Error("The compiled PDF is too small to be a complete visual lesson.");
     }
 
     if (plannedImageCount && embeddedImageCount < plannedImageCount) {
       throw new Error(`Only ${embeddedImageCount} of ${plannedImageCount} generated image assets were embedded in the PDF.`);
+    }
+
+    if (shouldRequireGeneratedImage && embeddedImageCount < 1) {
+      throw new Error("This topic needs at least one generated visual, but no generated image was embedded in the PDF.");
     }
   }
 
@@ -1033,7 +1038,12 @@ function StudentSlideDeck({
       return mergedAssets;
     } catch (error) {
       await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.images);
-      setAssetError(error instanceof Error ? `Generated images skipped: ${error.message}` : "Generated images skipped.");
+      const message = error instanceof Error ? error.message : "Could not generate slide images.";
+      setAssetError(
+        shouldRequireGeneratedImage
+          ? `Required visual generation failed: ${message}`
+          : `Generated images skipped: ${message}`
+      );
       setDeckStage("Images skipped");
       return null;
     } finally {
