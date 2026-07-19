@@ -93,7 +93,9 @@ export async function POST(request: Request) {
         const payload = await readJsonResponse(response);
 
         if (!response.ok) {
-          throw new Error(payload?.error?.message ?? "Could not generate slide images.");
+          throw new Error(
+            `${asset.assetId || asset.placement}: ${payload?.error?.message ?? `image generation failed with ${response.status}`}`
+          );
         }
 
         const b64Json = payload?.data?.[0]?.b64_json;
@@ -112,7 +114,7 @@ export async function POST(request: Request) {
           };
         }
 
-        return null;
+        throw new Error(`${asset.assetId || asset.placement}: image generation returned no PNG data.`);
       })
     );
 

@@ -1187,6 +1187,18 @@ async function compileDeckRequest(request: Request) {
     );
   }
 
+  const missingImageAssets = assets.filter((asset) => asset.type === "image" && !asset.dataUrl?.startsWith("data:image/png;base64,"));
+  if (missingImageAssets.length) {
+    return NextResponse.json(
+      {
+        compilerStatus: "validation_failed",
+        error: `${missingImageAssets.length} planned image asset${missingImageAssets.length === 1 ? "" : "s"} did not include generated PNG data. The deck was not compiled because real visuals are required for these slides.`,
+        validationErrors: missingImageAssets.map((asset) => `${asset.assetId || asset.placement}: missing generated image data`)
+      },
+      { status: 422 }
+    );
+  }
+
   const {
     embeddedImageCount,
     remotePayloadBytes,

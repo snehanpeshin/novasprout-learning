@@ -123,7 +123,7 @@ type SubjectTheme = {
 const accessStorageKey = "novasprout_ai_access_token";
 const leadStorageKey = "novasprout_ai_lead";
 const assetPlanningTimeoutMs = 18000;
-const imageGenerationTimeoutMs = 60000;
+const imageGenerationTimeoutMs = 90000;
 
 const grades = [
   "Grade 3",
@@ -953,12 +953,24 @@ function StudentSlideDeck({
         "Could not generate slide images."
       );
       const generatedImages = data.images ?? [];
+      const plannedImages = inputAssets.filter((asset) => asset.type === "image");
+      if (plannedImages.length && generatedImages.length < plannedImages.length) {
+        throw new Error(
+          `Only ${generatedImages.length} of ${plannedImages.length} planned images were generated. Check OpenAI image billing/quota and try again.`
+        );
+      }
+
       const mergedAssets = inputAssets.map((asset) => {
           const generated = generatedImages.find(
             (image) => image.placement === asset.placement && image.prompt === asset.prompt
           );
           return generated ? { ...asset, ...generated } : asset;
         });
+      const missingImages = mergedAssets.filter((asset) => asset.type === "image" && !asset.dataUrl);
+      if (missingImages.length) {
+        throw new Error(`${missingImages.length} planned image asset${missingImages.length === 1 ? "" : "s"} did not return PNG data.`);
+      }
+
       setAssets(mergedAssets);
       setDeckStage("Images ready");
       return mergedAssets;
@@ -1036,7 +1048,11 @@ function StudentSlideDeck({
       const assetsWithImages = safePlannedAssets.some((asset) => asset.type === "image")
         ? await generateSlideImages(safePlannedAssets)
         : safePlannedAssets;
-      const safeAssetsWithImages = assetsWithImages ?? safePlannedAssets.filter((asset) => asset.type !== "image");
+      if (!assetsWithImages && safePlannedAssets.some((asset) => asset.type === "image")) {
+        return;
+      }
+
+      const safeAssetsWithImages = assetsWithImages ?? safePlannedAssets;
 
       await compileLatexDeck(safeAssetsWithImages);
     } finally {
