@@ -900,6 +900,7 @@ function StudentSlideDeck({
     "Visual planning skipped": "Planning visuals"
   };
   const activeBuildStage = stageAliases[deckStage] ?? deckStage;
+  const shouldRequireGeneratedImage = context.subject === "Science" || context.topic.toLowerCase().includes("digest");
 
   async function readDeckResponse<T>(response: Response, fallbackMessage: string) {
     const responseText = await response.text();
@@ -916,6 +917,35 @@ function StudentSlideDeck({
     }
 
     return data;
+  }
+
+  function countEmbeddedImageAssets(deck: CompiledDeck | null) {
+    return deck?.assetManifest?.filter((asset) => asset.type === "image").length ?? 0;
+  }
+
+  function validateCompiledDeck(deck: CompiledDeck, inputAssets: SlideAsset[]) {
+    const plannedImageCount = inputAssets.filter((asset) => asset.type === "image").length;
+    const embeddedImageCount = countEmbeddedImageAssets(deck);
+
+    if (deck.compilerStatus !== "compiled") {
+      throw new Error(deck.error ?? "The PDF compiler did not report a successful compile.");
+    }
+
+    if (!deck.pdfUrl && !deck.pdfDataUrl) {
+      throw new Error("The PDF compiler did not return a previewable PDF.");
+    }
+
+    if (!deck.pageCount || deck.pageCount < Math.max(3, Math.floor(pdfPlanningTitles.length * 0.5))) {
+      throw new Error("The compiled PDF has fewer pages than expected.");
+    }
+
+    if ((deck.pdfSize ?? 0) < 25000) {
+      throw new Error("The compiled PDF is too small to be a complete visual lesson.");
+    }
+
+    if (plannedImageCount && embeddedImageCount < plannedImageCount) {
+      throw new Error(`Only ${embeddedImageCount} of ${plannedImageCount} generated image assets were embedded in the PDF.`);
+    }
   }
 
   async function planSlideAssets() {
@@ -941,13 +971,17 @@ function StudentSlideDeck({
         response,
         "Could not create the slide asset plan."
       );
+      const plannedAssets = data.assets ?? [];
+      if (shouldRequireGeneratedImage && !plannedAssets.some((asset) => asset.type === "image")) {
+        throw new Error("Visual planning did not produce a generated image asset for this science lesson.");
+      }
       await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.visuals);
-      setAssets(data.assets ?? []);
+      setAssets(plannedAssets);
       setDeckStage("Visual plan ready");
-      return data.assets ?? [];
+      return plannedAssets;
     } catch (error) {
       await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.visuals);
-      setAssetError("");
+      setAssetError(error instanceof Error ? `Visual planning failed: ${error.message}` : "Visual planning failed.");
       setDeckStage("Visual planning skipped");
       return null;
     } finally {
@@ -1041,16 +1075,21 @@ function StudentSlideDeck({
         );
       }
 
-      setCompiledDeck(data);
-      setPdfPage(1);
       await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.compile);
       if (!response.ok && data.error) {
+        setCompiledDeck(data);
+        setPdfPage(1);
         setAssetError(data.error);
       } else if (!response.ok) {
+        setCompiledDeck(data);
+        setPdfPage(1);
         setAssetError("Could not compile the LaTeX deck.");
       } else {
         setDeckStage("Checking quality");
         await sleep(minimumBuildStageMs.quality);
+        validateCompiledDeck(data, inputAssets);
+        setCompiledDeck(data);
+        setPdfPage(1);
         setDeckStage("Ready");
       }
       return response.ok ? data : null;
@@ -1072,6 +1111,9 @@ function StudentSlideDeck({
       setDeckStage("Generating LaTeX");
       await sleep(minimumBuildStageMs.latex);
       const plannedAssets = await planSlideAssets();
+      if (!plannedAssets && shouldRequireGeneratedImage) {
+        return;
+      }
       const safePlannedAssets = plannedAssets ?? [];
 
       const assetsWithImages = safePlannedAssets.some((asset) => asset.type === "image")

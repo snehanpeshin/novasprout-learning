@@ -908,7 +908,7 @@ function buildSlideBodies(request: LessonDeckRequest) {
 }
 
 async function writeImageAssets(workDir: string, assets: DeckAsset[]) {
-  const written: Array<{ filename: string; placement: string }> = [];
+  const written: Array<{ assetId?: string; filename: string; placement: string; type: "image" }> = [];
 
   await Promise.all(
     assets.map(async (asset) => {
@@ -923,7 +923,7 @@ async function writeImageAssets(workDir: string, assets: DeckAsset[]) {
 
       const base64 = asset.dataUrl.replace(/^data:image\/png;base64,/, "");
       await writeFile(path.join(workDir, filename), Buffer.from(base64, "base64"));
-      written.push({ filename, placement: cleanText(asset.placement, 8) });
+      written.push({ assetId: asset.assetId, filename, placement: cleanText(asset.placement, 8), type: "image" });
     })
   );
 
