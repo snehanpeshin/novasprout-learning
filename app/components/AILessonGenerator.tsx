@@ -120,6 +120,8 @@ type SubjectTheme = {
 
 const accessStorageKey = "novasprout_ai_access_token";
 const leadStorageKey = "novasprout_ai_lead";
+const assetPlanningTimeoutMs = 18000;
+const imageGenerationTimeoutMs = 25000;
 
 const grades = [
   "Grade 3",
@@ -532,6 +534,13 @@ function downloadTextFile(filename: string, content: string) {
   URL.revokeObjectURL(url);
 }
 
+function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => window.clearTimeout(timeout));
+}
+
 function LessonPlayer({
   context,
   lesson,
@@ -768,6 +777,13 @@ function StudentSlideDeck({
   const pdfFilename = texFilename.replace(/\.tex$/, ".pdf");
   const pdfViewerSrc = compiledDeck?.pdfDataUrl ? `${compiledDeck.pdfDataUrl}#page=${pdfPage}&zoom=${pdfZoom}` : "";
   const buildStages = ["Generating LaTeX", "Planning visuals", "Generating images", "Compiling PDF", "Checking quality", "Ready"];
+  const stageAliases: Record<string, string> = {
+    "Images ready": "Generating images",
+    "Images skipped": "Generating images",
+    "Visual plan ready": "Planning visuals",
+    "Visual planning skipped": "Planning visuals"
+  };
+  const activeBuildStage = stageAliases[deckStage] ?? deckStage;
 
   async function readDeckResponse<T>(response: Response, fallbackMessage: string) {
     const responseText = await response.text();
@@ -792,7 +808,7 @@ function StudentSlideDeck({
     setIsPlanningAssets(true);
 
     try {
-      const response = await fetch("/api/ai-slide-assets", {
+      const response = await fetchWithTimeout("/api/ai-slide-assets", {
         body: JSON.stringify({
           context,
           lesson,
@@ -803,7 +819,7 @@ function StudentSlideDeck({
           "x-ai-access-token": accessToken.trim()
         },
         method: "POST"
-      });
+      }, assetPlanningTimeoutMs);
       const data = await readDeckResponse<{ assets?: SlideAsset[] }>(
         response,
         "Could not create the slide asset plan."
@@ -812,7 +828,8 @@ function StudentSlideDeck({
       setDeckStage("Visual plan ready");
       return data.assets ?? [];
     } catch (error) {
-      setAssetError(error instanceof Error ? error.message : "Could not create the slide asset plan.");
+      setAssetError("");
+      setDeckStage("Visual planning skipped");
       return null;
     } finally {
       setIsPlanningAssets(false);
@@ -825,14 +842,14 @@ function StudentSlideDeck({
     setIsGeneratingImages(true);
 
     try {
-      const response = await fetch("/api/ai-slide-images", {
+      const response = await fetchWithTimeout("/api/ai-slide-images", {
         body: JSON.stringify({ assets: inputAssets }),
         headers: {
           "Content-Type": "application/json",
           "x-ai-access-token": accessToken.trim()
         },
         method: "POST"
-      });
+      }, imageGenerationTimeoutMs);
       const data = await readDeckResponse<{ images?: SlideAsset[] }>(
         response,
         "Could not generate slide images."
@@ -848,7 +865,8 @@ function StudentSlideDeck({
       setDeckStage("Images ready");
       return mergedAssets;
     } catch (error) {
-      setAssetError(error instanceof Error ? error.message : "Could not generate slide images.");
+      setAssetError("");
+      setDeckStage("Images skipped");
       return null;
     } finally {
       setIsGeneratingImages(false);
@@ -911,18 +929,14 @@ function StudentSlideDeck({
     try {
       setDeckStage("Generating LaTeX");
       const plannedAssets = await planSlideAssets();
-      if (!plannedAssets) {
-        return;
-      }
+      const safePlannedAssets = plannedAssets ?? [];
 
-      const assetsWithImages = plannedAssets.some((asset) => asset.type === "image")
-        ? await generateSlideImages(plannedAssets)
-        : plannedAssets;
-      if (!assetsWithImages) {
-        return;
-      }
+      const assetsWithImages = safePlannedAssets.some((asset) => asset.type === "image")
+        ? await generateSlideImages(safePlannedAssets)
+        : safePlannedAssets;
+      const safeAssetsWithImages = assetsWithImages ?? safePlannedAssets.filter((asset) => asset.type !== "image");
 
-      await compileLatexDeck(assetsWithImages);
+      await compileLatexDeck(safeAssetsWithImages);
     } finally {
       setIsFullPipelineRunning(false);
     }
@@ -966,10 +980,10 @@ function StudentSlideDeck({
             <h3>{deckStage || "Building PDF lesson"}</h3>
             <ol>
               {buildStages.map((stage) => {
-                const currentIndex = buildStages.indexOf(deckStage);
+                const currentIndex = buildStages.indexOf(activeBuildStage);
                 const stageIndex = buildStages.indexOf(stage);
                 return (
-                  <li className={stage === deckStage ? "active" : stageIndex < currentIndex ? "done" : ""} key={stage}>
+                  <li className={stage === activeBuildStage ? "active" : stageIndex < currentIndex ? "done" : ""} key={stage}>
                     {stage}
                   </li>
                 );
