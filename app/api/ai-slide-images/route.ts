@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       prompt: cleanText(asset.prompt, 900)
     }))
     .filter((asset) => asset.prompt && asset.placement)
-    .slice(0, 3);
+    .slice(0, 2);
 
   if (!imageAssets.length) {
     return NextResponse.json({ images: [] });

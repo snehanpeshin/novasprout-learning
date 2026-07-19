@@ -11,6 +11,9 @@ export const maxDuration = 60;
 
 const execFileAsync = promisify(execFile);
 const remoteCompilerTimeoutMs = 25000;
+const maxEmbeddedImageAssets = 2;
+const maxEmbeddedImageBytes = 1_400_000;
+const maxRemoteAssetPayloadBytes = 4_200_000;
 
 type DeckAsset = {
   assetId?: string;
@@ -35,6 +38,11 @@ type LessonDeckRequest = {
   };
   lesson?: {
     conceptExplanation?: string;
+    fullLessonSegments?: Array<{
+      activity?: string;
+      time?: string;
+      title?: string;
+    }>;
     guidedExample?: string;
     learningObjectives?: string[];
     practiceQuestions?: string[];
@@ -172,6 +180,58 @@ function normalizeAssets(assets: DeckAsset[], slideCount: number) {
   });
 
   return { errors, normalized };
+}
+
+function estimatedDataUrlBytes(dataUrl?: string) {
+  if (!dataUrl?.startsWith("data:image/png;base64,")) {
+    return 0;
+  }
+
+  return Math.ceil(dataUrl.replace("data:image/png;base64,", "").length * 0.75);
+}
+
+function selectAssetsForCompilation(assets: DeckAsset[]) {
+  const warnings: string[] = [];
+  let embeddedImageCount = 0;
+  let remotePayloadBytes = 0;
+
+  const selected = assets.filter((asset) => {
+    if (asset.type !== "image") {
+      return true;
+    }
+
+    const imageBytes = estimatedDataUrlBytes(asset.dataUrl);
+    if (!asset.dataUrl || !asset.filename || !imageBytes) {
+      warnings.push(`Image asset ${asset.assetId || asset.placement} was planned but not generated.`);
+      return false;
+    }
+
+    if (embeddedImageCount >= maxEmbeddedImageAssets) {
+      warnings.push(`Image asset ${asset.assetId || asset.placement} was omitted to keep the PDF compile lightweight.`);
+      return false;
+    }
+
+    if (imageBytes > maxEmbeddedImageBytes || remotePayloadBytes + imageBytes > maxRemoteAssetPayloadBytes) {
+      warnings.push(`Image asset ${asset.assetId || asset.placement} was omitted because it was too large for the compiler payload.`);
+      return false;
+    }
+
+    embeddedImageCount += 1;
+    remotePayloadBytes += imageBytes;
+    return true;
+  });
+
+  return { embeddedImageCount, remotePayloadBytes, selected, warnings };
+}
+
+function compilerImageAssets(assets: DeckAsset[]) {
+  return assets
+    .filter((asset) => asset.type === "image" && asset.dataUrl?.startsWith("data:image/png;base64,") && asset.filename)
+    .map((asset) => ({
+      dataUrl: asset.dataUrl,
+      filename: asset.filename,
+      placement: asset.placement
+    }));
 }
 
 function frameBody(title: string, body: string, assets: DeckAsset[], slideNumber: number) {
@@ -355,50 +415,112 @@ x = 9\cdot\frac{2}{3}=6
   ];
 }
 
+function textChunks(value?: string, maxLength = 380, maxChunks = 4) {
+  const text = cleanText(value, 3000).replace(/\s+/g, " ");
+  if (!text) {
+    return [];
+  }
+
+  const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const chunks: string[] = [];
+  let current = "";
+
+  sentences.forEach((sentence) => {
+    if (chunks.length >= maxChunks) {
+      return;
+    }
+
+    const next = current ? `${current} ${sentence}` : sentence;
+    if (next.length > maxLength && current) {
+      chunks.push(current);
+      current = sentence;
+    } else {
+      current = next;
+    }
+  });
+
+  if (current && chunks.length < maxChunks) {
+    chunks.push(current);
+  }
+
+  if (!chunks.length) {
+    chunks.push(text.slice(0, maxLength));
+  }
+
+  return chunks;
+}
+
+function itemChunks(items?: string[], size = 3, maxChunks = 4) {
+  const cleaned = (items ?? []).map((item) => cleanText(item, 260)).filter(Boolean);
+  const chunks: string[][] = [];
+  for (let index = 0; index < cleaned.length && chunks.length < maxChunks; index += size) {
+    chunks.push(cleaned.slice(index, index + size));
+  }
+  return chunks;
+}
+
+function textSlide(title: string, body?: string) {
+  return {
+    body: String.raw`\small ${escapeLatex(body)}`,
+    title
+  };
+}
+
+function listSlide(title: string, items: string[], ordered = false) {
+  return {
+    body: String.raw`${ordered ? "\\begin{enumerate}" : "\\begin{itemize}"}
+\small
+${latexItems(items)}
+${ordered ? "\\end{enumerate}" : "\\end{itemize}"}`,
+    title
+  };
+}
+
 function buildSlideBodies(request: LessonDeckRequest) {
   const lesson = request.lesson ?? {};
+  const conceptSlides = textChunks(lesson.conceptExplanation, 360, 4).map((chunk, index) =>
+    textSlide(index === 0 ? "Core Idea" : `Core Idea ${index + 1}`, chunk)
+  );
+  const exampleSlides = textChunks(lesson.guidedExample, 360, 4).map((chunk, index) =>
+    textSlide(index === 0 ? "Worked Example" : `Worked Example ${index + 1}`, chunk)
+  );
+  const practiceSlides = itemChunks(lesson.practiceQuestions, 3, 4).map((items, index) =>
+    listSlide(index === 0 ? "Practice Set" : `Practice Set ${index + 1}`, items, true)
+  );
+  const quickCheckSlides = itemChunks(lesson.quickAssessment, 3, 2).map((items, index) =>
+    listSlide(index === 0 ? "Quick Check" : `Quick Check ${index + 1}`, items, true)
+  );
+  const guidedActivitySlides = (lesson.fullLessonSegments ?? [])
+    .map((segment) => cleanText(segment.activity, 420))
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((activity, index) => textSlide(index === 0 ? "Guided Activity" : `Guided Activity ${index + 1}`, activity));
   const slides = [
     {
-      body: String.raw`\Large ${escapeLatex(lesson.studentFit)}
+      body: String.raw`\Large ${escapeLatex(request.context?.topic ?? lesson.title ?? "NovaSprout Lesson")}
+\vspace{0.8em}
+
+\small ${escapeLatex(lesson.studentFit)}
+\vspace{0.8em}
+
+\begin{block}{Focus}
+\begin{itemize}
+${latexItems((lesson.learningObjectives ?? []).slice(0, 3))}
+\end{itemize}
+\end{block}
 \vfill
 \small NovaSprout Learning`,
       title: lesson.title ?? "NovaSprout Lesson"
     },
-    {
-      body: String.raw`\begin{itemize}
-${latexItems(lesson.learningObjectives)}
-\end{itemize}`,
-      title: "What You Will Learn"
-    },
-    {
-      body: escapeLatex(lesson.warmUp),
-      title: "Warm-Up"
-    },
-    {
-      body: escapeLatex(lesson.conceptExplanation),
-      title: "Big Idea"
-    },
+    ...(lesson.warmUp ? [textSlide("Warm-Up", lesson.warmUp)] : []),
+    ...conceptSlides.slice(0, 2),
     ...subjectVisualSlides(request),
-    {
-      body: escapeLatex(lesson.guidedExample),
-      title: "Worked Example"
-    },
-    {
-      body: String.raw`\begin{enumerate}
-${latexItems(lesson.practiceQuestions)}
-\end{enumerate}`,
-      title: "Practice"
-    },
-    {
-      body: String.raw`\begin{enumerate}
-${latexItems(lesson.quickAssessment)}
-\end{enumerate}`,
-      title: "Quick Check"
-    },
-    {
-      body: escapeLatex(lesson.recommendedNextSession),
-      title: "Next Session"
-    }
+    ...conceptSlides.slice(2),
+    ...exampleSlides,
+    ...guidedActivitySlides,
+    ...practiceSlides,
+    ...quickCheckSlides,
+    ...(lesson.recommendedNextSession ? [textSlide("Next Practice", lesson.recommendedNextSession)] : [])
   ];
 
   return slides;
@@ -583,10 +705,7 @@ async function compileWithRemoteService({
       compileUrl,
       {
         body: JSON.stringify({
-      // Keep remote compilation lightweight. Large generated image payloads can
-      // exceed Lambda/Amplify request or response limits; LaTeX overlays are
-      // already embedded in the generated .tex source.
-      assets: [],
+          assets: compilerImageAssets(assets),
           expectedPageCount,
           tex
         }),
@@ -676,24 +795,32 @@ async function compileDeckRequest(request: Request) {
     );
   }
 
-  const tex = buildBeamerTex({ ...body, assets });
+  const {
+    embeddedImageCount,
+    remotePayloadBytes,
+    selected: compileAssets,
+    warnings: assetWarnings
+  } = selectAssetsForCompilation(assets);
+  const tex = buildBeamerTex({ ...body, assets: compileAssets });
   const densityWarnings = getDensityWarnings(slideBodies);
-  const imageAssetCount = assets.filter((asset) => asset.type === "image" && asset.dataUrl && asset.filename).length;
+  const plannedImageAssetCount = assets.filter((asset) => asset.type === "image").length;
   const qualityChecks = [
     `${slideBodies.length} Beamer slides generated.`,
-    `${imageAssetCount} image asset${imageAssetCount === 1 ? "" : "s"} prepared for indexed placement.`,
-    `${assets.filter((asset) => asset.type === "latex").length} LaTeX overlay asset${
-      assets.filter((asset) => asset.type === "latex").length === 1 ? "" : "s"
+    `${plannedImageAssetCount} image asset${plannedImageAssetCount === 1 ? "" : "s"} planned for indexed placement.`,
+    `${embeddedImageCount} generated image asset${embeddedImageCount === 1 ? "" : "s"} embedded in the compiled PDF.`,
+    `${compileAssets.filter((asset) => asset.type === "latex").length} LaTeX overlay asset${
+      compileAssets.filter((asset) => asset.type === "latex").length === 1 ? "" : "s"
     } included.`,
+    `Remote visual payload: ${Math.round(remotePayloadBytes / 1024)} KB.`,
     "Placement codes validated against lt, ct, rt, lm, cm, rm, lb, cb, rb."
   ];
 
-  const remoteCompile = await compileWithRemoteService({ assets, expectedPageCount: slideBodies.length, tex });
+  const remoteCompile = await compileWithRemoteService({ assets: compileAssets, expectedPageCount: slideBodies.length, tex });
   if (remoteCompile) {
     if (!remoteCompile.ok) {
       return NextResponse.json(
         {
-          assetManifest: assets.map((asset) => ({
+          assetManifest: compileAssets.map((asset) => ({
             alt: asset.alt,
             assetId: asset.assetId,
             aspectRatio: asset.aspectRatio,
@@ -705,7 +832,7 @@ async function compileDeckRequest(request: Request) {
           compilerStatus: remoteCompile.compilerStatus,
           error: remoteCompile.error,
           qualityChecks,
-          qualityWarnings: densityWarnings,
+          qualityWarnings: [...densityWarnings, ...assetWarnings],
           tex: process.env.NODE_ENV === "development" ? tex : undefined
         },
         { status: 422 }
@@ -716,6 +843,7 @@ async function compileDeckRequest(request: Request) {
     const pdfSize = remoteCompile.pdfSize ?? 0;
     const warnings = [
       ...densityWarnings,
+      ...assetWarnings,
       ...remoteCompile.warnings,
       ...(pageCount === slideBodies.length
         ? []
@@ -724,7 +852,7 @@ async function compileDeckRequest(request: Request) {
     ];
 
     return NextResponse.json({
-      assetManifest: assets.map((asset) => ({
+      assetManifest: compileAssets.map((asset) => ({
         alt: asset.alt,
         assetId: asset.assetId,
         aspectRatio: asset.aspectRatio,
@@ -750,7 +878,7 @@ async function compileDeckRequest(request: Request) {
 
   const workDir = await mkdtemp(path.join(tmpdir(), "novasprout-deck-"));
   const compiler = getCompilerCommand();
-  const writtenAssets = await writeImageAssets(workDir, assets);
+  const writtenAssets = await writeImageAssets(workDir, compileAssets);
   const localQualityChecks = [...qualityChecks, "Temporary compile directory isolated under the OS temp folder."];
 
   await writeFile(path.join(workDir, "lesson.tex"), tex, "utf8");
@@ -768,6 +896,7 @@ async function compileDeckRequest(request: Request) {
     const pageCount = pageCheck.pages;
     const warnings = [
       ...densityWarnings,
+      ...assetWarnings,
       ...(pageCount === slideBodies.length
         ? []
         : [`Expected ${slideBodies.length} pages but detected ${pageCount} using ${pageCheck.method}.`]),
@@ -775,7 +904,7 @@ async function compileDeckRequest(request: Request) {
     ];
 
     return NextResponse.json({
-      assetManifest: assets.map((asset) => ({
+      assetManifest: compileAssets.map((asset) => ({
         alt: asset.alt,
         assetId: asset.assetId,
         aspectRatio: asset.aspectRatio,
@@ -808,7 +937,7 @@ async function compileDeckRequest(request: Request) {
           ? "LaTeX compiler is not installed in this deployment. Use a TeX-enabled AWS Lambda/container or install pdflatex/tectonic and set LATEX_COMPILER_PATH."
           : sanitizeCompilerError(message),
         qualityChecks: localQualityChecks,
-        qualityWarnings: densityWarnings,
+        qualityWarnings: [...densityWarnings, ...assetWarnings],
         tex: process.env.NODE_ENV === "development" ? tex : undefined
       },
       { status: missingCompiler ? 501 : 422 }

@@ -209,6 +209,85 @@ function getSubjectTheme(subject: string): SubjectTheme {
   };
 }
 
+function countTextChunks(value?: string, maxLength = 360, maxChunks = 4) {
+  const text = (value ?? "").replace(/\s+/g, " ").trim();
+  if (!text) {
+    return 0;
+  }
+
+  const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  let chunks = 0;
+  let current = "";
+
+  sentences.forEach((sentence) => {
+    if (chunks >= maxChunks) {
+      return;
+    }
+
+    const next = current ? `${current} ${sentence}` : sentence;
+    if (next.length > maxLength && current) {
+      chunks += 1;
+      current = sentence;
+    } else {
+      current = next;
+    }
+  });
+
+  return Math.min(maxChunks, chunks + (current ? 1 : 0)) || 1;
+}
+
+function countItemChunks(items?: string[], size = 3, maxChunks = 4) {
+  const count = (items ?? []).filter((item) => item.trim()).length;
+  return Math.min(maxChunks, Math.ceil(count / size));
+}
+
+function subjectVisualTitles(subject: string) {
+  if (subject === "Science") {
+    return ["Visual Reasoning Model"];
+  }
+  if (subject === "ELA and study support") {
+    return ["Study Strategy Map"];
+  }
+  if (subject === "Coding and data skills") {
+    return ["Input Process Output"];
+  }
+  return ["Visual Model", "Equation Walkthrough"];
+}
+
+function pdfDeckPlanningTitles(lesson: GeneratedLesson, subject: string) {
+  const titles = [lesson.title ?? "NovaSprout Lesson"];
+  if (lesson.warmUp) {
+    titles.push("Warm-Up");
+  }
+
+  const conceptCount = countTextChunks(lesson.conceptExplanation, 360, 4);
+  Array.from({ length: Math.min(2, conceptCount) }).forEach((_, index) => {
+    titles.push(index === 0 ? "Core Idea" : `Core Idea ${index + 1}`);
+  });
+  titles.push(...subjectVisualTitles(subject));
+  Array.from({ length: Math.max(0, conceptCount - 2) }).forEach((_, index) => {
+    titles.push(`Core Idea ${index + 3}`);
+  });
+
+  Array.from({ length: countTextChunks(lesson.guidedExample, 360, 4) }).forEach((_, index) => {
+    titles.push(index === 0 ? "Worked Example" : `Worked Example ${index + 1}`);
+  });
+  Array.from({ length: Math.min(2, lesson.fullLessonSegments?.filter((segment) => segment.activity?.trim()).length ?? 0) }).forEach((_, index) => {
+    titles.push(index === 0 ? "Guided Activity" : `Guided Activity ${index + 1}`);
+  });
+  Array.from({ length: countItemChunks(lesson.practiceQuestions, 3, 4) }).forEach((_, index) => {
+    titles.push(index === 0 ? "Practice Set" : `Practice Set ${index + 1}`);
+  });
+  Array.from({ length: countItemChunks(lesson.quickAssessment, 3, 2) }).forEach((_, index) => {
+    titles.push(index === 0 ? "Quick Check" : `Quick Check ${index + 1}`);
+  });
+  if (lesson.recommendedNextSession) {
+    titles.push("Next Practice");
+  }
+
+  return titles;
+}
+
 function LessonSection({
   children,
   label,
@@ -770,6 +849,7 @@ function StudentSlideDeck({
 
   const activeSlide = slides[activeSlideIndex];
   const BeamerIcon = theme.icon;
+  const pdfPlanningTitles = useMemo(() => pdfDeckPlanningTitles(lesson, context.subject), [context.subject, lesson]);
   const texFilename = `${(lesson.title ?? "novasprout-lesson")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -835,7 +915,7 @@ function StudentSlideDeck({
         body: JSON.stringify({
           context,
           lesson,
-          slideTitles: slides.map((slide) => slide.title)
+          slideTitles: pdfPlanningTitles
         }),
         headers: {
           "Content-Type": "application/json",
@@ -908,7 +988,7 @@ function StudentSlideDeck({
           assets: inputAssets,
           context,
           lesson,
-          slideTitles: slides.map((slide) => slide.title)
+          slideTitles: pdfPlanningTitles
         }),
         headers: {
           "Content-Type": "application/json",

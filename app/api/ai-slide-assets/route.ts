@@ -141,7 +141,7 @@ export async function POST(request: Request) {
   const subject = cleanText(body.context?.subject, 60);
   const topic = cleanText(body.context?.topic, 90);
   const title = cleanText(body.lesson?.title, 120);
-  const slideTitles = (body.slideTitles ?? []).map((item) => cleanText(item, 80)).filter(Boolean).slice(0, 14);
+  const slideTitles = (body.slideTitles ?? []).map((item) => cleanText(item, 80)).filter(Boolean).slice(0, 20);
 
   if (!grade || !subject || !topic || !title || !slideTitles.length) {
     return NextResponse.json({ error: "Missing lesson, context, or slide titles." }, { status: 400 });
@@ -166,7 +166,7 @@ Lesson details:
 - Practice: ${(body.lesson?.practiceQuestions ?? []).slice(0, 4).join(" | ")}
 - Quick checks: ${(body.lesson?.quickAssessment ?? []).join(" | ")}
 
-Return a compact JSON object with 4 to 7 assets total.
+Return a compact JSON object with 3 to 6 assets total.
 Use two asset types:
 - image: a kid-friendly educational diagram prompt, no text labels inside the image
 - latex: a short formula, symbolic relationship, or structured notation when helpful
@@ -187,10 +187,14 @@ lt, ct, rt, lm, cm, rm, lb, cb, rb.
 Example: 1lb means slide 1, left bottom.
 
 Rules:
-- Create at most 3 image assets.
+- Create at most 2 image assets.
 - Do not put images on every slide.
 - Do not create decorative images. Every image must clarify the lesson.
-- Prefer images for concept, example, or practice slides.
+- Prefer images for the two slides where a visual most improves understanding: concept, diagram, model, graph, experiment, worked example, or practice.
+- For math, prefer visual models such as bars, number lines, coordinate grids, geometric sketches, or proportional tables.
+- For science, prefer process diagrams, experiment setups, cause/effect models, or observation diagrams.
+- For ELA/study skills, prefer organizing visuals such as flowcharts, annotation models, or planning maps.
+- For coding/data, prefer flow diagrams, input-process-output models, table/chart concepts, or dashboard sketches.
 - Prefer latex for math/science formulas and concise symbolic notation.
 - If no latex is useful for a slide, do not create a latex asset for that slide.
 - Use only slide numbers that exist in the slide-title list.
