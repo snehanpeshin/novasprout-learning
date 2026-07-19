@@ -416,13 +416,10 @@ async function compileWithRemoteService({
       compileUrl,
       {
         body: JSON.stringify({
-          assets: assets
-            .filter((asset) => asset.type === "image" && asset.dataUrl && asset.filename)
-            .map((asset) => ({
-              dataUrl: asset.dataUrl,
-              filename: asset.filename,
-              placement: asset.placement
-            })),
+      // Keep remote compilation lightweight. Large generated image payloads can
+      // exceed Lambda/Amplify request or response limits; LaTeX overlays are
+      // already embedded in the generated .tex source.
+      assets: [],
           expectedPageCount,
           tex
         }),
@@ -476,7 +473,7 @@ async function compileWithRemoteService({
   };
 }
 
-export async function POST(request: Request) {
+async function compileDeckRequest(request: Request) {
   const expectedAccessToken = process.env.AI_LESSON_ACCESS_TOKEN?.trim();
   const providedAccessToken = request.headers.get("x-ai-access-token")?.trim();
 
@@ -538,7 +535,7 @@ export async function POST(request: Request) {
           error: remoteCompile.error,
           qualityChecks,
           qualityWarnings: densityWarnings,
-          tex
+          tex: process.env.NODE_ENV === "development" ? tex : undefined
         },
         { status: 422 }
       );
@@ -575,7 +572,7 @@ export async function POST(request: Request) {
         `PDF size: ${pdfSize} bytes.`
       ],
       qualityWarnings: warnings,
-      tex
+      tex: process.env.NODE_ENV === "development" ? tex : undefined
     });
   }
 
@@ -640,11 +637,28 @@ export async function POST(request: Request) {
           : message.slice(0, 1200),
         qualityChecks: localQualityChecks,
         qualityWarnings: densityWarnings,
-        tex
+        tex: process.env.NODE_ENV === "development" ? tex : undefined
       },
       { status: missingCompiler ? 501 : 422 }
     );
   } finally {
     await rm(workDir, { force: true, recursive: true });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    return await compileDeckRequest(request);
+  } catch (error) {
+    return NextResponse.json(
+      {
+        compilerStatus: "compile_failed",
+        error:
+          error instanceof Error
+            ? `The lesson compiler route failed before it could finish: ${error.message}`
+            : "The lesson compiler route failed before it could finish."
+      },
+      { status: 500 }
+    );
   }
 }
