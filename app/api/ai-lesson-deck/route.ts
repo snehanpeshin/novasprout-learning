@@ -6,9 +6,10 @@ import { promisify } from "util";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const execFileAsync = promisify(execFile);
-const remoteCompilerTimeoutMs = 45000;
+const remoteCompilerTimeoutMs = 25000;
 
 type DeckAsset = {
   assetId?: string;

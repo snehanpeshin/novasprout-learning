@@ -899,7 +899,11 @@ function StudentSlideDeck({
       try {
         data = responseText ? JSON.parse(responseText) : {};
       } catch {
-        throw new Error(responseText || "Could not compile the LaTeX deck.");
+        throw new Error(
+          responseText
+            ? `Compiler server returned a non-JSON error: ${responseText.slice(0, 500)}`
+            : "Could not compile the LaTeX deck."
+        );
       }
 
       setCompiledDeck(data);
