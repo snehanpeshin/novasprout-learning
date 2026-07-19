@@ -97,6 +97,7 @@ type CompiledDeck = {
   error?: string;
   pageCount?: number;
   pdfDataUrl?: string;
+  pdfSize?: number;
   pdfUrl?: string;
   qualityChecks?: string[];
   qualityWarnings?: string[];
@@ -776,7 +777,8 @@ function StudentSlideDeck({
   const pdfFilename = texFilename.replace(/\.tex$/, ".pdf");
   const compiledPdfHref = compiledDeck?.pdfUrl ?? compiledDeck?.pdfDataUrl ?? "";
   const compiledPageCount = compiledDeck?.pageCount ?? slides.length;
-  const pdfViewerSrc = compiledPdfHref ? `${compiledPdfHref}#page=${pdfPage}&zoom=${pdfZoom}` : "";
+  const pdfViewerSrc = compiledPdfHref ? `${compiledPdfHref}#toolbar=0&navpanes=0&page=${pdfPage}&zoom=${pdfZoom}` : "";
+  const pdfViewerKey = `${compiledDeck?.pdfUrl ?? compiledDeck?.pdfSize ?? "compiled-pdf"}-${compiledPageCount}-${pdfPage}-${pdfZoom}`;
   const currentTimedSlide = slides[Math.min(pdfPage - 1, slides.length - 1)];
   const currentPageMinutes = currentTimedSlide?.minutes ?? 4;
   const [remainingSeconds, setRemainingSeconds] = useState(currentPageMinutes * 60);
@@ -1004,7 +1006,7 @@ function StudentSlideDeck({
         </div>
         {compiledPdfHref ? (
           <article className="compiled-pdf-primary" id="compiled-pdf-viewer">
-            <iframe src={pdfViewerSrc} title="Compiled NovaSprout lesson PDF" />
+            <iframe key={pdfViewerKey} src={pdfViewerSrc} title={`Compiled NovaSprout lesson PDF page ${pdfPage}`} />
           </article>
         ) : isFullPipelineRunning ? (
           <article className="deck-build-status">
