@@ -124,7 +124,6 @@ const accessStorageKey = "novasprout_ai_access_token";
 const leadStorageKey = "novasprout_ai_lead";
 const assetPlanningTimeoutMs = 18000;
 const imageGenerationTimeoutMs = 240000;
-const minimumCompiledPdfBytes = 12000;
 const minimumBuildStageMs = {
   compile: 7000,
   images: 12000,
@@ -940,10 +939,6 @@ function StudentSlideDeck({
       throw new Error("The compiled PDF has fewer pages than expected.");
     }
 
-    if ((deck.pdfSize ?? 0) < minimumCompiledPdfBytes) {
-      throw new Error("The compiled PDF is too small to be a complete visual lesson.");
-    }
-
     if (plannedImageCount && embeddedImageCount < plannedImageCount) {
       throw new Error(`Only ${embeddedImageCount} of ${plannedImageCount} generated image assets were embedded in the PDF.`);
     }
@@ -1366,46 +1361,6 @@ function StudentSlideDeck({
   );
 }
 
-function PrivateLessonPreparing({
-  onClose,
-  topic
-}: {
-  onClose: () => void;
-  topic: string;
-}) {
-  return (
-    <div className="lesson-player-backdrop" role="dialog" aria-modal="true" aria-labelledby="private-lesson-preparing-title">
-      <section className="student-deck">
-        <header className="student-deck-header">
-          <div>
-            <p className="eyebrow">Private lesson window</p>
-            <h2 id="private-lesson-preparing-title">Preparing {topic || "your lesson"}</h2>
-            <p>Generating the lesson plan before visuals, images, and PDF compilation.</p>
-          </div>
-          <button className="icon-button" onClick={onClose} type="button" aria-label="Close private lesson window">
-            <X aria-hidden="true" size={18} />
-          </button>
-        </header>
-        <div className="lesson-player-progress" aria-label="Preparing private lesson">
-          <span style={{ width: "14%" }} />
-        </div>
-        <article className="deck-build-status">
-          <FileCode2 aria-hidden="true" size={42} />
-          <p className="eyebrow">Preparing private lesson</p>
-          <h3>Generating lesson plan</h3>
-          <ol>
-            <li className="active">Generating lesson plan</li>
-            <li>Planning visuals</li>
-            <li>Generating images</li>
-            <li>Compiling PDF</li>
-            <li>Checking quality</li>
-          </ol>
-        </article>
-      </section>
-    </div>
-  );
-}
-
 export default function AILessonGenerator() {
   const [accessToken, setAccessToken] = useState("");
   const [leadContact, setLeadContact] = useState("");
@@ -1492,7 +1447,7 @@ export default function AILessonGenerator() {
     setError("");
     setLesson(null);
     setLessonText("");
-    setIsDeckOpen(true);
+    setIsDeckOpen(false);
     setExamAnswers({});
     setExamStartedAt(null);
     setExamSubmitted(false);
@@ -1527,9 +1482,6 @@ export default function AILessonGenerator() {
       setLesson(generatedLesson);
       setLessonText(data.lessonText ?? "");
       setError(data.warning ?? "");
-      if (generatedLesson) {
-        setIsDeckOpen(true);
-      }
       if (generatedLesson?.timedExam?.questions?.length) {
         setExamStartedAt(Date.now());
       }
@@ -1638,9 +1590,6 @@ Interested in: Free trial / Paid AI-generated lessons
           onClose={() => setIsDeckOpen(false)}
         />
       ) : null}
-      {!lesson && isDeckOpen && isGenerating ? (
-        <PrivateLessonPreparing onClose={() => setIsDeckOpen(false)} topic={topic} />
-      ) : null}
       <section className="section demo-generator-section" id="generator">
       <div className="section-heading">
         <p className="eyebrow">AI-generated tutoring</p>
@@ -1721,7 +1670,7 @@ Interested in: Free trial / Paid AI-generated lessons
             />
           </label>
           <button className="button primary full" disabled={isGenerating || topic.trim().length < 3} type="submit">
-            {isGenerating ? "Generating private lesson..." : "Generate Private Lesson"}
+            {isGenerating ? "Generating lesson plan..." : "Generate Lesson Plan"}
             <ArrowRight aria-hidden="true" size={18} />
           </button>
           <button
@@ -1753,16 +1702,17 @@ Interested in: Free trial / Paid AI-generated lessons
                 <>
                 <div className="lesson-launch-card">
                   <div>
-                    <p className="eyebrow">Private lesson created</p>
-                    <h4>The timed PDF lesson opens automatically.</h4>
+                    <p className="eyebrow">Lesson plan ready</p>
+                    <h4>Review the plan, then open the private PDF lesson.</h4>
                     <p>
-                      This plan remains here for review after closing the lesson window.
+                      The private lesson builds the LaTeX PDF deck, adds required visuals, starts the timer,
+                      and unlocks the quiz halfway through.
                     </p>
                   </div>
                   <div className="lesson-launch-actions">
                     <button className="button primary" onClick={() => setIsDeckOpen(true)} type="button">
                       <Images aria-hidden="true" size={18} />
-                      Reopen Lesson
+                      Start Private PDF Lesson
                     </button>
                   </div>
                 </div>
