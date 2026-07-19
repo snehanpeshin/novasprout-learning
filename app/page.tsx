@@ -45,31 +45,31 @@ export default function Home() {
       <section className="demo-strip" aria-label="NovaSprout AI tutor launch">
         <div className="demo-track">
           <span>AI tutor launch: personalized lesson decks, live tutoring, timed quiz</span>
-          <span>Normal tutoring demo, 1-hour, and monthly plans available</span>
-          <span>AI tutor locked by access code or approved paid email</span>
+          <span>Request a live tutor only when the AI lesson shows where help is needed</span>
+          <span>Free, Student, Student Plus, and Family AI Tutor plans</span>
           <span>AI tutor launch: personalized lesson decks, live tutoring, timed quiz</span>
-          <span>Normal tutoring demo, 1-hour, and monthly plans available</span>
-          <span>AI tutor locked by access code or approved paid email</span>
+          <span>Request a live tutor only when the AI lesson shows where help is needed</span>
+          <span>Free, Student, Student Plus, and Family AI Tutor plans</span>
         </div>
       </section>
 
       <section className="hero" id="top">
         <div className="hero-copy">
           <p className="eyebrow">AI tutor launch</p>
-          <h1>AI-Supported Online Tutoring With Live Human Guidance.</h1>
+          <h1>Personalized AI Tutoring With Live Tutor Help When Needed.</h1>
           <p className="hero-text">
-            NovaSprout Learning keeps normal online tutoring simple: free demo, 1-hour sessions,
-            and monthly plans. Approved users can also unlock AI-generated lesson decks, timed
-            quizzes, guided practice, and follow-up notes.
+            NovaSprout Learning starts with AI-generated lessons, visuals, timed quizzes, and study
+            notes. If the student gets stuck, they can request a live tutor who receives the topic,
+            lesson history, quiz results, and weak areas.
           </p>
           <div className="hero-highlights" aria-label="Tutoring benefits">
             <span>
               <CheckCircle2 aria-hidden="true" size={16} />
-              Live tutor guidance
+              Personalized AI lessons
             </span>
             <span>
               <CheckCircle2 aria-hidden="true" size={16} />
-              AI-generated lesson decks
+              Visual PDF decks
             </span>
             <span>
               <CheckCircle2 aria-hidden="true" size={16} />
@@ -77,20 +77,20 @@ export default function Home() {
             </span>
             <span>
               <CheckCircle2 aria-hidden="true" size={16} />
-              Notes and practice after sessions
+              Live tutor escalation
             </span>
           </div>
           <div className="hero-actions">
             <a className="button primary" href="/ai-lesson-generator">
-              Unlock AI Tutor
+              Start AI Tutor
               <ArrowRight aria-hidden="true" size={18} />
             </a>
             <TrackedLink className="button primary" eventName="book_meeting_click" href={bookingUrl} target="_blank">
               <CalendarCheck aria-hidden="true" size={18} />
-              Book AI Tutor Demo
+              Request Live Tutor
             </TrackedLink>
             <a className="button secondary" href="/pricing">
-              View Tutoring Plans
+              View AI Plans
             </a>
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function Home() {
       <section className="process-section" id="how-it-works">
         <div className="section-heading">
           <p className="eyebrow">How it works</p>
-          <h2>From request to live online support.</h2>
+          <h2>From AI lesson to live tutor only when needed.</h2>
         </div>
         <div className="steps wide-steps">
           {processSteps.map((step, index) => (
@@ -244,43 +244,43 @@ export default function Home() {
       <section className="section compact-section" id="pricing-summary">
         <div className="section-heading">
           <p className="eyebrow">Pricing summary</p>
-          <h2>Keep normal tutoring plans, with AI tutor access protected.</h2>
+          <h2>AI Tutor plans first, with live tutoring as an optional escalation.</h2>
           <p>
-            Start with a free demo, a 1-hour tutoring session, or a monthly tutoring plan. AI tutor
-            tools stay locked behind an access code or approved paid-user email.
+            Start with a free AI Tutor plan, upgrade for more lessons and reports, and request a live
+            tutor only when the student needs human guidance.
           </p>
         </div>
         <div className="pricing-grid">
           <article className="price-card">
-            <h3>Free Tutoring Demo</h3>
+            <h3>Free AI Tutor</h3>
             <strong>Free</strong>
-            <p>A short online demo to discuss the student&apos;s needs, subject, schedule, and fit.</p>
-            <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-              Book Free Demo
-            </TrackedLink>
+            <p>Limited monthly AI lessons, basic explanations, quizzes, notes, and live tutor request option.</p>
+            <a className="button primary full" href="/ai-lesson-generator">
+              Start AI Tutor
+            </a>
           </article>
           <article className="price-card">
-            <h3>1 Hour Tutoring</h3>
+            <h3>Student AI Tutor</h3>
+            <strong>$9.99-$14.99 / month</strong>
+            <p>More AI lessons, interactive quizzes, PDFs, worksheets, and saved lesson history.</p>
+            <a className="button secondary full" href="/pricing">
+              View Student Plan
+            </a>
+          </article>
+          <article className="price-card">
+            <h3>Student Plus</h3>
+            <strong>$19.99-$29.99 / month</strong>
+            <p>Higher AI lesson allowance, all subjects, adaptive quizzes, and progress reports.</p>
+            <a className="button secondary full" href="/pricing">
+              View Plus Plan
+            </a>
+          </article>
+          <article className="price-card">
+            <h3>Live Tutor Request</h3>
             <strong>$40-$60 / hour</strong>
-            <p>One live online session for homework, concept clarity, test prep, or guided practice.</p>
-            <a className="button secondary full" href="/pricing">
-              View Checkout
-            </a>
-          </article>
-          <article className="price-card">
-            <h3>Monthly Tutoring Plan</h3>
-            <strong>$199-$499 / month</strong>
-            <p>Recurring tutoring based on subject, goals, frequency, and learning plan.</p>
-            <a className="button secondary full" href="/pricing">
-              View Monthly Plan
-            </a>
-          </article>
-          <article className="price-card">
-            <h3>Locked AI Tutor Access</h3>
-            <strong>Code or approved email</strong>
-            <p>AI lesson decks, timed quizzes, and study plans for approved users.</p>
+            <p>Optional human help after the AI lesson identifies weak areas and next steps.</p>
             <a className="button secondary full" href="/ai-lesson-generator">
-              Unlock AI Tutor
+              Generate Lesson First
             </a>
           </article>
         </div>
@@ -304,10 +304,10 @@ export default function Home() {
       <section className="booking-section" id="book">
         <div className="booking-copy">
           <p className="eyebrow">Start</p>
-          <h2>Start With Tutoring, Then Unlock AI Support When Ready.</h2>
+          <h2>Start With AI Tutor, Then Request Human Help When Needed.</h2>
           <p>
-            Book a demo, choose a 1-hour/monthly tutoring plan, or request AI access. Tell us the
-            subject, grade or level, current challenge, and preferred schedule.
+            Generate a lesson from grade, subject, topic, and learning goal. If the quiz or explanation
+            shows a weak area, request a live tutor with the lesson context already prepared.
           </p>
           <ul>
             <li>

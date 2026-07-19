@@ -1,6 +1,6 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import TrackedLink from "./TrackedLink";
-import { bookingUrl, contactEmail, pricingPlans } from "../site-data";
+import { contactEmail, pricingPlans } from "../site-data";
 
 export default function PricingOptions() {
   return (
@@ -18,12 +18,12 @@ export default function PricingOptions() {
               </li>
             ))}
           </ul>
-          {plan.title === "Free Tutoring Demo" ? (
+          {plan.title === "Free AI Tutor" ? (
             <div className="payment-actions">
-              <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-                Book Free Demo
+              <a className="button primary full" href="/ai-lesson-generator">
+                Start Free AI Tutor
                 <ArrowRight aria-hidden="true" size={18} />
-              </TrackedLink>
+              </a>
             </div>
           ) : null}
           {plan.productKey && plan.paymentLink ? (
@@ -34,10 +34,10 @@ export default function PricingOptions() {
                 href={plan.paymentLink}
                 target="_blank"
               >
-                {plan.productKey === "monthly_subscription" ? "Start Monthly Plan" : "Buy 1-Hour Tutoring"}
+                Request Live Tutor
                 <ArrowRight aria-hidden="true" size={18} />
               </TrackedLink>
-              <p className="payment-note">Secure Stripe checkout for normal NovaSprout tutoring.</p>
+              <p className="payment-note">Secure Stripe checkout for optional live tutoring support.</p>
             </div>
           ) : null}
           {plan.productKey && !plan.paymentLink ? (
@@ -48,14 +48,14 @@ export default function PricingOptions() {
               </a>
             </div>
           ) : null}
-          {plan.title === "Locked AI Tutor Access" ? (
+          {plan.title.includes("Student") || plan.title === "Family AI Tutor" ? (
             <div className="payment-actions">
               <a className="button primary full" href="/ai-lesson-generator">
                 Unlock AI Tutor
                 <ArrowRight aria-hidden="true" size={18} />
               </a>
-              <a className="button secondary full" href={`mailto:${contactEmail}?subject=${encodeURIComponent("NovaSprout AI tutor access")}`}>
-                Request Access
+              <a className="button secondary full" href={`mailto:${contactEmail}?subject=${encodeURIComponent(`${plan.title} subscription request`)}`}>
+                Request This Plan
               </a>
             </div>
           ) : null}

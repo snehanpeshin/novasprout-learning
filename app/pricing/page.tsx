@@ -3,9 +3,9 @@ import Footer from "../components/Footer";
 import PricingOptions from "../components/PricingOptions";
 
 export const metadata = {
-  title: "Tutoring Pricing | NovaSprout Learning",
+  title: "AI Tutor Plans | NovaSprout Learning",
   description:
-    "Review NovaSprout Learning tutoring pricing, including a free demo, 1-hour tutoring, monthly plans, and locked AI tutor access."
+    "Review NovaSprout Learning AI Tutor plans, with optional live tutor requests when students need human help."
 };
 
 export default function PricingPage() {
@@ -26,37 +26,37 @@ export default function PricingPage() {
       <section className="demo-strip" aria-label="AI tutor launch announcement">
         <div className="demo-track">
           <span>AI tutor launch: generated lessons, live explanation, timed quiz</span>
-          <span>Normal tutoring demo, 1-hour, and monthly plans available</span>
-          <span>Protected AI tutor unlock by code or approved paid email</span>
+          <span>Live tutor request available when students need human help</span>
+          <span>Free, Student, Student Plus, and Family AI Tutor plans</span>
           <span>AI tutor launch: generated lessons, live explanation, timed quiz</span>
-          <span>Normal tutoring demo, 1-hour, and monthly plans available</span>
-          <span>Protected AI tutor unlock by code or approved paid email</span>
+          <span>Live tutor request available when students need human help</span>
+          <span>Free, Student, Student Plus, and Family AI Tutor plans</span>
         </div>
       </section>
 
       <section className="landing-hero compact-hero">
         <div>
           <p className="eyebrow">Pricing</p>
-          <h1>Start with normal tutoring, then unlock AI tutor tools when approved.</h1>
+          <h1>AI Tutor is the core product. Live tutoring is available when students need more help.</h1>
           <p>
-            Keep the simple tutoring pathway: free demo, 1-hour class, or monthly plan. The AI tutor
-            remains protected and can be unlocked with an access code or approved paid-user email.
+            Students generate personalized lessons, study the deck, take a timed quiz, and then request
+            a live tutor only when they need direct human support.
           </p>
         </div>
         <div className="landing-panel">
           <CheckCircle2 aria-hidden="true" size={42} />
-          <h2>Locked AI tutor</h2>
-          <p>AI lesson decks, timed quizzes, and generated study plans are available only after unlock.</p>
+          <h2>AI-first learning</h2>
+          <p>Lesson history, quiz results, and weak areas can be sent with a live tutor request.</p>
         </div>
       </section>
 
       <section className="section">
         <div className="section-heading">
           <p className="eyebrow">Options</p>
-          <h2>Demo, 1-hour tutoring, monthly tutoring, and protected AI access.</h2>
+          <h2>Choose an AI Tutor plan, then add live tutoring only when needed.</h2>
           <p>
-            Use Stripe checkout for paid tutoring. Use the AI tutor page only if you have the access
-            code or an approved paid-user email.
+            AI subscriptions can start as manual approvals while pricing is tested. Live tutor requests
+            remain separate from the digital subscription.
           </p>
         </div>
         <PricingOptions />

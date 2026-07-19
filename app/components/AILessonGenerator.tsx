@@ -133,6 +133,11 @@ const minimumBuildStageMs = {
 };
 
 const grades = [
+  "Preschool",
+  "Pre-Kindergarten",
+  "Kindergarten",
+  "Grade 1",
+  "Grade 2",
   "Grade 3",
   "Grade 4",
   "Grade 5",
@@ -147,14 +152,107 @@ const grades = [
   "College / adult"
 ];
 
-const subjects = ["Math", "Science", "ELA and study support", "Coding and data skills"];
-const levels = ["Struggling", "On grade level", "Advanced"];
-const goals = ["Homework help", "Concept clarity", "Test preparation", "Enrichment", "Project mentoring"];
-const modes = ["Demo session", "Comprehensive lesson", "Custom study plan", "Timed exam"];
-const durations = ["30 minutes", "45 minutes", "60 minutes"];
+const subjects = [
+  "Mathematics",
+  "Science",
+  "English",
+  "Social Studies",
+  "Computer Science",
+  "Environmental Studies",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Geography",
+  "History",
+  "Civics",
+  "Economics",
+  "Business Studies",
+  "Accounting",
+  "Statistics",
+  "Psychology",
+  "Health Education",
+  "Engineering",
+  "Robotics",
+  "Coding",
+  "Test Preparation",
+  "Languages"
+];
+const levels = ["Start from the basics", "Give me some support", "Teach at my grade level", "Challenge me", "Advanced challenge", "Not sure"];
+const goals = [
+  "Concept clarity",
+  "Learn from the beginning",
+  "Homework help",
+  "Improve grades",
+  "Prepare for a test",
+  "Revise a chapter",
+  "Solve practice questions",
+  "Master a difficult topic",
+  "Build confidence",
+  "Prepare for competition",
+  "Complete a school project",
+  "Learn real-world applications"
+];
+const modes = [
+  "Quick explanation",
+  "Comprehensive lesson",
+  "Revision lesson",
+  "Homework help",
+  "Exam preparation",
+  "Practice worksheet",
+  "Interactive quiz",
+  "Flashcards",
+  "Study notes",
+  "Project-based lesson",
+  "Lab or activity lesson",
+  "Presentation",
+  "Printable PDF lesson",
+  "Private guided lesson"
+];
+const durations = [
+  "5-minute explanation",
+  "10-minute quick lesson",
+  "20-minute lesson",
+  "30-minute lesson",
+  "45-minute comprehensive lesson",
+  "60-minute deep lesson",
+  "Multi-session unit",
+  "Custom duration"
+];
+const teachingStyles = ["Simple and friendly", "Step-by-step", "Visual", "Story-based", "Example-driven", "Interactive", "Exam-focused", "Project-based", "Socratic questioning"];
+const difficulties = ["Easy", "Standard", "Challenging", "Mixed difficulty", "Adaptive"];
+const languages = ["English", "Hindi", "Spanish", "French", "German", "Bilingual", "Simplified English"];
+const lessonIncludes = [
+  "Learning objectives",
+  "Warm-up question",
+  "Key vocabulary",
+  "Concept explanation",
+  "Diagrams",
+  "Real-world examples",
+  "Worked examples",
+  "Practice questions",
+  "Interactive quiz",
+  "Homework",
+  "Flashcards",
+  "Summary notes",
+  "Common mistakes",
+  "Exit ticket",
+  "Live tutor option"
+];
+const topicSuggestionsBySubject: Record<string, string[]> = {
+  Mathematics: ["Fractions", "Ratios", "Proportions", "Algebraic expressions", "Equations", "Geometry", "Probability", "Statistics"],
+  Science: ["Human body systems", "Digestive system", "Respiratory system", "Cells and tissues", "Forces and motion", "Ecosystems", "Matter", "Electricity"],
+  English: ["Reading comprehension", "Grammar", "Paragraph writing", "Essay writing", "Vocabulary", "Storytelling", "Literature analysis"],
+  "Social Studies": ["Maps", "Geography", "Ancient civilizations", "Government", "Civics", "Economics", "Global issues"],
+  "Computer Science": ["Computer basics", "Scratch", "Python", "HTML and CSS", "Algorithms", "Artificial intelligence", "Robotics"],
+  Biology: ["Cells", "Genetics", "Human body", "Digestive system", "Ecology", "Plants", "Animals"],
+  Chemistry: ["Atoms and molecules", "Chemical reactions", "Acids and bases", "Matter", "Energy changes"],
+  Physics: ["Forces and motion", "Energy", "Light", "Sound", "Electricity", "Magnetism"],
+  Coding: ["Scratch", "Python", "JavaScript", "HTML and CSS", "Game development", "App development"],
+  "Test Preparation": ["Test strategy", "Timed practice", "Reading questions", "Math review", "Science review", "Essay planning"]
+};
 
 function getSubjectTheme(subject: string): SubjectTheme {
-  if (subject === "Science") {
+  if (["Science", "Biology", "Chemistry", "Physics", "Environmental Studies", "Health Education"].includes(subject)) {
     return {
       accent: "Inquiry",
       deckLabel: "Science Lab Deck",
@@ -170,7 +268,7 @@ function getSubjectTheme(subject: string): SubjectTheme {
     };
   }
 
-  if (subject === "ELA and study support") {
+  if (["English", "Languages", "Social Studies", "History", "Geography", "Civics", "Economics", "Psychology"].includes(subject)) {
     return {
       accent: "Read",
       deckLabel: "Study Skills Deck",
@@ -186,7 +284,7 @@ function getSubjectTheme(subject: string): SubjectTheme {
     };
   }
 
-  if (subject === "Coding and data skills") {
+  if (["Computer Science", "Coding", "Robotics", "Engineering"].includes(subject)) {
     return {
       accent: "Build",
       deckLabel: "Coding/Data Deck",
@@ -279,16 +377,17 @@ function countItemChunks(items?: string[], size = 3, maxChunks = 4) {
 }
 
 function subjectVisualTitles(subject: string, topic?: string) {
-  if (subject === "Science" && topic?.toLowerCase().includes("digestive")) {
+  const normalizedSubject = subject.toLowerCase();
+  if (["science", "biology", "health education"].includes(normalizedSubject) && topic?.toLowerCase().includes("digestive")) {
     return ["Digestive System Map", "Mechanical vs Chemical Digestion"];
   }
-  if (subject === "Science") {
+  if (["science", "biology", "chemistry", "physics", "environmental studies", "health education"].includes(normalizedSubject)) {
     return ["Visual Reasoning Model"];
   }
-  if (subject === "ELA and study support") {
+  if (["english", "languages", "social studies", "history", "geography", "civics", "economics", "psychology"].includes(normalizedSubject)) {
     return ["Study Strategy Map"];
   }
-  if (subject === "Coding and data skills") {
+  if (["computer science", "coding", "robotics", "engineering"].includes(normalizedSubject)) {
     return ["Input Process Output"];
   }
   return ["Visual Model", "Equation Walkthrough"];
@@ -1367,12 +1466,24 @@ export default function AILessonGenerator() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [showLeadPopup, setShowLeadPopup] = useState(false);
   const [grade, setGrade] = useState("Grade 7");
-  const [subject, setSubject] = useState("Math");
-  const [topic, setTopic] = useState("Ratios and proportional relationships");
-  const [level, setLevel] = useState("On grade level");
+  const [subject, setSubject] = useState("Science");
+  const [topic, setTopic] = useState("Human body systems");
+  const [level, setLevel] = useState("Teach at my grade level");
   const [goal, setGoal] = useState("Concept clarity");
   const [mode, setMode] = useState("Comprehensive lesson");
-  const [duration, setDuration] = useState("45 minutes");
+  const [duration, setDuration] = useState("45-minute comprehensive lesson");
+  const [teachingStyle, setTeachingStyle] = useState("Visual");
+  const [difficulty, setDifficulty] = useState("Adaptive");
+  const [lessonLanguage, setLessonLanguage] = useState("English");
+  const [includeInLesson, setIncludeInLesson] = useState<string[]>([
+    "Learning objectives",
+    "Key vocabulary",
+    "Diagrams",
+    "Worked examples",
+    "Practice questions",
+    "Interactive quiz",
+    "Live tutor option"
+  ]);
   const [studentQuestion, setStudentQuestion] = useState("");
   const [lesson, setLesson] = useState<GeneratedLesson | null>(null);
   const [lessonText, setLessonText] = useState("");
@@ -1408,6 +1519,15 @@ export default function AILessonGenerator() {
       total: questions.length
     };
   }, [examAnswers, lesson]);
+  const topicSuggestions = topicSuggestionsBySubject[subject] ?? ["Homework help", "Chapter review", "Practice questions", "Exam preparation"];
+
+  function toggleIncludedLessonItem(item: string) {
+    setIncludeInLesson((current) =>
+      current.includes(item)
+        ? current.filter((selected) => selected !== item)
+        : [...current, item]
+    );
+  }
 
   function unlockTools(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1455,7 +1575,20 @@ export default function AILessonGenerator() {
 
     try {
       const response = await fetch("/api/ai-lesson", {
-        body: JSON.stringify({ duration, goal, grade, level, mode, studentQuestion, subject, topic }),
+        body: JSON.stringify({
+          difficulty,
+          duration,
+          goal,
+          grade,
+          includeInLesson,
+          language: lessonLanguage,
+          level,
+          mode,
+          studentQuestion,
+          subject,
+          teachingStyle,
+          topic
+        }),
         headers: {
           "Content-Type": "application/json",
           "x-ai-access-token": accessToken.trim()
@@ -1502,6 +1635,30 @@ Email or phone:
 Student grade:
 Subject:
 Interested in: Free trial / Paid AI-generated lessons
+`)}`;
+  const liveTutorRequestHref = `mailto:${contactEmail}?subject=${encodeURIComponent(
+    `Live tutor request: ${grade} ${subject} - ${topic}`
+  )}&body=${encodeURIComponent(`Hi NovaSprout Learning,
+
+I would like to request a live tutor after using the AI Tutor.
+
+Grade: ${grade}
+Subject: ${subject}
+Topic: ${topic}
+Output type: ${mode}
+Goal: ${goal}
+Student level: ${level}
+Teaching style: ${teachingStyle}
+Difficulty: ${difficulty}
+
+Specific difficulty:
+Preferred tutor:
+Preferred date and time:
+Individual or group session:
+Homework/worksheet link:
+
+Notes from AI lesson:
+${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tutor."}
 `)}`;
 
   const leadPopup = showLeadPopup ? (
@@ -1620,7 +1777,17 @@ Interested in: Free trial / Paid AI-generated lessons
           </label>
           <label>
             Subject
-            <select onChange={(event) => setSubject(event.target.value)} value={subject}>
+            <select
+              onChange={(event) => {
+                const nextSubject = event.target.value;
+                setSubject(nextSubject);
+                const nextSuggestion = topicSuggestionsBySubject[nextSubject]?.[0];
+                if (nextSuggestion) {
+                  setTopic(nextSuggestion);
+                }
+              }}
+              value={subject}
+            >
               {subjects.map((item) => (
                 <option key={item}>{item}</option>
               ))}
@@ -1636,6 +1803,18 @@ Interested in: Free trial / Paid AI-generated lessons
               value={topic}
             />
           </label>
+          <div className="topic-suggestions" aria-label="Topic suggestions">
+            {topicSuggestions.slice(0, 8).map((item) => (
+              <button
+                className={topic === item ? "selected" : ""}
+                key={item}
+                onClick={() => setTopic(item)}
+                type="button"
+              >
+                {item}
+              </button>
+            ))}
+          </div>
           <label>
             Student level
             <select onChange={(event) => setLevel(event.target.value)} value={level}>
@@ -1660,6 +1839,45 @@ Interested in: Free trial / Paid AI-generated lessons
               ))}
             </select>
           </label>
+          <label>
+            Teaching style
+            <select onChange={(event) => setTeachingStyle(event.target.value)} value={teachingStyle}>
+              {teachingStyles.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Difficulty
+            <select onChange={(event) => setDifficulty(event.target.value)} value={difficulty}>
+              {difficulties.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Language
+            <select onChange={(event) => setLessonLanguage(event.target.value)} value={lessonLanguage}>
+              {languages.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <fieldset className="lesson-include-field">
+            <legend>Include in lesson</legend>
+            <div>
+              {lessonIncludes.map((item) => (
+                <label key={item}>
+                  <input
+                    checked={includeInLesson.includes(item)}
+                    onChange={() => toggleIncludedLessonItem(item)}
+                    type="checkbox"
+                  />
+                  <span>{item}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <label>
             Student question or learning need
             <textarea
@@ -1714,6 +1932,9 @@ Interested in: Free trial / Paid AI-generated lessons
                       <Images aria-hidden="true" size={18} />
                       Start Private PDF Lesson
                     </button>
+                    <a className="button secondary" href={liveTutorRequestHref}>
+                      Request a Live Tutor
+                    </a>
                   </div>
                 </div>
                 <div className="lesson-timeline">

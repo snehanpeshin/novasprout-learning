@@ -125,6 +125,23 @@ export function stripDuplicateNumbering(value?: string) {
   return normalizePlainText(value, 900).replace(/^\s*(?:Q?\d+[\).:-]\s*)+/i, "");
 }
 
+function removeTutorInstructionLanguage(value?: string, maxLength = 900) {
+  return normalizePlainText(value, maxLength)
+    .replace(/\b(?:tutor|teacher|instructor)\s+(?:explains?|presents?|asks?|models?|introduces?|gives?|checks?|confirms?|notes?|guides?)\b/gi, "Study")
+    .replace(/\b(?:ask|tell|have)\s+the\s+student\s+to\b/gi, "Try to")
+    .replace(/\bthe\s+student\s+(?:responds?|works?|solves?|explains?)\b/gi, "You work")
+    .replace(/\bstudent\s+will\b/gi, "you will")
+    .replace(/\bstudents\s+will\b/gi, "you will")
+    .replace(/\bteacher should\b/gi, "focus on")
+    .replace(/\btutor should\b/gi, "focus on")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function looksLikeTutorProcedure(value?: string) {
+  return /\b(?:tutor|teacher|instructor)\s+(?:explains?|presents?|asks?|models?|introduces?|gives?|checks?|confirms?|notes?|guides?)\b/i.test(value ?? "");
+}
+
 export function detectSubjectKey(subject?: string, topic?: string): SubjectKey {
   const normalizedTopic = normalizePlainText(topic, 120).toLowerCase();
   if (/\b(digest|biology|cell|organ|organism|ecosystem|photosynthesis|respiration|force|motion|energy|matter|atom|chemical)\b/.test(normalizedTopic)) {
@@ -485,15 +502,15 @@ export function legacyLessonToSlidePlan({
         type: "icon_grid"
       }
     ]),
-    makeSlide("roadmap", "roadmap", "How This Lesson Works", 3, {
-      bullets: ["Start with what you already know.", "Build one idea at a time.", "Practice with hints.", "Check your understanding at the end."],
-      keyIdea: "Short slides, clear examples, and active checks."
+    makeSlide("big-idea", "big_idea", "Big Idea", 3, {
+      bullets: objectives.length ? objectives : [`Understand the main idea of ${topic}.`, "Use one visual model.", "Practice and check your answer."],
+      keyIdea: normalizePlainText(lesson?.conceptExplanation, 220) || `This lesson helps you understand ${topic} with examples and practice.`
     }, [
       {
-        accessibilityLabel: "Four step learning path.",
-        id: "learning-path",
-        steps: ["Warm-up", "Concept", "Model", "Practice", "Check"],
-        type: "process_sequence"
+        accessibilityLabel: "Core lesson ideas connected to examples and practice.",
+        id: "big-idea-map",
+        labels: ["Idea", "Visual", "Example", "Practice"],
+        type: "concept_map"
       }
     ]),
     makeSlide("vocabulary", "vocabulary", "Key Words To Know", 3, {
@@ -534,7 +551,7 @@ export function legacyLessonToSlidePlan({
     );
   }
 
-  chunkText(lesson?.conceptExplanation, 220, 5).forEach((chunk, index) => {
+  chunkText(removeTutorInstructionLanguage(lesson?.conceptExplanation, 3200), 220, 7).forEach((chunk, index) => {
     slides.push(
       makeSlide(`concept-${index + 1}`, "concept", slideTitle("Understand", chunk, `Concept ${index + 1}`), 4, {
         explanation: chunk,
@@ -552,7 +569,7 @@ export function legacyLessonToSlidePlan({
 
   slides.push(...subjectVisualSlides(subjectKey, topic));
 
-  chunkText(lesson?.guidedExample, 220, 5).forEach((chunk, index) => {
+  chunkText(removeTutorInstructionLanguage(lesson?.guidedExample, 3200), 220, 6).forEach((chunk, index) => {
     slides.push(
       makeSlide(`worked-example-${index + 1}`, "worked_example", slideTitle("Example", chunk, `Worked Example ${index + 1}`), 4, {
         explanation: chunk,
@@ -568,16 +585,24 @@ export function legacyLessonToSlidePlan({
     );
   });
 
-  (lesson?.fullLessonSegments ?? []).slice(0, 3).forEach((segment, index) => {
-    const activity = normalizePlainText(segment.activity, 320);
+  (lesson?.fullLessonSegments ?? []).slice(0, 5).forEach((segment, index) => {
+    const activity = removeTutorInstructionLanguage(segment.activity, 360);
     if (!activity) {
       return;
     }
+    const segmentTitle = normalizePlainText(segment.title, 80) || `Content ${index + 1}`;
     slides.push(
-      makeSlide(`guided-${index + 1}`, "guided_practice", slideTitle("Practice Move", activity, `Practice Move ${index + 1}`), 4, {
+      makeSlide(`content-${index + 1}`, looksLikeTutorProcedure(segment.activity) ? "concept" : "guided_practice", slideTitle(segmentTitle, activity, `Content ${index + 1}`), 4, {
         explanation: activity,
-        keyIdea: normalizePlainText(segment.title, 100)
-      })
+        keyIdea: segmentTitle
+      }, [
+        {
+          accessibilityLabel: `Student-facing content card for ${segmentTitle}.`,
+          id: `content-card-${index + 1}`,
+          labels: ["Read", "Notice", "Try"],
+          type: "callout"
+        }
+      ])
     );
   });
 

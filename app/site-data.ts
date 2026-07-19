@@ -410,32 +410,36 @@ export const resourceItems = [
 
 export const pricingPlans = [
   {
-    title: "Free Tutoring Demo",
+    title: "Free AI Tutor",
     price: "Free",
-    copy: "A short introductory online demo to discuss the student's needs, subject, schedule, and tutoring fit.",
-    features: ["Introductory online session", "Subject and goal review", "No payment required"]
+    copy: "Start with a small monthly AI lesson allowance and request live tutoring only when needed.",
+    features: ["3-5 AI lessons per month", "Basic explanations and quizzes", "Limited PDF downloads", "Live tutor request option"]
+  },
+  {
+    title: "Student AI Tutor",
+    price: "$9.99-$14.99 / month",
+    copy: "A practical AI tutor subscription for regular lessons, quizzes, worksheets, and saved study history.",
+    features: ["More AI lessons", "Comprehensive lessons and quizzes", "Lesson PDFs and worksheets", "Optional paid live tutoring"]
+  },
+  {
+    title: "Student Plus AI Tutor",
+    price: "$19.99-$29.99 / month",
+    copy: "Higher-use AI tutoring for all subjects, exam preparation, adaptive quizzes, and progress reporting.",
+    features: ["High monthly lesson allowance", "All subjects", "Adaptive quizzes and exam prep", "Priority live tutor requests"]
+  },
+  {
+    title: "Family AI Tutor",
+    price: "$29.99-$49.99 / month",
+    copy: "Shared AI tutoring access for multiple student profiles with parent-friendly progress and live tutor booking.",
+    features: ["3-5 student profiles", "Shared lesson credits", "Weekly progress reports", "Parent-tutor session option"]
   },
   {
     paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_ONE_HOUR_TUTORING_PAYMENT_LINK,
     productKey: "tutoring_session",
-    title: "1 Hour Tutoring",
+    title: "Live Tutor Request",
     price: "$40-$60 / hour",
-    copy: "One live online tutoring session for homework, concept clarity, test prep, or guided practice.",
-    features: ["Live online tutor session", "Follow-up notes or practice", "AI tutor access can be added for approved users"]
-  },
-  {
-    paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_MONTHLY_PACKAGE_PAYMENT_LINK,
-    productKey: "monthly_subscription",
-    title: "Monthly Tutoring Plan",
-    price: "$199-$499 / month",
-    copy: "Recurring support based on subject, goals, session frequency, and learning plan.",
-    features: ["Weekly or flexible tutoring", "Session notes and practice", "Approved email can unlock protected AI tutor tools"]
-  },
-  {
-    title: "Locked AI Tutor Access",
-    price: "Protected access",
-    copy: "AI-generated lesson decks, personalized explanations, timed quizzes, and study plans for approved users.",
-    features: ["Unlock by access code", "Unlock by approved paid-user email", "Designed to support, not replace, live tutoring"]
+    copy: "Escalate from AI Tutor to a human tutor when the student needs direct explanation or guided practice.",
+    features: ["One-time session", "AI lesson context shared", "Quiz weak areas reviewed", "Packages available by request"]
   }
 ] satisfies Array<{
   copy: string;

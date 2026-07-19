@@ -7,17 +7,26 @@ export const maxDuration = 60;
 const openAiLessonTimeoutMs = 22000;
 
 type LessonRequest = {
+  difficulty?: string;
   duration?: string;
   grade?: string;
   goal?: string;
+  includeInLesson?: string[];
+  language?: string;
   level?: string;
   mode?: string;
   studentQuestion?: string;
   subject?: string;
+  teachingStyle?: string;
   topic?: string;
 };
 
 const allowedGrades = new Set([
+  "Preschool",
+  "Pre-Kindergarten",
+  "Kindergarten",
+  "Grade 1",
+  "Grade 2",
   "Grade 3",
   "Grade 4",
   "Grade 5",
@@ -33,30 +42,96 @@ const allowedGrades = new Set([
 ]);
 
 const allowedSubjects = new Set([
-  "Math",
+  "Mathematics",
   "Science",
-  "ELA and study support",
-  "Coding and data skills"
+  "English",
+  "Social Studies",
+  "Computer Science",
+  "Environmental Studies",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Geography",
+  "History",
+  "Civics",
+  "Economics",
+  "Business Studies",
+  "Accounting",
+  "Statistics",
+  "Psychology",
+  "Health Education",
+  "Engineering",
+  "Robotics",
+  "Coding",
+  "Test Preparation",
+  "Languages"
 ]);
 
-const allowedLevels = new Set(["Struggling", "On grade level", "Advanced"]);
+const allowedLevels = new Set(["Start from the basics", "Give me some support", "Teach at my grade level", "Challenge me", "Advanced challenge", "Not sure"]);
 
 const allowedGoals = new Set([
-  "Homework help",
   "Concept clarity",
-  "Test preparation",
-  "Enrichment",
-  "Project mentoring"
+  "Learn from the beginning",
+  "Homework help",
+  "Improve grades",
+  "Prepare for a test",
+  "Revise a chapter",
+  "Solve practice questions",
+  "Master a difficult topic",
+  "Build confidence",
+  "Prepare for competition",
+  "Complete a school project",
+  "Learn real-world applications"
 ]);
 
 const allowedModes = new Set([
-  "Demo session",
+  "Quick explanation",
   "Comprehensive lesson",
-  "Custom study plan",
-  "Timed exam"
+  "Revision lesson",
+  "Homework help",
+  "Exam preparation",
+  "Practice worksheet",
+  "Interactive quiz",
+  "Flashcards",
+  "Study notes",
+  "Project-based lesson",
+  "Lab or activity lesson",
+  "Presentation",
+  "Printable PDF lesson",
+  "Private guided lesson"
 ]);
 
-const allowedDurations = new Set(["30 minutes", "45 minutes", "60 minutes"]);
+const allowedDurations = new Set([
+  "5-minute explanation",
+  "10-minute quick lesson",
+  "20-minute lesson",
+  "30-minute lesson",
+  "45-minute comprehensive lesson",
+  "60-minute deep lesson",
+  "Multi-session unit",
+  "Custom duration"
+]);
+
+const allowedTeachingStyles = new Set(["Simple and friendly", "Step-by-step", "Visual", "Story-based", "Example-driven", "Interactive", "Exam-focused", "Project-based", "Socratic questioning"]);
+const allowedDifficulties = new Set(["Easy", "Standard", "Challenging", "Mixed difficulty", "Adaptive"]);
+const allowedLanguages = new Set(["English", "Hindi", "Spanish", "French", "German", "Bilingual", "Simplified English"]);
+const allowedLessonIncludes = new Set([
+  "Learning objectives",
+  "Warm-up question",
+  "Key vocabulary",
+  "Concept explanation",
+  "Diagrams",
+  "Real-world examples",
+  "Worked examples",
+  "Practice questions",
+  "Interactive quiz",
+  "Homework",
+  "Flashcards",
+  "Summary notes",
+  "Common mistakes",
+  "Exit ticket",
+  "Live tutor option"
+]);
 
 const lessonJsonSchema = {
   name: "novasprout_lesson",
@@ -325,7 +400,7 @@ function fallbackLesson({
   }
 
   return {
-    conceptExplanation: `${topic} becomes easier when the student first understands the main idea, sees one clear model, and then practices in small steps. The tutor should connect each step back to the student's question and check understanding before moving forward.`,
+    conceptExplanation: `${topic} becomes easier when you first understand the main idea, see one clear model, and then practice in small steps. Focus on the meaning first, then use examples to check whether each step makes sense.`,
     customPlan: {
       focusAreas: [`Core idea of ${topic}`, "Step-by-step problem solving", "Independent practice with feedback"],
       recommendedCadence: "Start with one focused session, then review progress before scheduling the next lesson.",
@@ -339,22 +414,22 @@ function fallbackLesson({
     duration,
     fullLessonSegments: [
       {
-        activity: `Introduce the goal of the lesson and ask what feels confusing about ${topic}.`,
+        activity: `Start by naming the goal of the lesson: understand ${topic} clearly enough to explain the main idea and try a simple example.`,
         time: "0-5 min",
         title: "Set the Goal"
       },
       {
-        activity: `Explain the core idea of ${topic} using plain language and one visual or example.`,
+        activity: `Read the core idea of ${topic} in plain language. Connect the definition to one visual model and one everyday example.`,
         time: "5-15 min",
         title: "Build the Concept"
       },
       {
-        activity: "Work through one guided example slowly, asking the student to explain each step.",
+        activity: "Study one guided example slowly. Notice what is given, what the question asks, which step comes first, and how the final answer is checked.",
         time: "15-30 min",
         title: "Guided Example"
       },
       {
-        activity: "Give the student short practice questions, correct mistakes, and summarize the next step.",
+        activity: "Try short practice questions, compare with the hints and answers, then write the one step that still needs more practice.",
         time: `30-${durationMinutes} min`,
         title: "Practice and Check"
       }
@@ -505,6 +580,12 @@ export async function POST(request: Request) {
   const level = cleanText(body.level, 40);
   const goal = cleanText(body.goal, 60);
   const mode = cleanText(body.mode, 40);
+  const teachingStyle = cleanText(body.teachingStyle, 40);
+  const difficulty = cleanText(body.difficulty, 40);
+  const language = cleanText(body.language, 40);
+  const includeInLesson = Array.isArray(body.includeInLesson)
+    ? body.includeInLesson.map((item) => cleanText(item, 40)).filter((item) => allowedLessonIncludes.has(item)).slice(0, 10)
+    : [];
   const studentQuestion = cleanText(body.studentQuestion, 900);
 
   if (
@@ -514,9 +595,12 @@ export async function POST(request: Request) {
     !allowedLevels.has(level) ||
     !allowedGoals.has(goal) ||
     !allowedModes.has(mode) ||
+    !allowedTeachingStyles.has(teachingStyle) ||
+    !allowedDifficulties.has(difficulty) ||
+    !allowedLanguages.has(language) ||
     topic.length < 3
   ) {
-    return NextResponse.json({ error: "Please choose a valid grade, subject, level, goal, duration, and topic." }, { status: 400 });
+    return NextResponse.json({ error: "Please choose valid lesson options and topic." }, { status: 400 });
   }
 
   if (!apiKey) {
@@ -530,7 +614,7 @@ export async function POST(request: Request) {
 You are an experienced online tutor and curriculum designer for NovaSprout Learning.
 
 Create a personalized tutoring output using original content, aligned to common U.S. learning expectations without copying any school syllabus, textbook, worksheet, or proprietary curriculum.
-Create a clear lesson plan. The website will automatically convert your sections into private timed slides, so do not create a separate slide deck.
+Create a large pool of student-facing lesson content first: explanations, examples, vocabulary, misconceptions, visual descriptions, practice, quiz items, and next steps. The website will distribute that content into private timed slides, so do not write tutor instructions or a separate slide deck outline.
 
 Student context:
 - Grade or level: ${grade}
@@ -540,14 +624,25 @@ Student context:
 - Parent/student goal: ${goal}
 - Requested output: ${mode}
 - Session length: ${duration}
+- Teaching style: ${teachingStyle}
+- Difficulty: ${difficulty}
+- Language support: ${language}
+- Include in lesson: ${includeInLesson.length ? includeInLesson.join(", ") : "Core lesson, practice, quiz, and live tutor option"}
 - Student question or concern: ${studentQuestion || "No extra question provided."}
 
-For Demo session, make a concise 30-minute style lesson.
-For Comprehensive lesson, include 3-4 useful fullLessonSegments.
-For Custom study plan, use the student question heavily.
-For Timed exam, include 6 multiple-choice questions with one correct answerIndex from 0 to 3.
+Make AI Tutor the core product: student studies the AI-generated lesson first, then can request a live tutor if stuck.
+If Live tutor option is included, make recommendedNextSession mention what lesson history, quiz results, and weak areas a human tutor should receive.
+For Quick explanation, make the lesson concise and direct.
+For Comprehensive lesson, Private guided lesson, Printable PDF lesson, or Presentation, include 4-6 useful fullLessonSegments.
+For Practice worksheet, include more practiceQuestions with hints and answers.
+For Interactive quiz or Exam preparation, include 6 multiple-choice questions with one correct answerIndex from 0 to 3.
+For Flashcards or Study notes, make vocabulary and summaries especially strong.
 Make the output usable as independent student study material, not just a tutor plan.
 Include essential vocabulary in the conceptExplanation when relevant.
+Use the requested teaching style, difficulty, and language support.
+Make conceptExplanation substantial enough to become several short slides. Include facts, relationships, visual descriptions, and common confusions.
+Make fullLessonSegments student-facing content sections, not timing instructions for a tutor. Avoid phrases like "tutor explains", "teacher asks", "have the student", or "the tutor should".
+For visual subjects, describe exactly what should be shown in diagrams/images, using labels and spatial relationships where useful.
 Make guidedExample include clear steps and a final check.
 Make practiceQuestions self-contained and include a short hint and answer/explanation in plain text, for example: "Try: ... Hint: ... Answer: ... Why: ..."
 Make quickAssessment include answerable questions with brief answer/explanation text when possible.
