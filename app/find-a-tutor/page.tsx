@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, Mail } from "lucide-react";
+import { ArrowRight, CalendarCheck, CheckCircle2, Mail } from "lucide-react";
 import Footer from "../components/Footer";
 import { bookingUrl, contactEmail, studentRequestEmail, studentRequestSteps, subjectTracks } from "../site-data";
 
@@ -18,6 +18,8 @@ export default function FindATutorPage() {
         </a>
         <nav aria-label="Main navigation">
           <a href="/#subjects">Subjects</a>
+          <a href="/ai-lesson-generator">AI Tutor</a>
+          <a href="/pricing">Pricing</a>
           <a href="/become-a-tutor">Become a Tutor</a>
           <a className="nav-cta" href={bookingUrl} target="_blank" rel="noreferrer">
             Book a Free Demo
@@ -27,34 +29,35 @@ export default function FindATutorPage() {
 
       <section className="landing-hero compact-hero">
         <div>
-          <p className="eyebrow">Request a tutor</p>
-          <h1>Tell us what your student needs, and we will help match the right support.</h1>
+          <p className="eyebrow">Live tutoring</p>
+          <h1>Learn online, one-to-one, with a human tutor.</h1>
           <p>
-            Start with a quick request. We review the subject, grade level, goals, and schedule,
-            then guide you toward a free demo or a tutor match.
+            Book a free live demo or send a tutoring request. We review the subject, grade level,
+            goals, and schedule, then help match the student with suitable support. AI Tutor access
+            is not required.
           </p>
           <div className="hero-actions">
-            <a className="button primary" href={studentRequestEmail}>
-              Email student request
-              <Mail aria-hidden="true" size={18} />
+            <a className="button primary" href={bookingUrl} target="_blank" rel="noreferrer">
+              Book Free Live Demo
+              <CalendarCheck aria-hidden="true" size={18} />
             </a>
-            <a className="button secondary" href={`mailto:${contactEmail}`}>
-              Ask by email first
+            <a className="button secondary" href={studentRequestEmail}>
+              Send Tutoring Request
               <Mail aria-hidden="true" size={18} />
             </a>
           </div>
         </div>
         <div className="landing-panel">
           <CheckCircle2 aria-hidden="true" size={42} />
-          <h2>Curated matching first</h2>
-          <p>No open marketplace yet. NovaSprout reviews requests so students get a thoughtful tutor suggestion.</p>
+          <h2>Live human support</h2>
+          <p>Students receive direct explanation, guided practice, and a plan for what to work on next.</p>
         </div>
       </section>
 
       <section className="section">
         <div className="section-heading">
-          <p className="eyebrow">How matching starts</p>
-          <h2>A simple request flow before we build full accounts.</h2>
+          <p className="eyebrow">How live tutoring starts</p>
+          <h2>Book a demo or tell us what the student needs.</h2>
         </div>
         <div className="support-grid">
           {studentRequestSteps.map((step) => (
@@ -91,7 +94,7 @@ export default function FindATutorPage() {
       <section className="booking-section">
         <div className="booking-copy">
           <p className="eyebrow">Start</p>
-          <h2>Send the request now, then we help with the next step.</h2>
+          <h2>Meet a tutor before choosing paid sessions.</h2>
           <ul>
             <li>
               <CheckCircle2 aria-hidden="true" size={18} />
@@ -108,12 +111,16 @@ export default function FindATutorPage() {
           </ul>
         </div>
         <div className="booking-actions">
-          <a className="button primary full" href={studentRequestEmail}>
-            Email student request
+          <a className="button primary full" href={bookingUrl} target="_blank" rel="noreferrer">
+            Book Free Live Demo
+            <CalendarCheck aria-hidden="true" size={18} />
+          </a>
+          <a className="button secondary full" href={studentRequestEmail}>
+            Send Tutoring Request
             <ArrowRight aria-hidden="true" size={18} />
           </a>
-          <a className="button secondary full" href={`mailto:${contactEmail}`}>
-            Email a question first
+          <a className="text-link" href={`mailto:${contactEmail}`}>
+            Ask a question by email
           </a>
         </div>
       </section>

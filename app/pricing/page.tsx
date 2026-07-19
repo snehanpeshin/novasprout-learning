@@ -3,9 +3,9 @@ import Footer from "../components/Footer";
 import PricingOptions from "../components/PricingOptions";
 
 export const metadata = {
-  title: "AI Tutor Plans | NovaSprout Learning",
+  title: "AI Tutor and Live Tutoring Plans | NovaSprout Learning",
   description:
-    "Review NovaSprout Learning AI Tutor plans, with optional live tutor requests when students need human help."
+    "Compare NovaSprout Learning AI Tutor access and separate one-to-one live tutoring options."
 };
 
 export default function PricingPage() {
@@ -19,44 +19,45 @@ export default function PricingPage() {
         <nav aria-label="Main navigation">
           <a href="/#subjects">Subjects</a>
           <a href="/ai-lesson-generator">AI Tutor</a>
+          <a href="/find-a-tutor">Live Tutoring</a>
           <a href="/#book">Contact</a>
         </nav>
       </header>
 
-      <section className="demo-strip" aria-label="AI tutor launch announcement">
+      <section className="demo-strip" aria-label="Tutoring options announcement">
         <div className="demo-track">
-          <span>AI tutor launch: generated lessons, live explanation, timed quiz</span>
-          <span>Live tutor request available when students need human help</span>
-          <span>Free, Student, Student Plus, and Family AI Tutor plans</span>
-          <span>AI tutor launch: generated lessons, live explanation, timed quiz</span>
-          <span>Live tutor request available when students need human help</span>
-          <span>Free, Student, Student Plus, and Family AI Tutor plans</span>
+          <span>First live tutoring demo is free</span>
+          <span>AI Tutor and Live Tutoring are separate services</span>
+          <span>Choose self-guided AI lessons or one-to-one human tutoring</span>
+          <span>First live tutoring demo is free</span>
+          <span>AI Tutor and Live Tutoring are separate services</span>
+          <span>Choose self-guided AI lessons or one-to-one human tutoring</span>
         </div>
       </section>
 
       <section className="landing-hero compact-hero">
         <div>
           <p className="eyebrow">Pricing</p>
-          <h1>AI Tutor is the core product. Live tutoring is available when students need more help.</h1>
+          <h1>Choose AI Tutor or Live Tutoring.</h1>
           <p>
-            Students generate personalized lessons, study the deck, take a timed quiz, and then request
-            a live tutor only when they need direct human support.
+            Use personalized AI lessons independently, or book direct one-to-one sessions with a
+            human tutor. You can choose either service without purchasing the other.
           </p>
         </div>
         <div className="landing-panel">
           <CheckCircle2 aria-hidden="true" size={42} />
-          <h2>AI-first learning</h2>
-          <p>Lesson history, quiz results, and weak areas can be sent with a live tutor request.</p>
+          <h2>Two clear services</h2>
+          <p>AI Tutor supports self-guided study. Live Tutoring provides scheduled human instruction.</p>
         </div>
       </section>
 
       <section className="section">
         <div className="section-heading">
           <p className="eyebrow">Options</p>
-          <h2>Choose an AI Tutor plan, then add live tutoring only when needed.</h2>
+          <h2>Pick the learning format that fits.</h2>
           <p>
-            AI subscriptions can start as manual approvals while pricing is tested. Live tutor requests
-            remain separate from the digital subscription.
+            AI Tutor plans and Live Tutoring plans are listed separately below. Start with a free AI
+            lesson or book a free live tutoring demo.
           </p>
         </div>
         <PricingOptions />

@@ -19,8 +19,9 @@ export default function ResourcesPage() {
           <a href="/">Home</a>
           <a href="/#subjects">Subjects</a>
           <a href="/curriculum-demo">Curriculum</a>
+          <a href="/ai-lesson-generator">AI Tutor</a>
+          <a href="/find-a-tutor">Live Tutoring</a>
           <a href="/pricing">Pricing</a>
-          <a href="/#book">Book a Free Demo</a>
         </nav>
       </header>
 

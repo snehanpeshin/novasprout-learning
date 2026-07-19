@@ -667,7 +667,7 @@ function fallbackLesson({
     conceptExplanation: fallback.concept,
     customPlan: {
       focusAreas: [...fallback.focusAreas],
-      recommendedCadence: "Start with the AI lesson deck, complete the practice and quiz, then request live tutor help only for the weak areas.",
+      recommendedCadence: "Use the AI lesson deck, practice, and quiz for independent study. Live tutoring can be booked separately for direct human instruction.",
       summary: `A student-facing ${subject.toLowerCase()} lesson for ${topic} based on the selected grade, level, and goal.`,
       weeklyPlan: [
         `Lesson 1: study the core model for ${topic} and complete the guided example.`,
@@ -861,7 +861,7 @@ Student context:
 - Include in lesson: ${includeInLesson.length ? includeInLesson.join(", ") : "Core lesson, practice, quiz, and live tutor option"}
 - Student question or concern: ${studentQuestion || "No extra question provided."}
 
-Make AI Tutor the core product: student studies the AI-generated lesson first, then can request a live tutor if stuck.
+Present AI Tutor as a standalone self-guided service. Live Tutoring is a separate service and must not require completing an AI lesson first.
 If Live tutor option is included, make recommendedNextSession mention what lesson history, quiz results, and weak areas a human tutor should receive.
 For Quick explanation, make the lesson concise and direct.
 For Comprehensive lesson, Private guided lesson, Printable PDF lesson, or Presentation, include 4-6 useful fullLessonSegments.

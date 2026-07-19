@@ -1,65 +1,83 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import TrackedLink from "./TrackedLink";
-import { contactEmail, pricingPlans } from "../site-data";
+import { bookingUrl, contactEmail, pricingPlans } from "../site-data";
 
 export default function PricingOptions() {
+  const groups = [
+    {
+      copy: "Self-guided, personalized lessons generated around the student's grade, topic, and learning goal.",
+      id: "ai-tutor-plans",
+      service: "ai" as const,
+      title: "AI Tutor"
+    },
+    {
+      copy: "Direct one-to-one online sessions with a human tutor. AI Tutor access is not required.",
+      id: "live-tutoring-plans",
+      service: "live" as const,
+      title: "Live Tutoring"
+    }
+  ];
+
   return (
-    <div className="pricing-grid">
-      {pricingPlans.map((plan) => (
-        <article className="price-card" key={plan.title}>
-          <h3>{plan.title}</h3>
-          <strong>{plan.price}</strong>
-          <p>{plan.copy}</p>
-          <ul>
-            {plan.features.map((feature) => (
-              <li key={feature}>
-                <CheckCircle2 aria-hidden="true" size={17} />
-                {feature}
-              </li>
+    <div className="pricing-plan-groups">
+      {groups.map((group) => (
+        <div className="pricing-plan-group" id={group.id} key={group.service}>
+          <div className="pricing-group-heading">
+            <h2>{group.title}</h2>
+            <p>{group.copy}</p>
+          </div>
+          <div className="pricing-grid">
+            {pricingPlans.filter((plan) => plan.service === group.service).map((plan) => (
+              <article className="price-card" key={plan.title}>
+                <h3>{plan.title}</h3>
+                <strong>{plan.price}</strong>
+                <p>{plan.copy}</p>
+                <ul>
+                  {plan.features.map((feature) => (
+                    <li key={feature}>
+                      <CheckCircle2 aria-hidden="true" size={17} />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <div className="payment-actions">
+                  {plan.action === "ai" ? (
+                    <a className="button primary full" href="/ai-lesson-generator">
+                      Start Free AI Tutor
+                      <ArrowRight aria-hidden="true" size={18} />
+                    </a>
+                  ) : null}
+                  {plan.action === "booking" ? (
+                    <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
+                      Book Free Live Demo
+                      <ArrowRight aria-hidden="true" size={18} />
+                    </TrackedLink>
+                  ) : null}
+                  {plan.action === "payment" && plan.paymentLink ? (
+                    <TrackedLink
+                      className="button primary full"
+                      eventName="stripe_payment_link_click"
+                      href={plan.paymentLink}
+                      target="_blank"
+                    >
+                      Purchase Live Tutoring
+                      <ArrowRight aria-hidden="true" size={18} />
+                    </TrackedLink>
+                  ) : null}
+                  {plan.action === "contact" || (plan.action === "payment" && !plan.paymentLink) ? (
+                    <a className="button primary full" href={`mailto:${contactEmail}?subject=${encodeURIComponent(plan.title)}`}>
+                      Contact to Start
+                      <ArrowRight aria-hidden="true" size={18} />
+                    </a>
+                  ) : null}
+                </div>
+                {plan.action === "payment" && plan.paymentLink ? (
+                  <p className="payment-note">Secure Stripe checkout for live tutoring.</p>
+                ) : null}
+              </article>
             ))}
-          </ul>
-          {plan.title === "Free AI Tutor" ? (
-            <div className="payment-actions">
-              <a className="button primary full" href="/ai-lesson-generator">
-                Start Free AI Tutor
-                <ArrowRight aria-hidden="true" size={18} />
-              </a>
-            </div>
-          ) : null}
-          {plan.productKey && plan.paymentLink ? (
-            <div className="payment-actions">
-              <TrackedLink
-                className="button primary full"
-                eventName="stripe_payment_link_click"
-                href={plan.paymentLink}
-                target="_blank"
-              >
-                Request Live Tutor
-                <ArrowRight aria-hidden="true" size={18} />
-              </TrackedLink>
-              <p className="payment-note">Secure Stripe checkout for optional live tutoring support.</p>
-            </div>
-          ) : null}
-          {plan.productKey && !plan.paymentLink ? (
-            <div className="payment-actions">
-              <a className="button primary full" href={`mailto:${contactEmail}?subject=${encodeURIComponent(plan.title)}`}>
-                Contact to Start
-                <ArrowRight aria-hidden="true" size={18} />
-              </a>
-            </div>
-          ) : null}
-          {plan.title.includes("Student") || plan.title === "Family AI Tutor" ? (
-            <div className="payment-actions">
-              <a className="button primary full" href="/ai-lesson-generator">
-                Unlock AI Tutor
-                <ArrowRight aria-hidden="true" size={18} />
-              </a>
-              <a className="button secondary full" href={`mailto:${contactEmail}?subject=${encodeURIComponent(`${plan.title} subscription request`)}`}>
-                Request This Plan
-              </a>
-            </div>
-          ) : null}
-        </article>
+          </div>
+        </div>
       ))}
     </div>
   );

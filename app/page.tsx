@@ -2,10 +2,12 @@
 
 import {
   ArrowRight,
+  Bot,
   CalendarCheck,
   CheckCircle2,
   Mail,
-  Sparkles
+  Sparkles,
+  Video
 } from "lucide-react";
 import Footer from "./components/Footer";
 import TrackedLink from "./components/TrackedLink";
@@ -31,36 +33,34 @@ export default function Home() {
         </a>
         <nav aria-label="Main navigation">
           <a href="#subjects">Subjects</a>
-          <a href="/curriculum-demo">Curriculum</a>
           <a href="/ai-lesson-generator">AI Tutor</a>
-          <a href="#how-it-works">How it works</a>
+          <a href="/find-a-tutor">Live Tutoring</a>
           <a href="/pricing">Pricing</a>
-          <a href="#about">About</a>
           <TrackedLink className="nav-cta" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-            Book AI Tutor Demo
+            Book Free Live Demo
           </TrackedLink>
         </nav>
       </header>
 
-      <section className="demo-strip" aria-label="NovaSprout AI tutor launch">
+      <section className="demo-strip" aria-label="NovaSprout tutoring options">
         <div className="demo-track">
-          <span>AI tutor launch: personalized lesson decks, live tutoring, timed quiz</span>
-          <span>Request a live tutor only when the AI lesson shows where help is needed</span>
-          <span>Free, Student, Student Plus, and Family AI Tutor plans</span>
-          <span>AI tutor launch: personalized lesson decks, live tutoring, timed quiz</span>
-          <span>Request a live tutor only when the AI lesson shows where help is needed</span>
-          <span>Free, Student, Student Plus, and Family AI Tutor plans</span>
+          <span>First live tutoring demo is free</span>
+          <span>AI Tutor and Live Tutoring are separate services</span>
+          <span>Personalized AI lessons, live human teaching, or both</span>
+          <span>First live tutoring demo is free</span>
+          <span>AI Tutor and Live Tutoring are separate services</span>
+          <span>Personalized AI lessons, live human teaching, or both</span>
         </div>
       </section>
 
       <section className="hero" id="top">
         <div className="hero-copy">
-          <p className="eyebrow">AI tutor launch</p>
-          <h1>Personalized AI Tutoring With Live Tutor Help When Needed.</h1>
+          <p className="eyebrow">Two ways to learn online</p>
+          <h1>Choose AI Lessons or Learn Live With a Tutor.</h1>
           <p className="hero-text">
-            NovaSprout Learning starts with AI-generated lessons, visuals, timed quizzes, and study
-            notes. If the student gets stuck, they can request a live tutor who receives the topic,
-            lesson history, quiz results, and weak areas.
+            AI Tutor creates personalized lessons, visuals, practice, and timed quizzes. Live Tutoring
+            connects students directly with a human tutor for one-to-one online teaching. Each service
+            can be used on its own.
           </p>
           <div className="hero-highlights" aria-label="Tutoring benefits">
             <span>
@@ -77,21 +77,22 @@ export default function Home() {
             </span>
             <span>
               <CheckCircle2 aria-hidden="true" size={16} />
-              Live tutor escalation
+              One-to-one live tutoring
             </span>
           </div>
           <div className="hero-actions">
             <a className="button primary" href="/ai-lesson-generator">
-              Start AI Tutor
+              Try AI Tutor
               <ArrowRight aria-hidden="true" size={18} />
             </a>
-            <TrackedLink className="button primary" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-              <CalendarCheck aria-hidden="true" size={18} />
-              Request Live Tutor
-            </TrackedLink>
-            <a className="button secondary" href="/pricing">
-              View AI Plans
+            <a className="button secondary" href="/find-a-tutor">
+              <Video aria-hidden="true" size={18} />
+              Explore Live Tutoring
             </a>
+            <TrackedLink className="button secondary" eventName="book_meeting_click" href={bookingUrl} target="_blank">
+              <CalendarCheck aria-hidden="true" size={18} />
+              Book Free Live Demo
+            </TrackedLink>
           </div>
         </div>
         <div className="hero-media" aria-label="Seed growing in a nourishing learning environment">
@@ -101,8 +102,42 @@ export default function Home() {
           />
           <div className="hero-note">
             <Sparkles aria-hidden="true" size={18} />
-            <span>AI-prepared lessons, live explanation, and a clearer next step after every session.</span>
+            <span>Flexible online learning for independent study or direct human support.</span>
           </div>
+        </div>
+      </section>
+
+      <section className="section service-choice-section" aria-labelledby="choose-service-title">
+        <div className="section-heading">
+          <p className="eyebrow">Choose a service</p>
+          <h2 id="choose-service-title">Start with the type of tutoring you want.</h2>
+          <p>No AI lesson is required before booking a live tutor.</p>
+        </div>
+        <div className="service-choice-grid">
+          <article className="service-choice">
+            <span className="subject-icon"><Bot aria-hidden="true" size={26} /></span>
+            <div>
+              <p className="eyebrow">Self-guided</p>
+              <h3>AI Tutor</h3>
+              <p>Generate a lesson by grade, subject, and topic, then study the slides and complete a timed quiz.</p>
+              <a className="button primary" href="/ai-lesson-generator">
+                Open AI Tutor
+                <ArrowRight aria-hidden="true" size={18} />
+              </a>
+            </div>
+          </article>
+          <article className="service-choice">
+            <span className="subject-icon"><Video aria-hidden="true" size={26} /></span>
+            <div>
+              <p className="eyebrow">One-to-one</p>
+              <h3>Live Tutoring</h3>
+              <p>Meet a human tutor online for personal explanation, guided practice, and ongoing academic support.</p>
+              <a className="button primary" href="/find-a-tutor">
+                Explore Live Tutoring
+                <ArrowRight aria-hidden="true" size={18} />
+              </a>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -190,7 +225,7 @@ export default function Home() {
       <section className="process-section" id="how-it-works">
         <div className="section-heading">
           <p className="eyebrow">How it works</p>
-          <h2>From AI lesson to live tutor only when needed.</h2>
+          <h2>Two services with simple starting points.</h2>
         </div>
         <div className="steps wide-steps">
           {processSteps.map((step, index) => (
@@ -244,17 +279,17 @@ export default function Home() {
       <section className="section compact-section" id="pricing-summary">
         <div className="section-heading">
           <p className="eyebrow">Pricing summary</p>
-          <h2>AI Tutor plans first, with live tutoring as an optional escalation.</h2>
+          <h2>Separate plans for AI Tutor and Live Tutoring.</h2>
           <p>
-            Start with a free AI Tutor plan, upgrade for more lessons and reports, and request a live
-            tutor only when the student needs human guidance.
+            Try the AI Tutor for independent study, or book a free live tutoring demo before choosing
+            a one-hour session or monthly support.
           </p>
         </div>
         <div className="pricing-grid">
           <article className="price-card">
             <h3>Free AI Tutor</h3>
             <strong>Free</strong>
-            <p>Limited monthly AI lessons, basic explanations, quizzes, notes, and live tutor request option.</p>
+            <p>Limited monthly AI lessons with explanations, quizzes, notes, and PDF lesson previews.</p>
             <a className="button primary full" href="/ai-lesson-generator">
               Start AI Tutor
             </a>
@@ -268,20 +303,20 @@ export default function Home() {
             </a>
           </article>
           <article className="price-card">
-            <h3>Student Plus</h3>
-            <strong>$19.99-$29.99 / month</strong>
-            <p>Higher AI lesson allowance, all subjects, adaptive quizzes, and progress reports.</p>
+            <h3>1-Hour Live Tutoring</h3>
+            <strong>$40-$60 / hour</strong>
+            <p>A focused one-to-one online lesson with personalized explanation and guided practice.</p>
             <a className="button secondary full" href="/pricing">
-              View Plus Plan
+              View Live Tutoring
             </a>
           </article>
           <article className="price-card">
-            <h3>Live Tutor Request</h3>
-            <strong>$40-$60 / hour</strong>
-            <p>Optional human help after the AI lesson identifies weak areas and next steps.</p>
-            <a className="button secondary full" href="/ai-lesson-generator">
-              Generate Lesson First
-            </a>
+            <h3>Monthly Live Tutoring</h3>
+            <strong>$199-$499 / month</strong>
+            <p>Recurring live sessions with consistent tutor support, practice, and progress follow-up.</p>
+            <TrackedLink className="button secondary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
+              Book Free Demo
+            </TrackedLink>
           </article>
         </div>
       </section>
@@ -304,10 +339,10 @@ export default function Home() {
       <section className="booking-section" id="book">
         <div className="booking-copy">
           <p className="eyebrow">Start</p>
-          <h2>Start With AI Tutor, Then Request Human Help When Needed.</h2>
+          <h2>Choose AI Tutor or Live Tutoring.</h2>
           <p>
-            Generate a lesson from grade, subject, topic, and learning goal. If the quiz or explanation
-            shows a weak area, request a live tutor with the lesson context already prepared.
+            Open the AI Tutor for a personalized self-guided lesson, or book a free live demo to meet
+            a human tutor. Neither service requires the other.
           </p>
           <ul>
             <li>
@@ -316,7 +351,7 @@ export default function Home() {
             </li>
             <li>
               <CheckCircle2 aria-hidden="true" size={18} />
-              Live tutor support explains, guides, and adapts the material
+              Live tutoring provides direct one-to-one explanation and guided practice
             </li>
             <li>
               <CheckCircle2 aria-hidden="true" size={18} />
@@ -330,7 +365,7 @@ export default function Home() {
             <ArrowRight aria-hidden="true" size={18} />
           </a>
           <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-            Book AI Tutor Demo
+            Book Free Live Demo
             <ArrowRight aria-hidden="true" size={18} />
           </TrackedLink>
           <a className="button secondary full" href={`mailto:${contactEmail}`}>

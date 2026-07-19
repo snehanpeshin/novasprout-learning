@@ -20,10 +20,11 @@ export default function AILessonGeneratorPage() {
         </a>
         <nav aria-label="Main navigation">
           <a href="/#subjects">Subjects</a>
+          <a href="/find-a-tutor">Live Tutoring</a>
           <a href="#how-ai-tutor-works">How it works</a>
           <a href="/pricing">Pricing</a>
           <TrackedLink className="nav-cta" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-            Free Demo
+            Book Live Demo
           </TrackedLink>
         </nav>
       </header>
@@ -66,8 +67,8 @@ export default function AILessonGeneratorPage() {
       <section className="booking-section ai-tutor-help">
         <div className="booking-copy">
           <p className="eyebrow">Need human help?</p>
-          <h2>Meet a live tutor.</h2>
-          <p>Book a free call when a student needs personal explanation or ongoing support.</p>
+          <h2>Live Tutoring is also available.</h2>
+          <p>It is a separate service, so students can book a human tutor without using the AI Tutor first.</p>
         </div>
         <div className="booking-actions">
           <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">

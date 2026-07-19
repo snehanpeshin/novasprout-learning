@@ -8,7 +8,7 @@ export default function Footer() {
       <nav className="footer-links" aria-label="Footer links">
         <a href="/curriculum-demo">Curriculum Demos</a>
         <a href="/ai-lesson-generator">AI Lesson Generator</a>
-        <a href="/find-a-tutor">Request a Tutor</a>
+        <a href="/find-a-tutor">Live Tutoring</a>
         <a href="/become-a-tutor">Become a Tutor</a>
         <a href="/privacy">Privacy Policy</a>
         <a href="/refund-policy">Refund Policy</a>

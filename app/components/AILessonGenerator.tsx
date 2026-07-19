@@ -1625,7 +1625,7 @@ Interested in: Free trial / Paid AI-generated lessons
     `Live tutor request: ${grade} ${subject} - ${topic}`
   )}&body=${encodeURIComponent(`Hi NovaSprout Learning,
 
-I would like to request a live tutor after using the AI Tutor.
+I would like to request a separate live tutoring session for this topic.
 
 Grade: ${grade}
 Subject: ${subject}

@@ -23,8 +23,9 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
         </a>
         <nav aria-label="Main navigation">
           <a href="/#subjects">Subjects</a>
+          <a href="/ai-lesson-generator">AI Tutor</a>
+          <a href="/find-a-tutor">Live Tutoring</a>
           <a href="/pricing">Pricing</a>
-          <a href="/#book">Book a Free Demo</a>
         </nav>
       </header>
 

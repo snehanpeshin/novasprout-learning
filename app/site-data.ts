@@ -109,20 +109,20 @@ export const subjectTracks = [
 
 export const processSteps = [
   {
-    title: "Try the AI tutor flow",
-    copy: "Choose grade, subject, topic, and learning need so NovaSprout can prepare a structured lesson path."
+    title: "Choose AI or live tutoring",
+    copy: "Start a self-guided AI lesson or go directly to live one-to-one tutoring. Neither service requires the other."
   },
   {
-    title: "Review a generated lesson",
-    copy: "Use the AI-generated deck, timer, practice, and quiz to preview how the tutoring session can run."
+    title: "Start the AI Tutor",
+    copy: "Choose grade, subject, topic, and learning need to generate a lesson deck, practice, and timed quiz."
   },
   {
-    title: "Book one class or monthly support",
-    copy: "Start with a single 1-hour AI-supported tutoring session or continue with a monthly plan."
+    title: "Book a live tutor",
+    copy: "Schedule a free demo, then choose a one-hour live lesson or recurring monthly tutoring support."
   },
   {
-    title: "Continue with notes, quiz scores, and practice",
-    copy: "Human tutoring stays central, while AI-generated materials support explanations, exams, and follow-up."
+    title: "Continue your way",
+    copy: "Use either service independently, or combine AI study materials with live tutoring when that is useful."
   }
 ];
 
@@ -410,42 +410,56 @@ export const resourceItems = [
 
 export const pricingPlans = [
   {
+    action: "ai",
+    service: "ai",
     title: "Free AI Tutor",
     price: "Free",
-    copy: "Start with a small monthly AI lesson allowance and request live tutoring only when needed.",
-    features: ["3-5 AI lessons per month", "Basic explanations and quizzes", "Limited PDF downloads", "Live tutor request option"]
+    copy: "Try personalized AI-generated lessons, explanations, practice, and quizzes.",
+    features: ["Limited monthly AI lessons", "Explanations and practice", "Timed quizzes", "PDF lesson preview"]
   },
   {
+    action: "contact",
+    service: "ai",
     title: "Student AI Tutor",
     price: "$9.99-$14.99 / month",
-    copy: "A practical AI tutor subscription for regular lessons, quizzes, worksheets, and saved study history.",
-    features: ["More AI lessons", "Comprehensive lessons and quizzes", "Lesson PDFs and worksheets", "Optional paid live tutoring"]
+    copy: "Use the AI Tutor regularly for full lessons, revision, quizzes, and downloadable study materials.",
+    features: ["More AI lessons", "Comprehensive lesson decks", "Quizzes and worksheets", "Downloadable lesson PDFs"]
   },
   {
-    title: "Student Plus AI Tutor",
-    price: "$19.99-$29.99 / month",
-    copy: "Higher-use AI tutoring for all subjects, exam preparation, adaptive quizzes, and progress reporting.",
-    features: ["High monthly lesson allowance", "All subjects", "Adaptive quizzes and exam prep", "Priority live tutor requests"]
+    action: "booking",
+    service: "live",
+    title: "Free Live Tutoring Demo",
+    price: "Free",
+    copy: "Meet online with a tutor, discuss the student's goals, and experience the teaching approach.",
+    features: ["Introductory live session", "Subject and goal review", "No paid commitment", "Google Meet or Zoom"]
   },
   {
-    title: "Family AI Tutor",
-    price: "$29.99-$49.99 / month",
-    copy: "Shared AI tutoring access for multiple student profiles with parent-friendly progress and live tutor booking.",
-    features: ["3-5 student profiles", "Shared lesson credits", "Weekly progress reports", "Parent-tutor session option"]
-  },
-  {
+    action: "payment",
     paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_ONE_HOUR_TUTORING_PAYMENT_LINK,
     productKey: "tutoring_session",
-    title: "Live Tutor Request",
+    service: "live",
+    title: "1-Hour Live Tutoring",
     price: "$40-$60 / hour",
-    copy: "Escalate from AI Tutor to a human tutor when the student needs direct explanation or guided practice.",
-    features: ["One-time session", "AI lesson context shared", "Quiz weak areas reviewed", "Packages available by request"]
+    copy: "Book a focused one-to-one online lesson with a human tutor in the selected subject.",
+    features: ["One-to-one live session", "Personalized explanation", "Guided practice", "Follow-up notes"]
+  },
+  {
+    action: "payment",
+    paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_MONTHLY_PACKAGE_PAYMENT_LINK,
+    productKey: "monthly_subscription",
+    service: "live",
+    title: "Monthly Live Tutoring",
+    price: "$199-$499 / month",
+    copy: "Build a regular tutoring schedule with ongoing lessons, practice, and progress follow-up.",
+    features: ["Recurring live sessions", "Consistent tutor support", "Practice and session notes", "Progress follow-up"]
   }
 ] satisfies Array<{
+  action: "ai" | "booking" | "contact" | "payment";
   copy: string;
   features: string[];
   paymentLink?: string;
   price: string;
   productKey?: "tutoring_session" | "monthly_subscription";
+  service: "ai" | "live";
   title: string;
 }>;
