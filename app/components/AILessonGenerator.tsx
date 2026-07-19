@@ -1467,10 +1467,13 @@ export default function AILessonGenerator() {
       }
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Could not generate a lesson.");
+        throw new Error(data.error ? `Lesson generation failed (${response.status}): ${data.error}` : `Could not generate a lesson (${response.status}).`);
       }
 
       const generatedLesson = data.lesson ?? null;
+      if (!generatedLesson && !data.lessonText) {
+        throw new Error("The lesson service returned no lesson content.");
+      }
       setLesson(generatedLesson);
       setLessonText(data.lessonText ?? "");
       setError(data.warning ?? "");

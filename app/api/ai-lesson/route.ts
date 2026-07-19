@@ -477,13 +477,6 @@ async function requestOpenAiLesson({
 export async function POST(request: Request) {
   const apiKey = process.env.OPENAI_API_KEY;
 
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "OPENAI_API_KEY is not configured for this deployment." },
-      { status: 500 }
-    );
-  }
-
   if (!isAiAccessAllowed(request)) {
     return NextResponse.json({ error: aiAccessError }, { status: 401 });
   }
@@ -514,6 +507,13 @@ export async function POST(request: Request) {
     topic.length < 3
   ) {
     return NextResponse.json({ error: "Please choose a valid grade, subject, level, goal, duration, and topic." }, { status: 400 });
+  }
+
+  if (!apiKey) {
+    return NextResponse.json({
+      lesson: fallbackLesson({ duration, goal, grade, level, mode, studentQuestion, subject, topic }),
+      warning: "OPENAI_API_KEY is not configured for this deployment. A fallback lesson was generated instead."
+    });
   }
 
   const prompt = `
