@@ -5,6 +5,7 @@ import path from "path";
 import { promisify } from "util";
 import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
+import { legacyLessonToSlidePlan, type LessonPlanSlide, type VisualSpec } from "../../lib/lessonSlidePlan";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -597,72 +598,298 @@ ${ordered ? "\\end{enumerate}" : "\\end{itemize}"}
   };
 }
 
-function buildSlideBodies(request: LessonDeckRequest) {
-  const lesson = request.lesson ?? {};
-  const conceptSlides = textChunks(lesson.conceptExplanation, 360, 4).map((chunk, index) =>
-    textSlide(teachingTitle("Understand", chunk, index), chunk)
-  );
-  const exampleSlides = textChunks(lesson.guidedExample, 360, 4).map((chunk, index) =>
-    textSlide(teachingTitle("Example step", chunk, index), chunk)
-  );
-  const practiceSlides = itemChunks(lesson.practiceQuestions, 3, 4).map((items, index) =>
-    listSlide(index === 0 ? "Try these problems" : `Practice round ${index + 1}`, items, true)
-  );
-  const quickCheckSlides = itemChunks(lesson.quickAssessment, 3, 2).map((items, index) =>
-    listSlide(index === 0 ? "Show what you know" : `Final check ${index + 1}`, items, true)
-  );
-  const guidedActivitySlides = (lesson.fullLessonSegments ?? [])
-    .map((segment) => cleanText(segment.activity, 420))
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((activity, index) => textSlide(teachingTitle("Tutor-guided move", activity, index), activity));
-  const slides = [
-    {
-      body: String.raw`\begin{columns}[T]
-\begin{column}{0.58\textwidth}
-\Large ${escapeLatex(request.context?.topic ?? lesson.title ?? "NovaSprout Lesson")}
-\vspace{0.8em}
+function latexBullets(items?: string[], maxItems = 5) {
+  const cleanItems = (items ?? []).map((item) => cleanText(item, 260)).filter(Boolean).slice(0, maxItems);
+  if (!cleanItems.length) {
+    return "";
+  }
 
-\small ${escapeLatex(lesson.studentFit)}
-\end{column}
-\begin{column}{0.36\textwidth}
-\begin{block}{Today you will}
-\begin{itemize}
+  return String.raw`\begin{itemize}
 \small
-${latexItems((lesson.learningObjectives ?? []).slice(0, 3))}
-\end{itemize}
+${latexItems(cleanItems)}
+\end{itemize}`;
+}
+
+function latexSteps(items?: string[], maxItems = 5) {
+  const cleanItems = (items ?? []).map((item) => cleanText(item, 220)).filter(Boolean).slice(0, maxItems);
+  if (!cleanItems.length) {
+    return "";
+  }
+
+  return String.raw`\begin{enumerate}
+\small
+${latexItems(cleanItems)}
+\end{enumerate}`;
+}
+
+function visualLabels(visual: VisualSpec, fallback: string[]) {
+  return (visual.labels?.length ? visual.labels : fallback).map((item) => cleanText(item, 60)).filter(Boolean).slice(0, 8);
+}
+
+function renderDigestiveSystemVisual(visual: VisualSpec) {
+  const labels = visualLabels(visual, [
+    "Mouth",
+    "Esophagus",
+    "Stomach",
+    "Small intestine",
+    "Large intestine",
+    "Liver",
+    "Pancreas"
+  ]);
+  const [mouth, esophagus, stomach, smallIntestine, largeIntestine, liver, pancreas] = labels;
+
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.62, every node/.style={font=\scriptsize}]
+\node[draw, rounded corners, thick, fill=SubjectAccent!14, minimum width=1.9cm, minimum height=0.52cm] (mouth) at (0,5.0) {${escapeLatex(mouth)}};
+\node[draw, rounded corners, thick, fill=SubjectAccent!10, minimum width=1.9cm, minimum height=0.52cm] (eso) at (0,4.15) {${escapeLatex(esophagus)}};
+\node[draw, rounded corners, thick, fill=SubjectAccent!22, minimum width=2.15cm, minimum height=0.7cm] (stomach) at (0,3.15) {${escapeLatex(stomach)}};
+\node[draw, rounded corners, thick, fill=NovaMint!18, minimum width=2.55cm, minimum height=0.7cm] (small) at (0,2.05) {${escapeLatex(smallIntestine)}};
+\node[draw, rounded corners, thick, fill=NovaMint!10, minimum width=2.55cm, minimum height=0.7cm] (large) at (0,0.95) {${escapeLatex(largeIntestine)}};
+\node[draw, rounded corners, thick, fill=SubjectAccent!10, minimum width=1.55cm, minimum height=0.48cm] (liver) at (3.15,3.55) {${escapeLatex(liver)}};
+\node[draw, rounded corners, thick, fill=SubjectAccent!10, minimum width=1.65cm, minimum height=0.48cm] (pancreas) at (3.15,2.35) {${escapeLatex(pancreas)}};
+\draw[->, very thick, SubjectAccent] (mouth) -- (eso);
+\draw[->, very thick, SubjectAccent] (eso) -- (stomach);
+\draw[->, very thick, SubjectAccent] (stomach) -- (small);
+\draw[->, very thick, SubjectAccent] (small) -- (large);
+\draw[->, thick, NovaMint] (liver) -- node[above, sloped]{\tiny bile} (small);
+\draw[->, thick, NovaMint] (pancreas) -- node[below, sloped]{\tiny enzymes} (small);
+\node[align=center, font=\scriptsize] at (1.6,0.15) {Main path: food travels down\\Helper organs: chemicals join in};
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderProcessVisual(visual: VisualSpec) {
+  const steps = (visual.steps?.length ? visual.steps : visualLabels(visual, ["Notice", "Explain", "Practice", "Check"]))
+    .map((step) => cleanText(step, 48))
+    .filter(Boolean)
+    .slice(0, 5);
+  const nodes = steps
+    .map(
+      (step, index) =>
+        `\\node[draw, rounded corners, thick, fill=${index % 2 ? "NovaMint" : "SubjectAccent"}!12, minimum width=1.8cm, minimum height=0.65cm] (n${index}) at (${index * 2.05},0) {\\scriptsize ${escapeLatex(step)}};`
+    )
+    .join("\n");
+  const arrows = steps
+    .slice(0, -1)
+    .map((_, index) => `\\draw[->, very thick, SubjectAccent] (n${index}) -- (n${index + 1});`)
+    .join("\n");
+
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.7]
+${nodes}
+${arrows}
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderComparisonVisual(visual: VisualSpec) {
+  const columns =
+    visual.columns?.length === 2
+      ? visual.columns
+      : [
+          { title: "Side A", items: ["Key detail", "Example"] },
+          { title: "Side B", items: ["Key detail", "Example"] }
+        ];
+
+  return String.raw`\begin{columns}[T]
+\begin{column}{0.49\textwidth}
+\begin{block}{${escapeLatex(columns[0].title)}}
+${latexBullets(columns[0].items, 4)}
 \end{block}
 \end{column}
-\end{columns}
-\vspace{0.8em}
+\begin{column}{0.49\textwidth}
+\begin{block}{${escapeLatex(columns[1].title)}}
+${latexBullets(columns[1].items, 4)}
+\end{block}
+\end{column}
+\end{columns}`;
+}
 
-\begin{center}
-\begin{tikzpicture}[scale=0.85]
-\node[draw, rounded corners, fill=SubjectAccent!12, minimum width=2.2cm, minimum height=0.7cm] (a) {See};
-\node[draw, rounded corners, fill=NovaMint!12, right=0.55cm of a, minimum width=2.2cm, minimum height=0.7cm] (b) {Explain};
-\node[draw, rounded corners, fill=SubjectAccent!12, right=0.55cm of b, minimum width=2.2cm, minimum height=0.7cm] (c) {Practice};
-\node[draw, rounded corners, fill=NovaMint!12, right=0.55cm of c, minimum width=2.2cm, minimum height=0.7cm] (d) {Check};
-\draw[->, thick, SubjectAccent] (a) -- (b);
-\draw[->, thick, SubjectAccent] (b) -- (c);
-\draw[->, thick, SubjectAccent] (c) -- (d);
+function renderRatioTable(visual: VisualSpec) {
+  const headers = visual.tableHeaders?.length ? visual.tableHeaders.slice(0, 6) : ["Quantity", "x1", "x2", "x3", "x4"];
+  const rows = visual.rows?.length
+    ? visual.rows.slice(0, 4)
+    : [
+        ["A", "2", "4", "6", "8"],
+        ["B", "3", "6", "9", "12"]
+      ];
+  const columnSpec = `|${headers.map(() => "c").join("|")}|`;
+  const bodyRows = rows.map((row) => `${row.slice(0, headers.length).map((cell) => escapeLatex(cell)).join(" & ")} \\\\`).join("\n\\hline\n");
+
+  return String.raw`\begin{center}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{${columnSpec}}
+\hline
+${headers.map((header) => `\\textbf{${escapeLatex(header)}}`).join(" & ")} \\
+\hline
+${bodyRows}
+\hline
+\end{tabular}
+\end{center}`;
+}
+
+function renderDoubleNumberLine(visual: VisualSpec) {
+  const rows = visual.rows?.length
+    ? visual.rows
+    : [
+        ["A", "0", "2", "4", "6", "8"],
+        ["B", "0", "3", "6", "9", "12"]
+      ];
+  const top = rows[0] ?? [];
+  const bottom = rows[1] ?? [];
+  const values = top.slice(1, 6);
+  const ticks = values
+    .map((value, index) => {
+      const x = index * 1.4;
+      return String.raw`\draw (${x},0.08) -- (${x},-0.08);
+\draw (${x},-0.92) -- (${x},-1.08);
+\node[above] at (${x},0.1) {\scriptsize ${escapeLatex(value)}};
+\node[below] at (${x},-1.1) {\scriptsize ${escapeLatex(bottom[index + 1] ?? "")}};`;
+    })
+    .join("\n");
+
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.88]
+\draw[very thick, SubjectAccent] (0,0) -- (${Math.max(1, values.length - 1) * 1.4},0);
+\draw[very thick, NovaMint] (0,-1) -- (${Math.max(1, values.length - 1) * 1.4},-1);
+${ticks}
+\node[left] at (-0.25,0) {\scriptsize ${escapeLatex(top[0] ?? "A")}};
+\node[left] at (-0.25,-1) {\scriptsize ${escapeLatex(bottom[0] ?? "B")}};
 \end{tikzpicture}
-\end{center}
-\vfill
-\small NovaSprout Learning`,
-      title: `Learn ${request.context?.topic ?? lesson.title ?? "the topic"}`
-    },
-    ...(lesson.warmUp ? [textSlide("Start by noticing this", lesson.warmUp)] : []),
-    ...conceptSlides.slice(0, 2),
-    ...subjectVisualSlides(request),
-    ...conceptSlides.slice(2),
-    ...exampleSlides,
-    ...guidedActivitySlides,
-    ...practiceSlides,
-    ...quickCheckSlides,
-    ...(lesson.recommendedNextSession ? [textSlide("Next Practice", lesson.recommendedNextSession)] : [])
-  ];
+\end{center}`;
+}
 
-  return slides;
+function renderCoordinateGraph(visual: VisualSpec) {
+  const points = visual.points?.length ? visual.points.slice(0, 6) : [{ x: 0, y: 0 }, { x: 1, y: 2 }, { x: 2, y: 4 }, { x: 3, y: 6 }];
+  const maxX = Math.max(4, ...points.map((point) => point.x));
+  const maxY = Math.max(6, ...points.map((point) => point.y));
+  const scaledPoints = points.map((point) => `(${(point.x / maxX) * 5.2},${(point.y / maxY) * 3.4})`).join(" -- ");
+  const dots = points
+    .map((point) => `\\fill[SubjectAccent] (${(point.x / maxX) * 5.2},${(point.y / maxY) * 3.4}) circle (0.07);`)
+    .join("\n");
+
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.85]
+\draw[step=0.85cm, gray!28, very thin] (0,0) grid (5.2,3.4);
+\draw[->, thick] (0,0) -- (5.55,0) node[right]{\scriptsize x};
+\draw[->, thick] (0,0) -- (0,3.75) node[above]{\scriptsize y};
+\draw[very thick, SubjectAccent] ${scaledPoints};
+${dots}
+\node[below] at (2.6,-0.35) {\scriptsize straight line through origin = proportional};
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderEquationSteps(visual: VisualSpec) {
+  const steps = visual.steps?.length ? visual.steps : visual.equation ? [visual.equation] : [];
+  if (!steps.length) {
+    return "";
+  }
+
+  return String.raw`\begin{block}{Work the steps}
+\Large
+\begin{align*}
+${steps.map((step) => safeInlineLatex(step) || escapeLatex(step)).join(" \\\\\n")}
+\end{align*}
+\end{block}`;
+}
+
+function renderCardsVisual(visual: VisualSpec) {
+  const labels = visualLabels(visual, ["Notice", "Explain", "Practice", "Check"]).slice(0, 6);
+  const columns = labels
+    .map((label, index) => {
+      const color = index % 2 ? "NovaMint" : "SubjectAccent";
+      return `\\node[draw, rounded corners, thick, fill=${color}!12, minimum width=1.55cm, minimum height=0.72cm, align=center] at (${(index % 3) * 2.0},${index < 3 ? 1 : 0}) {\\scriptsize ${escapeLatex(label)}};`;
+    })
+    .join("\n");
+
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.88]
+${columns}
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderVisualSpec(visual: VisualSpec) {
+  switch (visual.type) {
+    case "labeled_system":
+    case "annotated_image":
+      if ((visual.labels ?? []).some((label) => label.toLowerCase().includes("stomach"))) {
+        return renderDigestiveSystemVisual(visual);
+      }
+      return renderCardsVisual(visual);
+    case "comparison_table":
+    case "structure_function":
+      return renderComparisonVisual(visual);
+    case "coordinate_graph":
+      return renderCoordinateGraph(visual);
+    case "double_number_line":
+      return renderDoubleNumberLine(visual);
+    case "equation_steps":
+      return renderEquationSteps(visual);
+    case "flowchart":
+    case "process_sequence":
+      return renderProcessVisual(visual);
+    case "ratio_table":
+    case "data_table":
+      return renderRatioTable(visual);
+    case "callout":
+    case "concept_map":
+    case "icon_grid":
+    case "labeled_cards":
+    case "tape_diagram":
+    default:
+      return renderCardsVisual(visual);
+  }
+}
+
+function renderPlanSlideBody(slide: LessonPlanSlide) {
+  const content = slide.studentContent;
+  const textParts = [
+    content.keyIdea ? String.raw`\begin{alertblock}{Key idea}
+\small ${escapeLatex(content.keyIdea)}
+\end{alertblock}` : "",
+    content.explanation ? String.raw`\small ${escapeLatex(content.explanation)}` : "",
+    content.question ? String.raw`\begin{block}{Question}
+\small ${escapeLatex(content.question)}
+\end{block}` : "",
+    latexBullets(content.bullets, 5),
+    latexSteps(content.steps, 4),
+    content.hint ? String.raw`\begin{block}{Hint}
+\small ${escapeLatex(content.hint)}
+\end{block}` : "",
+    content.answer ? String.raw`\begin{block}{Answer check}
+\small ${escapeLatex(content.answer)}
+\end{block}` : ""
+  ].filter(Boolean);
+  const visualTex = slide.visuals.slice(0, 1).map(renderVisualSpec).filter(Boolean).join("\n");
+
+  if (visualTex && textParts.length) {
+    return String.raw`\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+${textParts.join("\n\n")}
+\end{column}
+\begin{column}{0.48\textwidth}
+${visualTex}
+\end{column}
+\end{columns}`;
+  }
+
+  if (visualTex) {
+    return visualTex;
+  }
+
+  return textParts.join("\n\n") || String.raw`\begin{block}{Learn}
+\small Review this idea, try one example, and explain your thinking.
+\end{block}`;
+}
+
+function buildSlideBodies(request: LessonDeckRequest) {
+  const plan = legacyLessonToSlidePlan({ context: request.context, lesson: request.lesson });
+  return plan.slides.map((slide) => ({
+    body: renderPlanSlideBody(slide),
+    title: slide.title
+  }));
 }
 
 async function writeImageAssets(workDir: string, assets: DeckAsset[]) {
@@ -701,6 +928,7 @@ function buildBeamerTex(request: LessonDeckRequest) {
   return String.raw`\documentclass[aspectratio=169]{beamer}
 \usetheme{Madrid}
 \usepackage[absolute,overlay]{textpos}
+\usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tikz}
@@ -944,6 +1172,7 @@ async function compileDeckRequest(request: Request) {
   const densityWarnings = getDensityWarnings(slideBodies);
   const plannedImageAssetCount = assets.filter((asset) => asset.type === "image").length;
   const qualityChecks = [
+    "Structured LessonSlidePlan v1 renderer active.",
     `${slideBodies.length} Beamer slides generated.`,
     `${plannedImageAssetCount} image asset${plannedImageAssetCount === 1 ? "" : "s"} planned for indexed placement.`,
     `${embeddedImageCount} generated image asset${embeddedImageCount === 1 ? "" : "s"} embedded in the compiled PDF.`,

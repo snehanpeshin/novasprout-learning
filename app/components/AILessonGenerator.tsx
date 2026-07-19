@@ -22,6 +22,7 @@ import {
   X,
   type LucideIcon
 } from "lucide-react";
+import { legacyLessonToSlidePlan } from "../lib/lessonSlidePlan";
 import { contactEmail } from "../site-data";
 
 type ExamQuestion = {
@@ -275,38 +276,8 @@ function subjectVisualTitles(subject: string, topic?: string) {
   return ["Visual Model", "Equation Walkthrough"];
 }
 
-function pdfDeckPlanningTitles(lesson: GeneratedLesson, subject: string, topic?: string) {
-  const titles = [`Learn ${lesson.title ?? "the topic"}`];
-  if (lesson.warmUp) {
-    titles.push("Start by noticing this");
-  }
-
-  const conceptChunks = planningTextChunks(lesson.conceptExplanation, 360, 4);
-  conceptChunks.slice(0, 2).forEach((chunk, index) => {
-    titles.push(planningTeachingTitle("Understand", chunk, index));
-  });
-  titles.push(...subjectVisualTitles(subject, topic ?? lesson.title));
-  conceptChunks.slice(2).forEach((chunk, index) => {
-    titles.push(planningTeachingTitle("Understand", chunk, index + 2));
-  });
-
-  planningTextChunks(lesson.guidedExample, 360, 4).forEach((chunk, index) => {
-    titles.push(planningTeachingTitle("Example step", chunk, index));
-  });
-  (lesson.fullLessonSegments ?? []).filter((segment) => segment.activity?.trim()).slice(0, 2).forEach((segment, index) => {
-    titles.push(planningTeachingTitle("Tutor-guided move", segment.activity ?? "", index));
-  });
-  Array.from({ length: countItemChunks(lesson.practiceQuestions, 3, 4) }).forEach((_, index) => {
-    titles.push(index === 0 ? "Try these problems" : `Practice round ${index + 1}`);
-  });
-  Array.from({ length: countItemChunks(lesson.quickAssessment, 3, 2) }).forEach((_, index) => {
-    titles.push(index === 0 ? "Show what you know" : `Final check ${index + 1}`);
-  });
-  if (lesson.recommendedNextSession) {
-    titles.push("Next Practice");
-  }
-
-  return titles;
+function pdfDeckPlanningTitles(lesson: GeneratedLesson, context: LessonContext) {
+  return legacyLessonToSlidePlan({ context, lesson }).slides.map((slide) => slide.title);
 }
 
 function LessonSection({
@@ -871,8 +842,8 @@ function StudentSlideDeck({
   const activeSlide = slides[activeSlideIndex];
   const BeamerIcon = theme.icon;
   const pdfPlanningTitles = useMemo(
-    () => pdfDeckPlanningTitles(lesson, context.subject, context.topic),
-    [context.subject, context.topic, lesson]
+    () => pdfDeckPlanningTitles(lesson, context),
+    [context, lesson]
   );
   const texFilename = `${(lesson.title ?? "novasprout-lesson")
     .toLowerCase()
