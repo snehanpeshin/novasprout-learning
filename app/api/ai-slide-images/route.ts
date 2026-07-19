@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 type ImageAssetRequest = {
   assets?: Array<{
@@ -72,51 +73,50 @@ export async function POST(request: Request) {
   }
 
   try {
-    const images = [];
-
-    for (const asset of imageAssets) {
-      const response = await fetch("https://api.openai.com/v1/images/generations", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: process.env.OPENAI_IMAGE_MODEL ?? "gpt-image-1",
-          n: 1,
-          prompt: `${asset.prompt}. Friendly clean tutoring slide illustration. No embedded words or labels.`,
-          quality: "low",
-          size: "1024x1024"
-        })
-      });
-
-      const payload = await readJsonResponse(response);
-
-      if (!response.ok) {
-        return NextResponse.json(
-          { error: payload?.error?.message ?? "Could not generate slide images." },
-          { status: response.status }
-        );
-      }
-
-      const b64Json = payload?.data?.[0]?.b64_json;
-      if (typeof b64Json === "string") {
-        images.push({
-          alt: asset.alt,
-          assetId: asset.assetId,
-          aspectRatio: asset.aspectRatio,
-          caption: asset.caption,
-          dataUrl: `data:image/png;base64,${b64Json}`,
-          educationalPurpose: asset.educationalPurpose,
-          filename: asset.filename,
-          placement: asset.placement,
-          prompt: asset.prompt,
-          type: "image"
+    const images = await Promise.all(
+      imageAssets.map(async (asset) => {
+        const response = await fetch("https://api.openai.com/v1/images/generations", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: process.env.OPENAI_IMAGE_MODEL ?? "gpt-image-1",
+            n: 1,
+            prompt: `${asset.prompt}. Friendly clean tutoring slide illustration. No embedded words or labels.`,
+            quality: "low",
+            size: "1024x1024"
+          })
         });
-      }
-    }
 
-    return NextResponse.json({ images });
+        const payload = await readJsonResponse(response);
+
+        if (!response.ok) {
+          throw new Error(payload?.error?.message ?? "Could not generate slide images.");
+        }
+
+        const b64Json = payload?.data?.[0]?.b64_json;
+        if (typeof b64Json === "string") {
+          return {
+            alt: asset.alt,
+            assetId: asset.assetId,
+            aspectRatio: asset.aspectRatio,
+            caption: asset.caption,
+            dataUrl: `data:image/png;base64,${b64Json}`,
+            educationalPurpose: asset.educationalPurpose,
+            filename: asset.filename,
+            placement: asset.placement,
+            prompt: asset.prompt,
+            type: "image"
+          };
+        }
+
+        return null;
+      })
+    );
+
+    return NextResponse.json({ images: images.filter(Boolean) });
   } catch (error) {
     return NextResponse.json(
       {

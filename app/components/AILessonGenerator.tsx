@@ -122,7 +122,7 @@ type SubjectTheme = {
 const accessStorageKey = "novasprout_ai_access_token";
 const leadStorageKey = "novasprout_ai_lead";
 const assetPlanningTimeoutMs = 18000;
-const imageGenerationTimeoutMs = 25000;
+const imageGenerationTimeoutMs = 60000;
 
 const grades = [
   "Grade 3",
@@ -259,7 +259,10 @@ function countItemChunks(items?: string[], size = 3, maxChunks = 4) {
   return Math.min(maxChunks, Math.ceil(count / size));
 }
 
-function subjectVisualTitles(subject: string) {
+function subjectVisualTitles(subject: string, topic?: string) {
+  if (subject === "Science" && topic?.toLowerCase().includes("digestive")) {
+    return ["Digestive System Map", "Mechanical vs Chemical Digestion"];
+  }
   if (subject === "Science") {
     return ["Visual Reasoning Model"];
   }
@@ -272,7 +275,7 @@ function subjectVisualTitles(subject: string) {
   return ["Visual Model", "Equation Walkthrough"];
 }
 
-function pdfDeckPlanningTitles(lesson: GeneratedLesson, subject: string) {
+function pdfDeckPlanningTitles(lesson: GeneratedLesson, subject: string, topic?: string) {
   const titles = [`Learn ${lesson.title ?? "the topic"}`];
   if (lesson.warmUp) {
     titles.push("Start by noticing this");
@@ -282,7 +285,7 @@ function pdfDeckPlanningTitles(lesson: GeneratedLesson, subject: string) {
   conceptChunks.slice(0, 2).forEach((chunk, index) => {
     titles.push(planningTeachingTitle("Understand", chunk, index));
   });
-  titles.push(...subjectVisualTitles(subject));
+  titles.push(...subjectVisualTitles(subject, topic ?? lesson.title));
   conceptChunks.slice(2).forEach((chunk, index) => {
     titles.push(planningTeachingTitle("Understand", chunk, index + 2));
   });
@@ -867,7 +870,10 @@ function StudentSlideDeck({
 
   const activeSlide = slides[activeSlideIndex];
   const BeamerIcon = theme.icon;
-  const pdfPlanningTitles = useMemo(() => pdfDeckPlanningTitles(lesson, context.subject), [context.subject, lesson]);
+  const pdfPlanningTitles = useMemo(
+    () => pdfDeckPlanningTitles(lesson, context.subject, context.topic),
+    [context.subject, context.topic, lesson]
+  );
   const texFilename = `${(lesson.title ?? "novasprout-lesson")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -986,7 +992,7 @@ function StudentSlideDeck({
       setDeckStage("Images ready");
       return mergedAssets;
     } catch (error) {
-      setAssetError("");
+      setAssetError(error instanceof Error ? `Generated images skipped: ${error.message}` : "Generated images skipped.");
       setDeckStage("Images skipped");
       return null;
     } finally {

@@ -95,8 +95,18 @@ function cleanText(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
-function escapeLatex(value?: string) {
+function normalizeLessonText(value?: string) {
   return (value ?? "")
+    .replace(/-\s*[>¿]/g, " to ")
+    .replace(/[→⇒]/g, " to ")
+    .replace(/[×✕]/g, " x ")
+    .replace(/[–—]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function escapeLatex(value?: string) {
+  return normalizeLessonText(value)
     .replace(/\\/g, "\\textbackslash{}")
     .replace(/&/g, "\\&")
     .replace(/%/g, "\\%")
@@ -123,7 +133,15 @@ function latexItems(items?: string[]) {
     return "\\item Review the topic with your tutor.";
   }
 
-  return safeItems.map((item) => `\\item ${escapeLatex(item)}`).join("\n");
+  return safeItems
+    .map((item) => item.replace(/^\s*(?:\d+[\).:-]\s*|Q\d+[\).:-]\s*)/i, ""))
+    .map((item) => `\\item ${escapeLatex(item)}`)
+    .join("\n");
+}
+
+function frameTitle(title: string) {
+  const normalized = normalizeLessonText(title);
+  return normalized.length > 72 ? `${normalized.slice(0, 69).trim()}...` : normalized;
 }
 
 function getSubjectTemplate(subject?: string) {
@@ -281,7 +299,7 @@ ${position.anchor}
     .filter(Boolean)
     .join("\n");
 
-  return String.raw`\begin{frame}{${escapeLatex(title)}}
+  return String.raw`\begin{frame}{${escapeLatex(frameTitle(title))}}
 ${body}
 ${assetTex}
 \end{frame}`;
@@ -292,6 +310,73 @@ function subjectVisualSlides(request: LessonDeckRequest) {
   const topic = escapeLatex(request.context?.topic ?? "this topic");
 
   if (subject.includes("science")) {
+    if (topic.toLowerCase().includes("digestive")) {
+      return [
+        {
+          body: String.raw`\begin{columns}[T]
+\begin{column}{0.54\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.72, every node/.style={font=\scriptsize}]
+\node[draw, rounded corners, fill=SubjectAccent!12, minimum width=1.9cm, minimum height=0.55cm] (mouth) at (0,4.8) {Mouth};
+\node[draw, rounded corners, fill=SubjectAccent!12, minimum width=1.9cm, minimum height=0.55cm] (eso) at (0,3.9) {Esophagus};
+\node[draw, rounded corners, fill=SubjectAccent!20, minimum width=2.1cm, minimum height=0.75cm] (stomach) at (0,2.85) {Stomach};
+\node[draw, rounded corners, fill=NovaMint!16, minimum width=2.4cm, minimum height=0.75cm] (small) at (0,1.75) {Small intestine};
+\node[draw, rounded corners, fill=NovaMint!10, minimum width=2.4cm, minimum height=0.75cm] (large) at (0,0.65) {Large intestine};
+\node[draw, rounded corners, fill=SubjectAccent!10, minimum width=1.5cm, minimum height=0.5cm] (pancreas) at (3.0,2.0) {Pancreas};
+\node[draw, rounded corners, fill=SubjectAccent!10, minimum width=1.5cm, minimum height=0.5cm] (liver) at (3.0,3.2) {Liver};
+\draw[->, thick, SubjectAccent] (mouth) -- (eso);
+\draw[->, thick, SubjectAccent] (eso) -- (stomach);
+\draw[->, thick, SubjectAccent] (stomach) -- (small);
+\draw[->, thick, SubjectAccent] (small) -- (large);
+\draw[->, thick, NovaMint] (pancreas) -- (small);
+\draw[->, thick, NovaMint] (liver) -- (small);
+\end{tikzpicture}
+\end{center}
+\end{column}
+\begin{column}{0.42\textwidth}
+\begin{block}{Trace the path}
+Food moves through organs in order. Accessory organs add chemicals but food does not pass through them.
+\end{block}
+\begin{block}{Key idea}
+Mechanical digestion breaks food physically; chemical digestion breaks molecules.
+\end{block}
+\end{column}
+\end{columns}`,
+          title: "Digestive System Map"
+        },
+        {
+          body: String.raw`\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{block}{Mechanical digestion}
+Chewing and stomach mixing make food pieces smaller.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+\foreach \x in {0,0.45,0.9} {\fill[SubjectAccent!45] (\x,0) circle (0.18);}
+\draw[->, thick, SubjectAccent] (1.35,0) -- (2.15,0);
+\foreach \x in {2.55,2.85,3.15,3.45,3.75} {\fill[SubjectAccent!45] (\x,0) circle (0.09);}
+\end{tikzpicture}
+\end{center}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{Chemical digestion}
+Enzymes and acid break large molecules into nutrients that can be absorbed.
+\end{block}
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+\node[draw, rounded corners, fill=NovaMint!12] (large) at (0,0) {large molecule};
+\draw[->, thick, NovaMint] (1.55,0) -- (2.35,0);
+\node[draw, rounded corners, fill=NovaMint!12] at (3.25,0.35) {nutrient};
+\node[draw, rounded corners, fill=NovaMint!12] at (3.25,-0.35) {nutrient};
+\end{tikzpicture}
+\end{center}
+\end{column}
+\end{columns}`,
+          title: "Mechanical vs Chemical Digestion"
+        }
+      ];
+    }
+
     return [
       {
         body: String.raw`\begin{columns}[T]

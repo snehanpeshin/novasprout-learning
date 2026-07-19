@@ -424,6 +424,13 @@ For Demo session, make a concise 30-minute style lesson.
 For Comprehensive lesson, include 3-4 useful fullLessonSegments.
 For Custom study plan, use the student question heavily.
 For Timed exam, include 6 multiple-choice questions with one correct answerIndex from 0 to 3.
+Make the output usable as independent student study material, not just a tutor plan.
+Include essential vocabulary in the conceptExplanation when relevant.
+Make guidedExample include clear steps and a final check.
+Make practiceQuestions self-contained and include a short hint and answer/explanation in plain text, for example: "Try: ... Hint: ... Answer: ... Why: ..."
+Make quickAssessment include answerable questions with brief answer/explanation text when possible.
+Avoid teacher-only wording such as "whole-class", "tutor-guided move", "teacher should", or "ask the student to" in student-facing explanation fields.
+Use ASCII arrows as "to" instead of "->".
 Use plain text only. Avoid LaTeX backslashes, markdown, code fences, comments, or explanatory text outside the JSON.
 Keep every field brief enough that the full response is complete.
 Return only the JSON object. Do not include markdown, code fences, comments, or explanatory text outside the JSON.
