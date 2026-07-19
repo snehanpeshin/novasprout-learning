@@ -134,22 +134,12 @@ const minimumBuildStageMs = {
 };
 
 const grades = [
-  "Preschool",
-  "Pre-Kindergarten",
-  "Kindergarten",
-  "Grade 1",
-  "Grade 2",
-  "Grade 3",
-  "Grade 4",
-  "Grade 5",
-  "Grade 6",
-  "Grade 7",
-  "Grade 8",
-  "Grade 9",
-  "Grade 10",
-  "Grade 11",
-  "Grade 12",
-  "Teen / beginner",
+  "Pre-K / Kindergarten",
+  "Grades 1-2",
+  "Grades 3-5",
+  "Grades 6-8",
+  "Grades 9-10",
+  "Grades 11-12",
   "College / adult"
 ];
 
@@ -159,97 +149,51 @@ const subjects = [
   "English",
   "Social Studies",
   "Computer Science",
-  "Environmental Studies",
-  "Physics",
-  "Chemistry",
-  "Biology",
-  "Geography",
-  "History",
-  "Civics",
-  "Economics",
-  "Business Studies",
-  "Accounting",
-  "Statistics",
-  "Psychology",
-  "Health Education",
-  "Engineering",
-  "Robotics",
-  "Coding",
-  "Test Preparation",
-  "Languages"
+  "Test Preparation"
 ];
-const levels = ["Start from the basics", "Give me some support", "Teach at my grade level", "Challenge me", "Advanced challenge", "Not sure"];
+const levels = ["Start from the basics", "Give me some support", "Teach at my grade level", "Challenge me"];
 const goals = [
   "Concept clarity",
-  "Learn from the beginning",
   "Homework help",
-  "Improve grades",
   "Prepare for a test",
-  "Revise a chapter",
   "Solve practice questions",
-  "Master a difficult topic",
   "Build confidence",
-  "Prepare for competition",
-  "Complete a school project",
-  "Learn real-world applications"
+  "Complete a school project"
 ];
 const modes = [
   "Quick explanation",
   "Comprehensive lesson",
-  "Revision lesson",
   "Homework help",
   "Exam preparation",
   "Practice worksheet",
-  "Interactive quiz",
-  "Flashcards",
-  "Study notes",
-  "Project-based lesson",
-  "Lab or activity lesson",
-  "Presentation",
-  "Printable PDF lesson",
-  "Private guided lesson"
+  "Interactive quiz"
 ];
 const durations = [
-  "5-minute explanation",
-  "10-minute quick lesson",
   "20-minute lesson",
   "30-minute lesson",
   "45-minute comprehensive lesson",
-  "60-minute deep lesson",
-  "Multi-session unit",
-  "Custom duration"
+  "60-minute deep lesson"
 ];
-const teachingStyles = ["Simple and friendly", "Step-by-step", "Visual", "Story-based", "Example-driven", "Interactive", "Exam-focused", "Project-based", "Socratic questioning"];
-const difficulties = ["Easy", "Standard", "Challenging", "Mixed difficulty", "Adaptive"];
-const languages = ["English", "Hindi", "Spanish", "French", "German", "Bilingual", "Simplified English"];
+const teachingStyles = ["Simple and friendly", "Step-by-step", "Visual", "Exam-focused"];
+const difficulties = ["Easy", "Standard", "Challenging", "Adaptive"];
+const languages = ["English", "Hindi", "Spanish", "Bilingual", "Simplified English"];
 const lessonIncludes = [
-  "Learning objectives",
-  "Warm-up question",
   "Key vocabulary",
-  "Concept explanation",
   "Diagrams",
-  "Real-world examples",
   "Worked examples",
   "Practice questions",
   "Interactive quiz",
-  "Homework",
-  "Flashcards",
   "Summary notes",
   "Common mistakes",
-  "Exit ticket",
   "Live tutor option"
 ];
 const topicSuggestionsBySubject: Record<string, string[]> = {
-  Mathematics: ["Fractions", "Ratios", "Proportions", "Algebraic expressions", "Equations", "Geometry", "Probability", "Statistics"],
-  Science: ["Human body systems", "Digestive system", "Respiratory system", "Cells and tissues", "Forces and motion", "Ecosystems", "Matter", "Electricity"],
-  English: ["Reading comprehension", "Grammar", "Paragraph writing", "Essay writing", "Vocabulary", "Storytelling", "Literature analysis"],
-  "Social Studies": ["Maps", "Geography", "Ancient civilizations", "Government", "Civics", "Economics", "Global issues"],
-  "Computer Science": ["Computer basics", "Scratch", "Python", "HTML and CSS", "Algorithms", "Artificial intelligence", "Robotics"],
-  Biology: ["Cells", "Genetics", "Human body", "Digestive system", "Ecology", "Plants", "Animals"],
-  Chemistry: ["Atoms and molecules", "Chemical reactions", "Acids and bases", "Matter", "Energy changes"],
-  Physics: ["Forces and motion", "Energy", "Light", "Sound", "Electricity", "Magnetism"],
-  Coding: ["Scratch", "Python", "JavaScript", "HTML and CSS", "Game development", "App development"],
-  "Test Preparation": ["Test strategy", "Timed practice", "Reading questions", "Math review", "Science review", "Essay planning"]
+  Mathematics: ["Fractions", "Ratios and proportions", "Equations", "Geometry", "Graphing", "Probability", "Statistics", "Word problems"],
+  Science: ["Digestive system", "Electricity", "Forces and motion", "Cells", "Ecosystems", "Matter", "Solar system", "Scientific method"],
+  English: ["Reading comprehension", "Grammar", "Paragraph writing", "Essay writing", "Vocabulary", "Storytelling", "Main idea", "Evidence"],
+  "Social Studies": ["Maps and geography", "Ancient civilizations", "Government", "Civics", "Economics", "World history", "Culture", "Current events"],
+  "Computer Science": ["Computer basics", "Scratch", "Python", "HTML and CSS", "Algorithms", "AI basics", "Robotics", "Game development"],
+  "Test Preparation": ["Timed practice", "Reading questions", "Math review", "Science review", "Essay planning", "Test strategy"]
 };
 
 function getSubjectTheme(subject: string): SubjectTheme {
@@ -1466,9 +1410,9 @@ export default function AILessonGenerator() {
   const [leadContact, setLeadContact] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [showLeadPopup, setShowLeadPopup] = useState(false);
-  const [grade, setGrade] = useState("Grade 7");
+  const [grade, setGrade] = useState("Grades 6-8");
   const [subject, setSubject] = useState("Science");
-  const [topic, setTopic] = useState("Human body systems");
+  const [topic, setTopic] = useState("Digestive system");
   const [level, setLevel] = useState("Teach at my grade level");
   const [goal, setGoal] = useState("Concept clarity");
   const [mode, setMode] = useState("Comprehensive lesson");
@@ -1477,12 +1421,13 @@ export default function AILessonGenerator() {
   const [difficulty, setDifficulty] = useState("Adaptive");
   const [lessonLanguage, setLessonLanguage] = useState("English");
   const [includeInLesson, setIncludeInLesson] = useState<string[]>([
-    "Learning objectives",
     "Key vocabulary",
     "Diagrams",
     "Worked examples",
     "Practice questions",
     "Interactive quiz",
+    "Summary notes",
+    "Common mistakes",
     "Live tutor option"
   ]);
   const [studentQuestion, setStudentQuestion] = useState("");

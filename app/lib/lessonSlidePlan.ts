@@ -152,16 +152,16 @@ export function detectSubjectKey(subject?: string, topic?: string): SubjectKey {
   }
 
   const normalized = normalizePlainText(subject, 80).toLowerCase();
-  if (normalized.includes("science")) {
+  if (/\b(science|biology|chemistry|physics|health|environmental)\b/.test(normalized)) {
     return "science";
   }
-  if (normalized.includes("ela") || normalized.includes("english") || normalized.includes("study")) {
+  if (/\b(ela|english|language|reading|writing)\b/.test(normalized)) {
     return "ela";
   }
-  if (normalized.includes("coding") || normalized.includes("data")) {
+  if (/\b(coding|computer|data|robotics|engineering|programming)\b/.test(normalized)) {
     return "coding";
   }
-  if (normalized.includes("math") || normalized.includes("algebra") || normalized.includes("geometry")) {
+  if (/\b(math|mathematics|algebra|geometry|statistics|accounting)\b/.test(normalized)) {
     return "math";
   }
   return "general";
@@ -207,7 +207,7 @@ function slideTitle(prefix: string, text: string, fallback: string) {
     .replace(/[^\w\s:+\-/%]/g, "")
     .split(/\s+/)
     .filter(Boolean)
-    .slice(0, 6)
+    .slice(0, 4)
     .join(" ");
   return words ? `${prefix}: ${words}` : fallback;
 }
@@ -247,24 +247,88 @@ function makeSlide(
   };
 }
 
-function vocabularyFor(subjectKey: SubjectKey, topic: string) {
+const topicVocabulary = [
+  {
+    pattern: /\b(digest|stomach|intestine|enzyme|bile|food)\b/i,
+    terms: ["mouth", "esophagus", "stomach", "small intestine", "large intestine", "enzyme", "bile", "absorption", "villi", "waste"]
+  },
+  {
+    pattern: /\b(electric|circuit|current|voltage|charge|resistance|battery)\b/i,
+    terms: ["electric charge", "current", "voltage", "circuit", "battery", "conductor", "insulator", "resistance", "switch", "energy transfer"]
+  },
+  {
+    pattern: /\b(force|motion|speed|velocity|acceleration|friction|gravity)\b/i,
+    terms: ["force", "motion", "speed", "velocity", "acceleration", "friction", "gravity", "balanced force", "unbalanced force"]
+  },
+  {
+    pattern: /\b(cell|cells|tissue|organ|organism|microscope)\b/i,
+    terms: ["cell", "tissue", "organ", "organ system", "nucleus", "membrane", "cytoplasm", "function", "structure"]
+  },
+  {
+    pattern: /\b(ecosystem|food chain|habitat|population|community)\b/i,
+    terms: ["ecosystem", "habitat", "population", "community", "producer", "consumer", "decomposer", "food chain", "energy flow"]
+  },
+  {
+    pattern: /\b(ratio|proportion|unit rate|scale factor)\b/i,
+    terms: ["ratio", "unit rate", "equivalent ratio", "proportion", "scale factor", "constant of proportionality", "table", "graph"]
+  },
+  {
+    pattern: /\b(fraction|decimal|percent|numerator|denominator)\b/i,
+    terms: ["fraction", "numerator", "denominator", "equivalent fraction", "decimal", "percent", "benchmark", "simplify"]
+  },
+  {
+    pattern: /\b(equation|algebra|variable|expression|inequality)\b/i,
+    terms: ["variable", "expression", "equation", "coefficient", "constant", "solution", "inverse operation", "balance"]
+  },
+  {
+    pattern: /\b(geometry|angle|triangle|area|perimeter|volume)\b/i,
+    terms: ["point", "line", "angle", "triangle", "area", "perimeter", "volume", "parallel", "perpendicular"]
+  },
+  {
+    pattern: /\b(reading|main idea|inference|evidence|comprehension)\b/i,
+    terms: ["main idea", "detail", "inference", "evidence", "context clue", "theme", "summary", "author's purpose"]
+  },
+  {
+    pattern: /\b(essay|paragraph|writing|grammar|sentence)\b/i,
+    terms: ["claim", "topic sentence", "evidence", "explanation", "transition", "conclusion", "revision", "grammar"]
+  },
+  {
+    pattern: /\b(python|scratch|javascript|html|algorithm|code|program)\b/i,
+    terms: ["input", "output", "algorithm", "variable", "condition", "loop", "debug", "function", "test case"]
+  },
+  {
+    pattern: /\b(map|geography|history|civics|government|economics)\b/i,
+    terms: ["context", "cause", "effect", "perspective", "evidence", "timeline", "map scale", "source", "significance"]
+  }
+];
+
+function vocabularyFor(subjectKey: SubjectKey, topic: string, lesson?: LegacyLesson) {
   const lowerTopic = topic.toLowerCase();
-  if (subjectKey === "science" && lowerTopic.includes("digest")) {
-    return ["mouth", "esophagus", "stomach", "small intestine", "large intestine", "enzyme", "bile", "villi"];
-  }
-  if (subjectKey === "science" && /\b(electric|circuit|current|voltage|charge|resistance)\b/.test(lowerTopic)) {
-    return ["electric charge", "current", "voltage", "circuit", "conductor", "insulator", "resistance", "switch"];
-  }
-  if (subjectKey === "math" && (lowerTopic.includes("ratio") || lowerTopic.includes("proportion"))) {
-    return ["ratio", "unit rate", "equivalent ratio", "proportion", "scale factor", "constant of proportionality"];
+  const lessonText = normalizePlainText([
+    topic,
+    lesson?.title,
+    lesson?.conceptExplanation,
+    lesson?.guidedExample,
+    ...(lesson?.learningObjectives ?? []),
+    ...(lesson?.practiceQuestions ?? [])
+  ].filter(Boolean).join(" "), 5000);
+  const dictionaryMatch = topicVocabulary.find((entry) => entry.pattern.test(`${lowerTopic} ${lessonText}`));
+  if (dictionaryMatch) {
+    return dictionaryMatch.terms.slice(0, 8);
   }
   if (subjectKey === "ela") {
-    return ["main idea", "evidence", "inference", "claim", "explanation"];
+    return ["main idea", "evidence", "inference", "claim", "context", "structure", "summary", "revision"];
   }
   if (subjectKey === "coding") {
-    return ["input", "process", "output", "condition", "debug"];
+    return ["input", "process", "output", "algorithm", "condition", "loop", "debug", "test case"];
   }
-  return ["key idea", "example", "practice", "check"];
+  if (subjectKey === "science") {
+    return ["model", "system", "process", "evidence", "observation", "cause", "effect", "energy"];
+  }
+  if (subjectKey === "math") {
+    return ["model", "operation", "variable", "relationship", "strategy", "estimate", "solution", "check"];
+  }
+  return ["main idea", "model", "example", "evidence", "practice", "strategy", "check", "next step"];
 }
 
 function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanSlide[] {
@@ -590,6 +654,7 @@ export function legacyLessonToSlidePlan({
   const title = normalizePlainText(lesson?.title || topic, 120);
   const durationMinutes = durationToMinutes(lesson?.duration);
   const objectives = (lesson?.learningObjectives ?? []).map((item) => stripDuplicateNumbering(item)).filter(Boolean).slice(0, 4);
+  const vocabulary = vocabularyFor(subjectKey, topic, lesson);
   const slides: LessonPlanSlide[] = [
     makeSlide("title", "title", `Learn ${topic}`, 2, {
       bullets: objectives,
@@ -614,13 +679,13 @@ export function legacyLessonToSlidePlan({
       }
     ]),
     makeSlide("vocabulary", "vocabulary", "Key Words To Know", 3, {
-      bullets: vocabularyFor(subjectKey, topic),
+      bullets: vocabulary,
       keyIdea: "These words unlock the lesson."
     }, [
       {
         accessibilityLabel: "Key vocabulary cards.",
         id: "vocabulary-cards",
-        labels: vocabularyFor(subjectKey, topic).slice(0, 6),
+        labels: vocabulary.slice(0, 6),
         type: "labeled_cards"
       }
     ])
@@ -653,9 +718,9 @@ export function legacyLessonToSlidePlan({
 
   chunkText(removeTutorInstructionLanguage(lesson?.conceptExplanation, 3200), 220, 7).forEach((chunk, index) => {
     slides.push(
-      makeSlide(`concept-${index + 1}`, "concept", slideTitle("Understand", chunk, `Concept ${index + 1}`), 4, {
+      makeSlide(`concept-${index + 1}`, "concept", `Key Idea ${index + 1}`, 4, {
         explanation: chunk,
-        keyIdea: index === 0 ? "Focus on the meaning before memorizing steps." : undefined
+        keyIdea: index === 0 ? "Understand the idea before memorizing details." : undefined
       }, [
         {
           accessibilityLabel: "Concept card that connects the idea to a simple example.",
@@ -699,7 +764,7 @@ export function legacyLessonToSlidePlan({
     }
     const segmentTitle = normalizePlainText(segment.title, 80) || `Content ${index + 1}`;
     slides.push(
-      makeSlide(`content-${index + 1}`, looksLikeTutorProcedure(segment.activity) ? "concept" : "guided_practice", slideTitle(segmentTitle, activity, `Content ${index + 1}`), 4, {
+      makeSlide(`content-${index + 1}`, looksLikeTutorProcedure(segment.activity) ? "concept" : "guided_practice", segmentTitle, 4, {
         explanation: activity,
         keyIdea: segmentTitle
       }, [

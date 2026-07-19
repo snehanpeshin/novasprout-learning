@@ -58,14 +58,14 @@ type LessonDeckRequest = {
 
 const validPlacementPositions = ["lt", "ct", "rt", "lm", "cm", "rm", "lb", "cb", "rb"] as const;
 const positions: Record<(typeof validPlacementPositions)[number], { anchor: string; x: string; y: string }> = {
-  cb: { anchor: "\\centering", x: "4.7cm", y: "7.05cm" },
-  cm: { anchor: "\\centering", x: "4.7cm", y: "3.45cm" },
+  cb: { anchor: "\\centering", x: "4.7cm", y: "5.45cm" },
+  cm: { anchor: "\\centering", x: "4.7cm", y: "3.15cm" },
   ct: { anchor: "\\centering", x: "4.7cm", y: "1.1cm" },
-  lb: { anchor: "", x: "0.55cm", y: "7.05cm" },
-  lm: { anchor: "", x: "0.55cm", y: "3.45cm" },
+  lb: { anchor: "", x: "0.55cm", y: "5.45cm" },
+  lm: { anchor: "", x: "0.55cm", y: "3.15cm" },
   lt: { anchor: "", x: "0.55cm", y: "1.1cm" },
-  rb: { anchor: "\\raggedleft", x: "8.65cm", y: "7.05cm" },
-  rm: { anchor: "\\raggedleft", x: "8.65cm", y: "3.45cm" },
+  rb: { anchor: "\\raggedleft", x: "8.65cm", y: "5.45cm" },
+  rm: { anchor: "\\raggedleft", x: "8.65cm", y: "3.15cm" },
   rt: { anchor: "\\raggedleft", x: "8.65cm", y: "1.1cm" }
 };
 
@@ -142,12 +142,12 @@ function latexItems(items?: string[]) {
 
 function frameTitle(title: string) {
   const normalized = normalizeLessonText(title);
-  return normalized.length > 72 ? `${normalized.slice(0, 69).trim()}...` : normalized;
+  return normalized.length > 54 ? `${normalized.slice(0, 51).trim()}...` : normalized;
 }
 
 function getSubjectTemplate(subject?: string, topic?: string) {
   const normalizedTopic = cleanText(topic, 120).toLowerCase();
-  if (/\b(digest|biology|cell|organ|organism|ecosystem|photosynthesis|respiration|force|motion|energy|matter|atom|chemical)\b/.test(normalizedTopic)) {
+  if (/\b(digest|biology|cell|organ|organism|ecosystem|photosynthesis|respiration|force|motion|energy|matter|atom|chemical|electric|circuit|current|voltage|charge|resistance)\b/.test(normalizedTopic)) {
     return subjectTemplates.science;
   }
   if (/\b(ratio|proportion|fraction|equation|algebra|geometry|graph|linear|percent|integer)\b/.test(normalizedTopic)) {
@@ -155,13 +155,13 @@ function getSubjectTemplate(subject?: string, topic?: string) {
   }
 
   const normalized = cleanText(subject, 80).toLowerCase();
-  if (normalized.includes("science")) {
+  if (/\b(science|biology|chemistry|physics|health|environmental)\b/.test(normalized)) {
     return subjectTemplates.science;
   }
-  if (normalized.includes("ela") || normalized.includes("english") || normalized.includes("study")) {
+  if (/\b(ela|english|language|reading|writing|social|history|geography|civics|economics)\b/.test(normalized)) {
     return subjectTemplates.ela;
   }
-  if (normalized.includes("coding") || normalized.includes("data")) {
+  if (/\b(coding|computer|data|robotics|engineering|programming)\b/.test(normalized)) {
     return subjectTemplates.coding;
   }
   return subjectTemplates.math;
@@ -287,7 +287,7 @@ function frameBody(title: string, body: string, assets: DeckAsset[], slideNumber
       if (asset.type === "image" && filename) {
         return String.raw`\begin{textblock*}{4.3cm}(${position.x},${position.y})
 ${position.anchor}
-\includegraphics[width=3.9cm]{${filename}}
+\includegraphics[width=3.9cm,height=2.95cm,keepaspectratio]{${filename}}
 ${asset.caption ? `\\\\{\\scriptsize ${escapeLatex(asset.caption)}}` : ""}
 \end{textblock*}`;
       }
@@ -853,9 +853,14 @@ function renderVisualSpec(visual: VisualSpec) {
 
 function renderPlanSlideBody(slide: LessonPlanSlide, hasImageAsset = false) {
   const content = slide.studentContent;
+  const keyIdea = content.keyIdea
+    ? normalizeLessonText(content.keyIdea).length > 150
+      ? `${normalizeLessonText(content.keyIdea).slice(0, 147).trim()}...`
+      : normalizeLessonText(content.keyIdea)
+    : "";
   const textParts = [
-    content.keyIdea ? String.raw`\begin{alertblock}{Key idea}
-\small ${escapeLatex(content.keyIdea)}
+    keyIdea ? String.raw`\begin{alertblock}{Key idea}
+\small ${escapeLatex(keyIdea)}
 \end{alertblock}` : "",
     content.explanation ? String.raw`\small ${escapeLatex(content.explanation)}` : "",
     content.question ? String.raw`\begin{block}{Question}

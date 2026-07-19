@@ -26,6 +26,12 @@ type LessonRequest = {
 };
 
 const allowedGrades = new Set([
+  "Pre-K / Kindergarten",
+  "Grades 1-2",
+  "Grades 3-5",
+  "Grades 6-8",
+  "Grades 9-10",
+  "Grades 11-12",
   "Preschool",
   "Pre-Kindergarten",
   "Kindergarten",
@@ -876,6 +882,7 @@ You are an experienced online tutor and curriculum designer for NovaSprout Learn
 
 Create a personalized tutoring output using original content, aligned to common U.S. learning expectations without copying any school syllabus, textbook, worksheet, or proprietary curriculum.
 Create a large pool of student-facing lesson content first: explanations, examples, vocabulary, misconceptions, visual descriptions, practice, quiz items, and next steps. The website will distribute that content into private timed slides, so do not write tutor instructions or a separate slide deck outline.
+Every major content field should teach, not label. Avoid one-line placeholders. Use 2-4 clear student-facing sentences for concept explanations, guided examples, and fullLessonSegments whenever the output type is not a quick explanation.
 
 Student context:
 - Grade or level: ${grade}
@@ -903,6 +910,7 @@ Include essential vocabulary in the conceptExplanation when relevant.
 Use the requested teaching style, difficulty, and language support.
 Make conceptExplanation substantial enough to become several short slides. Include facts, relationships, visual descriptions, and common confusions.
 Make fullLessonSegments student-facing content sections, not timing instructions for a tutor. Avoid phrases like "tutor explains", "teacher asks", "have the student", or "the tutor should".
+Include topic-specific vocabulary naturally in conceptExplanation and guidedExample so the deck can build a strong keyword slide.
 For visual subjects, describe exactly what should be shown in diagrams/images, using labels and spatial relationships where useful.
 Make guidedExample include clear steps and a final check.
 Make practiceQuestions self-contained and include a short hint and answer/explanation in plain text, for example: "Try: ... Hint: ... Answer: ... Why: ..."
