@@ -1252,6 +1252,30 @@ h3 {
   margin: 0;
 }
 
+.pdf-timer-pill {
+  align-items: center;
+  background: #f2f8fc;
+  border: 1px solid #b9dcff;
+  border-radius: 8px;
+  color: var(--ink);
+  display: inline-flex;
+  gap: 8px;
+  min-height: 46px;
+  padding: 10px 12px;
+  white-space: nowrap;
+}
+
+.pdf-timer-pill strong {
+  font-variant-numeric: tabular-nums;
+  font-size: 1rem;
+}
+
+.pdf-timer-pill span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
 .deck-build-status {
   align-content: center;
   background:

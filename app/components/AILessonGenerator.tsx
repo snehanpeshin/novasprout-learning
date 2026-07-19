@@ -16,7 +16,6 @@ import {
   Gift,
   Images,
   LockKeyhole,
-  PlayCircle,
   Printer,
   TimerReset,
   Trophy,
@@ -770,7 +769,6 @@ function StudentSlideDeck({
 
   const activeSlide = slides[activeSlideIndex];
   const BeamerIcon = theme.icon;
-  const progress = slides.length > 1 ? Math.round((activeSlideIndex / (slides.length - 1)) * 100) : 100;
   const texFilename = `${(lesson.title ?? "novasprout-lesson")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -779,6 +777,15 @@ function StudentSlideDeck({
   const compiledPdfHref = compiledDeck?.pdfUrl ?? compiledDeck?.pdfDataUrl ?? "";
   const compiledPageCount = compiledDeck?.pageCount ?? slides.length;
   const pdfViewerSrc = compiledPdfHref ? `${compiledPdfHref}#page=${pdfPage}&zoom=${pdfZoom}` : "";
+  const currentTimedSlide = slides[Math.min(pdfPage - 1, slides.length - 1)];
+  const currentPageMinutes = currentTimedSlide?.minutes ?? 4;
+  const [remainingSeconds, setRemainingSeconds] = useState(currentPageMinutes * 60);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const timerMinutes = Math.floor(remainingSeconds / 60);
+  const timerSeconds = remainingSeconds % 60;
+  const progress = compiledPdfHref
+    ? Math.round(((pdfPage - 1) / Math.max(1, compiledPageCount - 1)) * 100)
+    : slides.length > 1 ? Math.round((activeSlideIndex / (slides.length - 1)) * 100) : 100;
   const buildStages = ["Generating LaTeX", "Planning visuals", "Generating images", "Compiling PDF", "Checking quality", "Ready"];
   const stageAliases: Record<string, string> = {
     "Images ready": "Generating images",
@@ -958,6 +965,23 @@ function StudentSlideDeck({
     void buildPdfLesson();
   }, []);
 
+  useEffect(() => {
+    setRemainingSeconds(currentPageMinutes * 60);
+    setIsTimerRunning(Boolean(compiledPdfHref));
+  }, [compiledPdfHref, currentPageMinutes, pdfPage]);
+
+  useEffect(() => {
+    if (!compiledPdfHref || !isTimerRunning || remainingSeconds <= 0) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setRemainingSeconds((seconds) => Math.max(0, seconds - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [compiledPdfHref, isTimerRunning, remainingSeconds]);
+
   return (
     <div className="lesson-player-backdrop" role="dialog" aria-modal="true" aria-labelledby="student-deck-title">
       <section className={`student-deck ${theme.key}`}>
@@ -966,7 +990,9 @@ function StudentSlideDeck({
             <p className="eyebrow">Student slide deck</p>
             <h2 id="student-deck-title">{lesson.title}</h2>
             <p>
-              Slide {activeSlideIndex + 1} of {slides.length} · {activeSlide?.minutes} min suggested
+              {compiledPdfHref
+                ? `PDF page ${pdfPage} of ${compiledPageCount} · ${currentPageMinutes} min suggested`
+                : `Slide ${activeSlideIndex + 1} of ${slides.length} · ${activeSlide?.minutes} min suggested`}
             </p>
           </div>
           <button className="icon-button" onClick={onClose} type="button" aria-label="Close student deck">
@@ -1068,6 +1094,20 @@ function StudentSlideDeck({
           {assetError ? <p className="form-error deck-asset-error">{assetError}</p> : null}
           {compiledPdfHref ? (
             <>
+              <span className="pdf-timer-pill" aria-live="polite">
+                <Clock aria-hidden="true" size={18} />
+                <strong>
+                  {timerMinutes}:{timerSeconds.toString().padStart(2, "0")}
+                </strong>
+                <span>{currentPageMinutes} min page</span>
+              </span>
+              <button className="button secondary" onClick={() => setIsTimerRunning((running) => !running)} type="button">
+                {isTimerRunning ? "Pause" : "Start"}
+              </button>
+              <button className="button secondary" onClick={() => setRemainingSeconds(currentPageMinutes * 60)} type="button">
+                <TimerReset aria-hidden="true" size={18} />
+                Reset
+              </button>
               <button
                 className="button secondary"
                 disabled={pdfPage <= 1}
@@ -1163,7 +1203,6 @@ export default function AILessonGenerator() {
   const [lesson, setLesson] = useState<GeneratedLesson | null>(null);
   const [lessonText, setLessonText] = useState("");
   const [isDeckOpen, setIsDeckOpen] = useState(false);
-  const [isLessonPlayerOpen, setIsLessonPlayerOpen] = useState(false);
   const [examAnswers, setExamAnswers] = useState<Record<number, number>>({});
   const [examStartedAt, setExamStartedAt] = useState<number | null>(null);
   const [examSubmitted, setExamSubmitted] = useState(false);
@@ -1235,7 +1274,6 @@ export default function AILessonGenerator() {
     setLesson(null);
     setLessonText("");
     setIsDeckOpen(false);
-    setIsLessonPlayerOpen(false);
     setExamAnswers({});
     setExamStartedAt(null);
     setExamSubmitted(false);
@@ -1366,13 +1404,6 @@ Interested in: Free trial / Paid AI-generated lessons
   return (
     <>
       {leadPopup}
-      {lesson && isLessonPlayerOpen ? (
-        <LessonPlayer
-          context={{ grade, subject, topic }}
-          lesson={lesson}
-          onClose={() => setIsLessonPlayerOpen(false)}
-        />
-      ) : null}
       {lesson && isDeckOpen ? (
         <StudentSlideDeck
           accessToken={accessToken}
@@ -1494,19 +1525,15 @@ Interested in: Free trial / Paid AI-generated lessons
                 <div className="lesson-launch-card">
                   <div>
                     <p className="eyebrow">Ready to teach</p>
-                    <h4>Review the plan, then start the private timed lesson.</h4>
+                    <h4>Review the plan, then start the private timed PDF lesson.</h4>
                     <p>
-                      The lesson player opens as a focused window with timed slides and the quiz at the end.
+                      The same LaTeX PDF deck opens in a focused window with page timing, controls, and download.
                     </p>
                   </div>
                   <div className="lesson-launch-actions">
                     <button className="button primary" onClick={() => setIsDeckOpen(true)} type="button">
                       <Images aria-hidden="true" size={18} />
-                      Create Student Slide Deck
-                    </button>
-                    <button className="button secondary" onClick={() => setIsLessonPlayerOpen(true)} type="button">
-                      <PlayCircle aria-hidden="true" size={18} />
-                      Start Timed Lesson
+                      Start Timed PDF Lesson
                     </button>
                   </div>
                 </div>
