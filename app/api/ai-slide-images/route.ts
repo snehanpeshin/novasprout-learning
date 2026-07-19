@@ -86,7 +86,7 @@ export async function POST(request: Request) {
   try {
     const images = await Promise.all(
       imageAssets.map(async (asset) => {
-        const imageModel = process.env.OPENAI_IMAGE_MODEL?.trim() || "dall-e-3";
+        const imageModel = process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-1";
         const response = await fetch("https://api.openai.com/v1/images/generations", {
           method: "POST",
           headers: {
