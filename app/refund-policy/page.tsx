@@ -1,7 +1,6 @@
-import { Mail } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import Footer from "../components/Footer";
-
-const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "novasproutlearning@gmail.com";
+import { contactEmail, contactPhone, contactPhoneHref } from "../site-data";
 
 export const metadata = {
   title: "Refund Policy | NovaSprout Learning",
@@ -78,6 +77,10 @@ export default function RefundPolicy() {
           <a className="policy-email" href={`mailto:${contactEmail}`}>
             <Mail aria-hidden="true" size={18} />
             {contactEmail}
+          </a>
+          <a className="policy-email" href={contactPhoneHref}>
+            <Phone aria-hidden="true" size={18} />
+            {contactPhone}
           </a>
         </article>
 

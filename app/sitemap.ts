@@ -13,6 +13,7 @@ const routes = [
   "/coding-data-skills",
   "/study-skills",
   "/pricing",
+  "/contact",
   "/resources",
   "/privacy",
   "/refund-policy"

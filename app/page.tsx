@@ -6,6 +6,7 @@ import {
   CalendarCheck,
   CheckCircle2,
   Mail,
+  Phone,
   Sparkles,
   Video
 } from "lucide-react";
@@ -15,6 +16,8 @@ import {
   audiencePathways,
   bookingUrl,
   contactEmail,
+  contactPhone,
+  contactPhoneHref,
   learningSituations,
   matchingSteps,
   processSteps,
@@ -36,6 +39,7 @@ export default function Home() {
           <a href="/ai-lesson-generator">AI Tutor</a>
           <a href="/find-a-tutor">Live Tutoring</a>
           <a href="/pricing">Pricing</a>
+          <a href="/contact">Contact</a>
           <TrackedLink className="nav-cta" eventName="book_meeting_click" href={bookingUrl} target="_blank">
             Book Free Live Demo
           </TrackedLink>
@@ -95,10 +99,10 @@ export default function Home() {
             </TrackedLink>
           </div>
         </div>
-        <div className="hero-media" aria-label="Seed growing in a nourishing learning environment">
+        <div className="hero-media" aria-label="Children learning online with a tutor">
           <img
-            alt="A seed nourished in healthy soil growing into a bright young plant"
-            src="/novasprout-hero.png"
+            alt="Crayon illustration of children learning math and science with an online tutor"
+            src="/novasprout-crayon-hero.jpg"
           />
           <div className="hero-note">
             <Sparkles aria-hidden="true" size={18} />
@@ -296,7 +300,7 @@ export default function Home() {
           </article>
           <article className="price-card">
             <h3>Student AI Tutor</h3>
-            <strong>$9.99-$14.99 / month</strong>
+            <strong>$6 / month</strong>
             <p>More AI lessons, interactive quizzes, PDFs, worksheets, and saved lesson history.</p>
             <a className="button secondary full" href="/pricing">
               View Student Plan
@@ -304,16 +308,16 @@ export default function Home() {
           </article>
           <article className="price-card">
             <h3>1-Hour Live Tutoring</h3>
-            <strong>$40-$60 / hour</strong>
+            <strong>$20 / class</strong>
             <p>A focused one-to-one online lesson with personalized explanation and guided practice.</p>
             <a className="button secondary full" href="/pricing">
               View Live Tutoring
             </a>
           </article>
           <article className="price-card">
-            <h3>Monthly Live Tutoring</h3>
-            <strong>$199-$499 / month</strong>
-            <p>Recurring live sessions with consistent tutor support, practice, and progress follow-up.</p>
+            <h3>Recurring Live Tutoring</h3>
+            <strong>$20 / class</strong>
+            <p>Schedule regular live sessions at the same flat rate, with practice and progress follow-up.</p>
             <TrackedLink className="button secondary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
               Book Free Demo
             </TrackedLink>
@@ -368,10 +372,14 @@ export default function Home() {
             Book Free Live Demo
             <ArrowRight aria-hidden="true" size={18} />
           </TrackedLink>
-          <a className="button secondary full" href={`mailto:${contactEmail}`}>
+          <a className="button secondary full" href="/contact">
             <Mail aria-hidden="true" size={18} />
-            Ask a Question
+            Open Contact Form
           </a>
+          <div className="contact-summary">
+            <a href={`mailto:${contactEmail}`}><Mail aria-hidden="true" size={17} />{contactEmail}</a>
+            <a href={contactPhoneHref}><Phone aria-hidden="true" size={17} />{contactPhone}</a>
+          </div>
         </div>
       </section>
 

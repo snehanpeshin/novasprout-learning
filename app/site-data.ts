@@ -31,6 +31,9 @@ export const contactEmail =
     ? envContactEmail
     : defaultContactEmail;
 
+export const contactPhone = "+1 775-248-8317";
+export const contactPhoneHref = "tel:+17752488317";
+
 export const studentRequestEmail = `mailto:${contactEmail}?subject=${encodeURIComponent(
   "NovaSprout student request"
 )}&body=${encodeURIComponent(`Student name:
@@ -329,7 +332,7 @@ export const tutoringFaqs = [
   {
     question: "How much does tutoring cost?",
     answer:
-      "Individual sessions are currently listed at $40-$60 per hour, with the final rate confirmed before booking based on the tutoring arrangement. Monthly plans are custom."
+      "Live tutoring is a flat $20 per class. Recurring tutoring uses the same per-class rate. Book a free demo before choosing paid classes."
   },
   {
     question: "What platforms are used for lessons?",
@@ -421,7 +424,7 @@ export const pricingPlans = [
     action: "contact",
     service: "ai",
     title: "Student AI Tutor",
-    price: "$9.99-$14.99 / month",
+    price: "$6 / month",
     copy: "Use the AI Tutor regularly for full lessons, revision, quizzes, and downloadable study materials.",
     features: ["More AI lessons", "Comprehensive lesson decks", "Quizzes and worksheets", "Downloadable lesson PDFs"]
   },
@@ -434,32 +437,26 @@ export const pricingPlans = [
     features: ["Introductory live session", "Subject and goal review", "No paid commitment", "Google Meet or Zoom"]
   },
   {
-    action: "payment",
-    paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_ONE_HOUR_TUTORING_PAYMENT_LINK,
-    productKey: "tutoring_session",
+    action: "contact",
     service: "live",
     title: "1-Hour Live Tutoring",
-    price: "$40-$60 / hour",
+    price: "$20 / class",
     copy: "Book a focused one-to-one online lesson with a human tutor in the selected subject.",
     features: ["One-to-one live session", "Personalized explanation", "Guided practice", "Follow-up notes"]
   },
   {
-    action: "payment",
-    paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_MONTHLY_PACKAGE_PAYMENT_LINK,
-    productKey: "monthly_subscription",
+    action: "contact",
     service: "live",
-    title: "Monthly Live Tutoring",
-    price: "$199-$499 / month",
-    copy: "Build a regular tutoring schedule with ongoing lessons, practice, and progress follow-up.",
+    title: "Recurring Live Tutoring",
+    price: "$20 / class",
+    copy: "Build a regular weekly or monthly tutoring schedule at the same flat per-class rate.",
     features: ["Recurring live sessions", "Consistent tutor support", "Practice and session notes", "Progress follow-up"]
   }
 ] satisfies Array<{
-  action: "ai" | "booking" | "contact" | "payment";
+  action: "ai" | "booking" | "contact";
   copy: string;
   features: string[];
-  paymentLink?: string;
   price: string;
-  productKey?: "tutoring_session" | "monthly_subscription";
   service: "ai" | "live";
   title: string;
 }>;

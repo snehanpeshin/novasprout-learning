@@ -1,6 +1,6 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import TrackedLink from "./TrackedLink";
-import { bookingUrl, contactEmail, pricingPlans } from "../site-data";
+import { bookingUrl, pricingPlans } from "../site-data";
 
 export default function PricingOptions() {
   const groups = [
@@ -53,27 +53,13 @@ export default function PricingOptions() {
                       <ArrowRight aria-hidden="true" size={18} />
                     </TrackedLink>
                   ) : null}
-                  {plan.action === "payment" && plan.paymentLink ? (
-                    <TrackedLink
-                      className="button primary full"
-                      eventName="stripe_payment_link_click"
-                      href={plan.paymentLink}
-                      target="_blank"
-                    >
-                      Purchase Live Tutoring
-                      <ArrowRight aria-hidden="true" size={18} />
-                    </TrackedLink>
-                  ) : null}
-                  {plan.action === "contact" || (plan.action === "payment" && !plan.paymentLink) ? (
-                    <a className="button primary full" href={`mailto:${contactEmail}?subject=${encodeURIComponent(plan.title)}`}>
+                  {plan.action === "contact" ? (
+                    <a className="button primary full" href="/contact">
                       Contact to Start
                       <ArrowRight aria-hidden="true" size={18} />
                     </a>
                   ) : null}
                 </div>
-                {plan.action === "payment" && plan.paymentLink ? (
-                  <p className="payment-note">Secure Stripe checkout for live tutoring.</p>
-                ) : null}
               </article>
             ))}
           </div>

@@ -20,7 +20,7 @@ export default function PricingPage() {
           <a href="/#subjects">Subjects</a>
           <a href="/ai-lesson-generator">AI Tutor</a>
           <a href="/find-a-tutor">Live Tutoring</a>
-          <a href="/#book">Contact</a>
+          <a href="/contact">Contact</a>
         </nav>
       </header>
 

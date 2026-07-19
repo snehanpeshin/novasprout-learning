@@ -1,3 +1,5 @@
+import { contactEmail, contactPhone, contactPhoneHref } from "../site-data";
+
 export default function Footer() {
   return (
     <footer>
@@ -9,6 +11,9 @@ export default function Footer() {
         <a href="/curriculum-demo">Curriculum Demos</a>
         <a href="/ai-lesson-generator">AI Lesson Generator</a>
         <a href="/find-a-tutor">Live Tutoring</a>
+        <a href="/contact">Contact Form</a>
+        <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+        <a href={contactPhoneHref}>{contactPhone}</a>
         <a href="/become-a-tutor">Become a Tutor</a>
         <a href="/privacy">Privacy Policy</a>
         <a href="/refund-policy">Refund Policy</a>

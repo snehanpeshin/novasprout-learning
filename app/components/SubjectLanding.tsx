@@ -84,10 +84,9 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
       <section className="section compact-section">
         <div className="section-heading">
           <p className="eyebrow">Pricing pathway</p>
-          <h2>Start with the free demo, then confirm the right rate.</h2>
+          <h2>Start with the free demo, then choose a fixed-price plan.</h2>
           <p>
-            Individual sessions are currently listed at $40-$60 per hour, with the final tutor,
-            schedule, and payment link confirmed before booking.
+            Live tutoring is a flat $20 per class, including recurring weekly or monthly schedules.
           </p>
           <a className="button secondary" href="/pricing">
             <CreditCard aria-hidden="true" size={18} />
