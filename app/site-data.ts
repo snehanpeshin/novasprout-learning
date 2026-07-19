@@ -109,20 +109,20 @@ export const subjectTracks = [
 
 export const processSteps = [
   {
-    title: "Tell us what the student needs",
-    copy: "Share the subject, grade or level, current challenge, availability, and goals."
+    title: "Try the AI tutor flow",
+    copy: "Choose grade, subject, topic, and learning need so NovaSprout can prepare a structured lesson path."
   },
   {
-    title: "Meet in a free demo",
-    copy: "Use the introductory session to understand the student, explain the format, and confirm whether the match feels appropriate."
+    title: "Review a generated lesson",
+    copy: "Use the AI-generated deck, timer, practice, and quiz to preview how the tutoring session can run."
   },
   {
-    title: "Confirm the tutor and plan",
-    copy: "Agree on the tutor, rate, schedule, and whether the student needs one session or recurring support."
+    title: "Book one class or monthly support",
+    copy: "Start with a single 1-hour AI-supported tutoring session or continue with a monthly plan."
   },
   {
-    title: "Continue with notes and practice",
-    copy: "Attend live online lessons and receive useful follow-up notes, examples, or practice suggestions."
+    title: "Continue with notes, quiz scores, and practice",
+    copy: "Human tutoring stays central, while AI-generated materials support explanations, exams, and follow-up."
   }
 ];
 
@@ -168,12 +168,12 @@ export const audiencePathways = [
 ];
 
 export const sessionDeliverables = [
-  "Live online explanation",
+  "AI-generated lesson deck",
+  "Live online tutor explanation",
   "Guided practice",
+  "Timed quiz and score",
   "Help with current coursework or goals",
-  "Follow-up notes",
-  "Suggested practice",
-  "A pace adapted to the student",
+  "Follow-up notes and suggested practice",
   "A clear next step after each session"
 ];
 
@@ -410,40 +410,26 @@ export const resourceItems = [
 
 export const pricingPlans = [
   {
-    title: "Free Demo",
-    price: "Free",
-    copy: "A short introductory session to discuss the student's needs and experience the format.",
-    features: ["Introductory online session", "Subject and goal review", "No monthly commitment"]
-  },
-  {
     paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_ONE_HOUR_TUTORING_PAYMENT_LINK,
     productKey: "tutoring_session",
-    title: "1 Hour Tutoring",
-    price: "$40-$60 per hour",
-    copy: "One live online tutoring session with follow-up notes or practice. The final rate is confirmed before booking.",
-    features: ["Live online session", "Follow-up notes or practice", "Rate confirmed before payment"]
+    title: "AI Tutor Single Class",
+    price: "$40-$60 / 1 hour",
+    copy: "One live online tutoring class supported by an AI-generated lesson deck, guided practice, and a quick assessment.",
+    features: ["1-hour live online tutor session", "AI-generated lesson plan and deck", "Practice questions and follow-up notes"]
   },
   {
     paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_MONTHLY_PACKAGE_PAYMENT_LINK,
     productKey: "monthly_subscription",
-    title: "Monthly Tutoring Package",
-    price: "Custom plan",
-    copy: "Recurring support based on subject, goals, frequency, and tutor availability.",
-    features: ["Weekly or flexible tutoring", "Session notes and practice", "Discuss after fit is confirmed"]
-  },
-  {
-    paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_AI_LESSONS_PAYMENT_LINK,
-    productKey: "ai_lessons_access",
-    title: "AI-Generated Lesson Access",
-    price: "Free trial, paid access later",
-    copy: "Protected access to AI-generated lessons, custom study plans, practice questions, and timed scored exams.",
-    features: ["Free access by request", "Comprehensive AI lessons", "Timed exams with instant scoring"]
+    title: "AI Tutor Monthly Plan",
+    price: "$199-$499 / month",
+    copy: "Ongoing AI-supported tutoring with recurring live sessions, generated lessons, timed quizzes, and progress follow-up.",
+    features: ["Recurring live tutoring support", "Personalized AI lesson materials", "Monthly practice and progress rhythm"]
   }
 ] satisfies Array<{
   copy: string;
   features: string[];
   paymentLink?: string;
   price: string;
-  productKey?: "tutoring_session" | "monthly_subscription" | "ai_lessons_access";
+  productKey?: "tutoring_session" | "monthly_subscription";
   title: string;
 }>;

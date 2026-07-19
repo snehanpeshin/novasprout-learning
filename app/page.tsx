@@ -32,49 +32,64 @@ export default function Home() {
         <nav aria-label="Main navigation">
           <a href="#subjects">Subjects</a>
           <a href="/curriculum-demo">Curriculum</a>
-          <a href="/ai-lesson-generator">AI Lesson</a>
+          <a href="/ai-lesson-generator">AI Tutor</a>
           <a href="#how-it-works">How it works</a>
           <a href="/pricing">Pricing</a>
           <a href="#about">About</a>
           <TrackedLink className="nav-cta" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-            Book a Free Demo
+            Book AI Tutor Demo
           </TrackedLink>
         </nav>
       </header>
 
+      <section className="demo-strip" aria-label="NovaSprout AI tutor launch">
+        <div className="demo-track">
+          <span>AI tutor launch: personalized lesson decks, live tutoring, timed quiz</span>
+          <span>Try a single 1-hour AI-supported class</span>
+          <span>Monthly AI tutor plans for ongoing support</span>
+          <span>AI tutor launch: personalized lesson decks, live tutoring, timed quiz</span>
+          <span>Try a single 1-hour AI-supported class</span>
+          <span>Monthly AI tutor plans for ongoing support</span>
+        </div>
+      </section>
+
       <section className="hero" id="top">
         <div className="hero-copy">
-          <p className="eyebrow">Personalized online tutoring</p>
-          <h1>Personalized Online Tutoring That Makes Difficult Subjects Clearer.</h1>
+          <p className="eyebrow">AI tutor launch</p>
+          <h1>AI-Supported Online Tutoring With Live Human Guidance.</h1>
           <p className="hero-text">
-            NovaSprout Learning connects students with friendly online support in math, science,
-            coding, and study skills, starting with a free introductory session.
+            NovaSprout Learning now combines live online tutoring with AI-generated lesson decks,
+            timed quizzes, guided practice, and follow-up notes for math, science, coding, and study skills.
           </p>
           <div className="hero-highlights" aria-label="Tutoring benefits">
             <span>
               <CheckCircle2 aria-hidden="true" size={16} />
-              Live online lessons
+              Live tutor guidance
             </span>
             <span>
               <CheckCircle2 aria-hidden="true" size={16} />
-              Personalized support
+              AI-generated lesson decks
+            </span>
+            <span>
+              <CheckCircle2 aria-hidden="true" size={16} />
+              Timed quiz and score
             </span>
             <span>
               <CheckCircle2 aria-hidden="true" size={16} />
               Notes and practice after sessions
             </span>
-            <span>
-              <CheckCircle2 aria-hidden="true" size={16} />
-              AI-generated lessons and exams
-            </span>
           </div>
           <div className="hero-actions">
+            <a className="button primary" href="/ai-lesson-generator">
+              Try AI Tutor
+              <ArrowRight aria-hidden="true" size={18} />
+            </a>
             <TrackedLink className="button primary" eventName="book_meeting_click" href={bookingUrl} target="_blank">
               <CalendarCheck aria-hidden="true" size={18} />
-              Book a Free Demo
+              Book AI Tutor Demo
             </TrackedLink>
-            <a className="button secondary" href="#subjects">
-              Explore Subjects
+            <a className="button secondary" href="/pricing">
+              View AI Tutor Plans
             </a>
           </div>
         </div>
@@ -85,7 +100,7 @@ export default function Home() {
           />
           <div className="hero-note">
             <Sparkles aria-hidden="true" size={18} />
-            <span>Friendly, personalized online tutoring for school-age students and growing learners.</span>
+            <span>AI-prepared lessons, live explanation, and a clearer next step after every session.</span>
           </div>
         </div>
       </section>
@@ -135,19 +150,19 @@ export default function Home() {
       <section className="section curriculum-callout">
         <div className="section-heading">
           <p className="eyebrow">AI-generated tutoring</p>
-          <h2>Preview lessons, custom plans, and timed exams before regular support.</h2>
+          <h2>The new NovaSprout AI tutor prepares lessons students can actually use.</h2>
           <p>
-            NovaSprout can generate original tutoring material by grade, subject, and topic using
-            public U.S. standards as a guide. Students can get structured explanations, practice,
-            and scored checks while tutors personalize the live support.
+            Students can generate a topic-based lesson deck, study through a timed PDF lesson,
+            and unlock a quiz after guided learning time. Human tutors can use the same materials
+            during live support.
           </p>
           <div className="hero-actions">
-            <a className="button secondary" href="/curriculum-demo">
-              Explore Curriculum Demos
-            </a>
             <a className="button primary" href="/ai-lesson-generator">
               Try AI Lesson Generator
               <ArrowRight aria-hidden="true" size={18} />
+            </a>
+            <a className="button secondary" href="/curriculum-demo">
+              Explore Curriculum Demos
             </a>
           </div>
         </div>
@@ -228,36 +243,27 @@ export default function Home() {
       <section className="section compact-section" id="pricing-summary">
         <div className="section-heading">
           <p className="eyebrow">Pricing summary</p>
-          <h2>Start free, then confirm the right rate and plan.</h2>
+          <h2>Two ways to start with AI-supported tutoring.</h2>
           <p>
-            Public prices are a guide. The final rate, tutor, schedule, and payment link are confirmed
-            before a paid session or recurring plan.
+            Choose a single live AI tutor class or a monthly AI-supported tutoring plan. Questions
+            before checkout can still come by email or demo booking.
           </p>
         </div>
-        <div className="pricing-grid">
+        <div className="pricing-grid pricing-grid-two">
           <article className="price-card">
-            <h3>Free Demo</h3>
-            <strong>Free</strong>
-            <p>A short introductory session to discuss the student&apos;s needs and experience the format.</p>
-            <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-              Book a Free Demo
-              <ArrowRight aria-hidden="true" size={18} />
-            </TrackedLink>
-          </article>
-          <article className="price-card">
-            <h3>Individual Tutoring</h3>
-            <strong>$40-$60 per hour</strong>
-            <p>One live online session with follow-up notes or practice. Rate is confirmed before booking.</p>
-            <a className="button secondary full" href="/pricing">
-              Confirm Availability
+            <h3>AI Tutor Single Class</h3>
+            <strong>$40-$60 / 1 hour</strong>
+            <p>One live online class with an AI-generated lesson deck, guided practice, and follow-up notes.</p>
+            <a className="button primary full" href="/pricing">
+              Buy 1-Hour Class
             </a>
           </article>
           <article className="price-card">
-            <h3>Ongoing Tutoring</h3>
-            <strong>Custom monthly plan</strong>
-            <p>Recurring support based on subject, goals, frequency, and tutor availability.</p>
+            <h3>AI Tutor Monthly Plan</h3>
+            <strong>$199-$499 / month</strong>
+            <p>Recurring tutoring with personalized AI lessons, timed checks, progress rhythm, and practice.</p>
             <a className="button secondary full" href="/pricing">
-              Discuss a Tutoring Plan
+              View Monthly Plan
             </a>
           </article>
         </div>
@@ -281,29 +287,33 @@ export default function Home() {
       <section className="booking-section" id="book">
         <div className="booking-copy">
           <p className="eyebrow">Start</p>
-          <h2>Help Your Student Take the Next Clear Step.</h2>
+          <h2>Start With an AI Tutor Plan or Ask a Question First.</h2>
           <p>
-            Tell us the subject, grade or level, current challenge, and preferred schedule. We&apos;ll
-            help determine the right tutoring option.
+            Try the AI lesson generator, book a demo, or choose a single class/monthly plan. Tell us
+            the subject, grade or level, current challenge, and preferred schedule.
           </p>
           <ul>
             <li>
               <CheckCircle2 aria-hidden="true" size={18} />
-              Subject, grade or level, and goals reviewed first
+              AI-generated lesson deck prepared around grade, subject, and topic
             </li>
             <li>
               <CheckCircle2 aria-hidden="true" size={18} />
-              Tutor, rate, and schedule confirmed before payment
+              Live tutor support explains, guides, and adapts the material
             </li>
             <li>
               <CheckCircle2 aria-hidden="true" size={18} />
-              Follow-up notes or practice after lessons
+              Timed quiz, score, notes, and next-step practice
             </li>
           </ul>
         </div>
         <div className="booking-actions">
+          <a className="button primary full" href="/pricing">
+            View AI Tutor Plans
+            <ArrowRight aria-hidden="true" size={18} />
+          </a>
           <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-            Book a Free Demo
+            Book AI Tutor Demo
             <ArrowRight aria-hidden="true" size={18} />
           </TrackedLink>
           <a className="button secondary full" href={`mailto:${contactEmail}`}>

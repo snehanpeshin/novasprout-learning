@@ -3,9 +3,9 @@ import Footer from "../components/Footer";
 import PricingOptions from "../components/PricingOptions";
 
 export const metadata = {
-  title: "Tutoring Pricing | NovaSprout Learning",
+  title: "AI Tutor Pricing | NovaSprout Learning",
   description:
-    "Review NovaSprout Learning tutoring prices, including a free demo, individual online tutoring, and custom monthly plans."
+    "Review NovaSprout Learning AI tutor pricing, including a single 1-hour class and monthly AI-supported tutoring plans."
 };
 
 export default function PricingPage() {
@@ -18,44 +18,45 @@ export default function PricingPage() {
         </a>
         <nav aria-label="Main navigation">
           <a href="/#subjects">Subjects</a>
-          <a href="/#book">Book a Free Demo</a>
+          <a href="/ai-lesson-generator">AI Tutor</a>
+          <a href="/#book">Contact</a>
         </nav>
       </header>
 
-      <section className="demo-strip" aria-label="Free demo class announcement">
+      <section className="demo-strip" aria-label="AI tutor launch announcement">
         <div className="demo-track">
-          <span>First demo class free</span>
-          <span>First paid session fit guarantee</span>
-          <span>Custom monthly plan after fit is confirmed</span>
-          <span>First demo class free</span>
-          <span>First paid session fit guarantee</span>
-          <span>Custom monthly plan after fit is confirmed</span>
+          <span>AI tutor launch: generated lessons, live explanation, timed quiz</span>
+          <span>Single 1-hour AI-supported class available</span>
+          <span>Monthly AI tutor plan for ongoing support</span>
+          <span>AI tutor launch: generated lessons, live explanation, timed quiz</span>
+          <span>Single 1-hour AI-supported class available</span>
+          <span>Monthly AI tutor plan for ongoing support</span>
         </div>
       </section>
 
       <section className="landing-hero compact-hero">
         <div>
           <p className="eyebrow">Pricing</p>
-          <h1>Start with a free demo, then confirm the right rate and plan.</h1>
+          <h1>Choose one AI tutor plan: single class or monthly support.</h1>
           <p>
-            After the demo, NovaSprout confirms the tutor, subject level, schedule, and rate before
-            payment. Individual tutoring is currently listed at $40-$60 per hour.
+            NovaSprout combines live online tutoring with AI-generated lesson decks, practice
+            questions, timed quizzes, and follow-up notes.
           </p>
         </div>
         <div className="landing-panel">
           <CheckCircle2 aria-hidden="true" size={42} />
-          <h2>Payment after confirmation</h2>
-          <p>Use payment links after the tutor, rate, and schedule are confirmed. See the refund policy for the first-session fit guarantee.</p>
+          <h2>AI tutor launch</h2>
+          <p>Start with a 1-hour class or choose monthly AI-supported tutoring for a recurring study rhythm.</p>
         </div>
       </section>
 
       <section className="section">
         <div className="section-heading">
           <p className="eyebrow">Options</p>
-          <h2>Three ways to start or continue.</h2>
+          <h2>Two simple AI tutor options.</h2>
           <p>
-            Cancellation, rescheduling, monthly minimums, and unused-session rules should be confirmed
-            before a recurring plan because final operating terms are still being defined.
+            Use Stripe checkout for the class or monthly plan. For questions before purchase,
+            contact NovaSprout from the footer or booking section.
           </p>
         </div>
         <PricingOptions />

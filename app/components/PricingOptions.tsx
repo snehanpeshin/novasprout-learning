@@ -1,10 +1,10 @@
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import TrackedLink from "./TrackedLink";
-import { bookingUrl, pricingPlans } from "../site-data";
+import { contactEmail, pricingPlans } from "../site-data";
 
 export default function PricingOptions() {
   return (
-    <div className="pricing-grid">
+    <div className="pricing-grid pricing-grid-two">
       {pricingPlans.map((plan) => (
         <article className="price-card" key={plan.title}>
           <h3>{plan.title}</h3>
@@ -18,14 +18,6 @@ export default function PricingOptions() {
               </li>
             ))}
           </ul>
-          {plan.title === "Free Demo" ? (
-            <div className="payment-actions">
-              <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-                Book a Free Demo
-                <ArrowRight aria-hidden="true" size={18} />
-              </TrackedLink>
-            </div>
-          ) : null}
           {plan.productKey && plan.paymentLink ? (
             <div className="payment-actions">
               <TrackedLink
@@ -34,21 +26,18 @@ export default function PricingOptions() {
                 href={plan.paymentLink}
                 target="_blank"
               >
-                Payment link after confirmation
+                {plan.productKey === "monthly_subscription" ? "Start Monthly Plan" : "Buy 1-Hour Class"}
                 <ArrowRight aria-hidden="true" size={18} />
               </TrackedLink>
-              <p className="payment-note">Use this only after NovaSprout confirms the tutor, rate, and schedule.</p>
+              <p className="payment-note">Secure checkout through Stripe for NovaSprout Learning.</p>
             </div>
           ) : null}
-          {plan.productKey === "ai_lessons_access" && !plan.paymentLink ? (
+          {plan.productKey && !plan.paymentLink ? (
             <div className="payment-actions">
-              <a className="button primary full" href="/ai-lesson-generator">
-                Request Free AI Access
+              <a className="button primary full" href={`mailto:${contactEmail}?subject=${encodeURIComponent(plan.title)}`}>
+                Contact to Start
                 <ArrowRight aria-hidden="true" size={18} />
               </a>
-              <TrackedLink className="button secondary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-                Discuss Paid Access
-              </TrackedLink>
             </div>
           ) : null}
         </article>
