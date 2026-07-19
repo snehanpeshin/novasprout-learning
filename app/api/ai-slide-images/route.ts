@@ -35,6 +35,17 @@ async function readJsonResponse(response: Response) {
   }
 }
 
+async function imageUrlToDataUrl(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`generated image URL could not be downloaded with ${response.status}`);
+  }
+
+  const contentType = response.headers.get("content-type")?.split(";")[0] || "image/png";
+  const buffer = Buffer.from(await response.arrayBuffer());
+  return `data:${contentType};base64,${buffer.toString("base64")}`;
+}
+
 export async function POST(request: Request) {
   const apiKey = process.env.OPENAI_API_KEY;
 
@@ -75,6 +86,7 @@ export async function POST(request: Request) {
   try {
     const images = await Promise.all(
       imageAssets.map(async (asset) => {
+        const imageModel = process.env.OPENAI_IMAGE_MODEL?.trim() || "dall-e-3";
         const response = await fetch("https://api.openai.com/v1/images/generations", {
           method: "POST",
           headers: {
@@ -82,10 +94,10 @@ export async function POST(request: Request) {
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
-            model: process.env.OPENAI_IMAGE_MODEL ?? "gpt-image-1",
+            model: imageModel,
             n: 1,
             prompt: `${asset.prompt}. Friendly clean tutoring slide illustration. No embedded words or labels.`,
-            quality: "low",
+            quality: imageModel === "dall-e-3" ? "standard" : "low",
             size: "1024x1024"
           })
         });
@@ -99,13 +111,21 @@ export async function POST(request: Request) {
         }
 
         const b64Json = payload?.data?.[0]?.b64_json;
-        if (typeof b64Json === "string") {
+        const imageUrl = payload?.data?.[0]?.url;
+        const dataUrl =
+          typeof b64Json === "string"
+            ? `data:image/png;base64,${b64Json}`
+            : typeof imageUrl === "string"
+              ? await imageUrlToDataUrl(imageUrl)
+              : "";
+
+        if (dataUrl) {
           return {
             alt: asset.alt,
             assetId: asset.assetId,
             aspectRatio: asset.aspectRatio,
             caption: asset.caption,
-            dataUrl: `data:image/png;base64,${b64Json}`,
+            dataUrl,
             educationalPurpose: asset.educationalPurpose,
             filename: asset.filename,
             placement: asset.placement,
@@ -114,7 +134,7 @@ export async function POST(request: Request) {
           };
         }
 
-        throw new Error(`${asset.assetId || asset.placement}: image generation returned no PNG data.`);
+        throw new Error(`${asset.assetId || asset.placement}: image generation returned no image URL or PNG data.`);
       })
     );
 
