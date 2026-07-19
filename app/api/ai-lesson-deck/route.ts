@@ -647,21 +647,21 @@ function renderDigestiveSystemVisual(visual: VisualSpec) {
   const [mouth, esophagus, stomach, smallIntestine, largeIntestine, liver, pancreas] = labels;
 
   return String.raw`\begin{center}
-\begin{tikzpicture}[scale=0.62, every node/.style={font=\scriptsize}]
-\node[draw, rounded corners, thick, fill=SubjectAccent!14, minimum width=1.9cm, minimum height=0.52cm] (mouth) at (0,5.0) {${escapeLatex(mouth)}};
-\node[draw, rounded corners, thick, fill=SubjectAccent!10, minimum width=1.9cm, minimum height=0.52cm] (eso) at (0,4.15) {${escapeLatex(esophagus)}};
-\node[draw, rounded corners, thick, fill=SubjectAccent!22, minimum width=2.15cm, minimum height=0.7cm] (stomach) at (0,3.15) {${escapeLatex(stomach)}};
-\node[draw, rounded corners, thick, fill=NovaMint!18, minimum width=2.55cm, minimum height=0.7cm] (small) at (0,2.05) {${escapeLatex(smallIntestine)}};
-\node[draw, rounded corners, thick, fill=NovaMint!10, minimum width=2.55cm, minimum height=0.7cm] (large) at (0,0.95) {${escapeLatex(largeIntestine)}};
-\node[draw, rounded corners, thick, fill=SubjectAccent!10, minimum width=1.55cm, minimum height=0.48cm] (liver) at (3.15,3.55) {${escapeLatex(liver)}};
-\node[draw, rounded corners, thick, fill=SubjectAccent!10, minimum width=1.65cm, minimum height=0.48cm] (pancreas) at (3.15,2.35) {${escapeLatex(pancreas)}};
-\draw[->, very thick, SubjectAccent] (mouth) -- (eso);
-\draw[->, very thick, SubjectAccent] (eso) -- (stomach);
-\draw[->, very thick, SubjectAccent] (stomach) -- (small);
-\draw[->, very thick, SubjectAccent] (small) -- (large);
-\draw[->, thick, NovaMint] (liver) -- node[above, sloped]{\tiny bile} (small);
-\draw[->, thick, NovaMint] (pancreas) -- node[below, sloped]{\tiny enzymes} (small);
-\node[align=center, font=\scriptsize] at (1.6,0.15) {Main path: food travels down\\Helper organs: chemicals join in};
+\begin{tikzpicture}[scale=0.58, every node/.style={font=\tiny}]
+\node[draw, rounded corners, thick, fill=SubjectAccent!14, minimum width=2.15cm, minimum height=0.5cm] (mouth) at (0,4.8) {${escapeLatex(mouth)}};
+\node[draw, rounded corners, thick, fill=SubjectAccent!10, minimum width=2.15cm, minimum height=0.5cm] (eso) at (0,4.05) {${escapeLatex(esophagus)}};
+\node[draw, rounded corners, thick, fill=SubjectAccent!22, minimum width=2.15cm, minimum height=0.62cm] (stomach) at (0,3.15) {${escapeLatex(stomach)}};
+\node[draw, rounded corners, thick, fill=NovaMint!18, minimum width=2.5cm, minimum height=0.62cm] (small) at (0,2.15) {${escapeLatex(smallIntestine)}};
+\node[draw, rounded corners, thick, fill=NovaMint!10, minimum width=2.5cm, minimum height=0.62cm] (large) at (0,1.15) {${escapeLatex(largeIntestine)}};
+\node[draw, rounded corners, thick, fill=SubjectAccent!10, minimum width=1.55cm, minimum height=0.45cm] (liver) at (3.4,3.45) {${escapeLatex(liver)}};
+\node[draw, rounded corners, thick, fill=SubjectAccent!10, minimum width=1.75cm, minimum height=0.45cm] (pancreas) at (3.55,2.45) {${escapeLatex(pancreas)}};
+\draw[->, very thick, SubjectAccent] (mouth.south) -- (eso.north);
+\draw[->, very thick, SubjectAccent] (eso.south) -- (stomach.north);
+\draw[->, very thick, SubjectAccent] (stomach.south) -- (small.north);
+\draw[->, very thick, SubjectAccent] (small.south) -- (large.north);
+\draw[->, thick, NovaMint] (liver.west) to[bend right=12] node[above, sloped]{\tiny bile} (small.east);
+\draw[->, thick, NovaMint] (pancreas.west) to[bend left=10] node[below, sloped]{\tiny enzymes} (small.east);
+\node[align=center, font=\tiny] at (1.55,0.25) {Food path is vertical.\\Helper organs add chemicals.};
 \end{tikzpicture}
 \end{center}`;
 }
@@ -674,16 +674,16 @@ function renderProcessVisual(visual: VisualSpec) {
   const nodes = steps
     .map(
       (step, index) =>
-        `\\node[draw, rounded corners, thick, fill=${index % 2 ? "NovaMint" : "SubjectAccent"}!12, minimum width=1.8cm, minimum height=0.65cm] (n${index}) at (${index * 2.05},0) {\\scriptsize ${escapeLatex(step)}};`
+        `\\node[draw, rounded corners, thick, fill=${index % 2 ? "NovaMint" : "SubjectAccent"}!12, minimum width=3.45cm, minimum height=0.52cm, align=center] (n${index}) at (0,${-index * 0.72}) {\\tiny ${escapeLatex(step)}};`
     )
     .join("\n");
   const arrows = steps
     .slice(0, -1)
-    .map((_, index) => `\\draw[->, very thick, SubjectAccent] (n${index}) -- (n${index + 1});`)
+    .map((_, index) => `\\draw[->, thick, SubjectAccent] (n${index}.south) -- (n${index + 1}.north);`)
     .join("\n");
 
   return String.raw`\begin{center}
-\begin{tikzpicture}[scale=0.7]
+\begin{tikzpicture}[scale=0.9]
 ${nodes}
 ${arrows}
 \end{tikzpicture}
@@ -950,6 +950,8 @@ function buildBeamerTex(request: LessonDeckRequest) {
 \setbeamercolor{title}{fg=white,bg=NovaInk}
 \setbeamercolor{block title}{fg=white,bg=SubjectAccent}
 \setbeamercolor{block body}{fg=NovaInk,bg=SubjectAccent!8}
+\setbeamercolor{block title alerted}{fg=white,bg=SubjectAccent}
+\setbeamercolor{block body alerted}{fg=NovaInk,bg=SubjectAccent!8}
 \setbeamertemplate{navigation symbols}{}
 \setbeamertemplate{frametitle}{
   \nointerlineskip
@@ -1010,8 +1012,16 @@ async function countPdfPages(workDir: string, pdf: Buffer) {
 function getDensityWarnings(slides: Array<{ body: string; title: string }>) {
   return slides
     .map((slide, index) => {
-      const plainLength = slide.body.replace(/\\[a-zA-Z]+/g, "").replace(/[{}]/g, "").trim().length;
-      return plainLength > 900 ? `Slide ${index + 1} "${slide.title}" may be too text-heavy.` : "";
+      const readableBody = slide.body
+        .replace(/\\begin\{tikzpicture\}[\s\S]*?\\end\{tikzpicture\}/g, "")
+        .replace(/\\begin\{tabular\}[\s\S]*?\\end\{tabular\}/g, "")
+        .replace(/\\draw\b[^;]*;/g, "")
+        .replace(/\\node\b[^;]*;/g, "")
+        .replace(/\\[a-zA-Z]+(?:\[[^\]]*\])?(?:\{[^}]*\})?/g, " ")
+        .replace(/[{}\\]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      return readableBody.length > 780 ? `Slide ${index + 1} "${slide.title}" may be too text-heavy.` : "";
     })
     .filter(Boolean);
 }
@@ -1179,9 +1189,13 @@ async function compileDeckRequest(request: Request) {
   const tex = buildBeamerTex({ ...body, assets: compileAssets });
   const densityWarnings = getDensityWarnings(slideBodies);
   const plannedImageAssetCount = assets.filter((asset) => asset.type === "image").length;
+  const programmaticVisualCount = slideBodies.filter((slide) =>
+    /\\begin\{tikzpicture\}|\\begin\{tabular\}/.test(slide.body)
+  ).length;
   const qualityChecks = [
     "Structured LessonSlidePlan v1 renderer active.",
     `${slideBodies.length} Beamer slides generated.`,
+    `${programmaticVisualCount} built-in diagram/table visual${programmaticVisualCount === 1 ? "" : "s"} rendered from the lesson plan.`,
     `${plannedImageAssetCount} image asset${plannedImageAssetCount === 1 ? "" : "s"} planned for indexed placement.`,
     `${embeddedImageCount} generated image asset${embeddedImageCount === 1 ? "" : "s"} embedded in the compiled PDF.`,
     `${compileAssets.filter((asset) => asset.type === "latex").length} LaTeX overlay asset${

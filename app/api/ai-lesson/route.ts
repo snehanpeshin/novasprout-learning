@@ -208,6 +208,118 @@ function fallbackLesson({
 }) {
   const durationMinutes = Number(duration.match(/\d+/)?.[0] ?? 45);
   const studentFit = `For a ${grade} student studying ${subject.toLowerCase()} who is ${level.toLowerCase()} and wants help with ${topic.toLowerCase()} for ${goal.toLowerCase()}.`;
+  const isDigestiveSystem = topic.toLowerCase().includes("digest");
+
+  if (isDigestiveSystem) {
+    return {
+      conceptExplanation:
+        "The digestive system changes food into nutrients the body can use. Food follows one main path: mouth to esophagus to stomach to small intestine to large intestine. Mechanical digestion breaks food into smaller pieces. Chemical digestion uses acid, bile, and enzymes to break large food molecules into smaller nutrients. The small intestine absorbs most nutrients into the blood, while the large intestine absorbs water and prepares waste for removal.",
+      customPlan: {
+        focusAreas: ["Organ order and function", "Mechanical vs chemical digestion", "Absorption in the small intestine"],
+        recommendedCadence: "Start with one diagram-based lesson, then practice organ-function questions and short explanations.",
+        summary: "A Grade 7 digestive-system lesson focused on understanding the path of food and how nutrients are absorbed.",
+        weeklyPlan: [
+          "Session 1: label the digestive organs and trace a meal through the system.",
+          "Session 2: compare mechanical and chemical digestion using examples.",
+          "Session 3: practice exam-style questions on enzymes, bile, villi, and absorption."
+        ]
+      },
+      duration,
+      fullLessonSegments: [
+        {
+          activity: "Trace the path of food through the main digestive organs and identify what each organ does.",
+          time: "0-10 min",
+          title: "Food Path"
+        },
+        {
+          activity: "Compare mechanical digestion with chemical digestion using chewing, stomach churning, acid, bile, and enzymes.",
+          time: "10-22 min",
+          title: "Two Types of Digestion"
+        },
+        {
+          activity: "Follow a sandwich through the system and explain where starch, protein, fat, and nutrients are handled.",
+          time: "22-38 min",
+          title: "Worked Example"
+        },
+        {
+          activity: "Answer short practice questions about organ order, absorption, and common misconceptions.",
+          time: `38-${durationMinutes} min`,
+          title: "Practice and Check"
+        }
+      ],
+      guidedExample:
+        "Example: Follow a sandwich through digestion. Step 1: In the mouth, teeth break the food apart and saliva begins starch digestion. Step 2: The esophagus moves the swallowed food by peristalsis. Step 3: The stomach churns food and acid helps start protein digestion. Step 4: In the small intestine, enzymes finish digestion and villi absorb nutrients into the blood. Step 5: The large intestine absorbs water and forms waste. Final check: most nutrient absorption happens in the small intestine.",
+      learningObjectives: [
+        "Put the main digestive organs in the correct order.",
+        "Explain the difference between mechanical and chemical digestion.",
+        "Describe why villi help the small intestine absorb nutrients."
+      ],
+      mode,
+      parentTutorNotes: `Fallback science lesson generated because live AI was unavailable. Student note: ${studentQuestion || "No extra student question provided."}`,
+      practiceQuestions: [
+        "Try: Put these in order: stomach, mouth, small intestine, esophagus. Hint: Start where food enters. Answer: mouth to esophagus to stomach to small intestine. Why: food travels through the digestive tract in order.",
+        "Try: Is chewing mechanical or chemical digestion? Hint: Ask whether food size or molecules change. Answer: mechanical digestion. Why: chewing physically breaks food into smaller pieces.",
+        "Try: Where does most nutrient absorption happen? Hint: Think about villi. Answer: small intestine. Why: villi increase surface area so nutrients can move into the blood.",
+        "Try: Does food pass through the liver or pancreas? Hint: They are helper organs. Answer: no. Why: they add chemicals to digestion, but food stays in the digestive tract."
+      ],
+      prerequisiteCheck: [
+        "Can you name three organs in the digestive system?",
+        "What does it mean for the body to absorb nutrients?"
+      ],
+      quickAssessment: [
+        "Question: Name the organ where most nutrient absorption happens. Answer: small intestine.",
+        "Question: Explain one difference between mechanical and chemical digestion. Answer: mechanical changes food size; chemical changes food molecules.",
+        "Question: Why are villi useful? Answer: they increase surface area for absorption."
+      ],
+      recommendedNextSession:
+        "Practice exam-style digestive-system questions using labeled diagrams, organ functions, enzymes, bile, and villi.",
+      studentFit,
+      timedExam: {
+        durationMinutes: Math.min(20, Math.max(10, Math.round(durationMinutes / 3))),
+        passingScore: 70,
+        questions: [
+          {
+            answerIndex: 2,
+            explanation: "Food enters through the mouth, then moves down the esophagus to the stomach.",
+            options: ["Stomach", "Small intestine", "Mouth", "Large intestine"],
+            question: "Where does food enter the digestive system?"
+          },
+          {
+            answerIndex: 1,
+            explanation: "Chewing physically breaks food into smaller pieces.",
+            options: ["Chemical digestion", "Mechanical digestion", "Absorption", "Excretion"],
+            question: "What type of digestion is chewing?"
+          },
+          {
+            answerIndex: 2,
+            explanation: "The small intestine absorbs most nutrients into the blood.",
+            options: ["Mouth", "Stomach", "Small intestine", "Esophagus"],
+            question: "Where does most nutrient absorption happen?"
+          },
+          {
+            answerIndex: 3,
+            explanation: "Bile helps break fat into smaller droplets so enzymes can work better.",
+            options: ["Protein", "Starch", "Water", "Fat"],
+            question: "Bile mainly helps digest which nutrient group?"
+          },
+          {
+            answerIndex: 0,
+            explanation: "Villi increase surface area for absorption.",
+            options: ["They increase surface area", "They chew food", "They make acid", "They store waste"],
+            question: "Why are villi important?"
+          },
+          {
+            answerIndex: 1,
+            explanation: "Food does not pass through helper organs such as the liver or pancreas.",
+            options: ["Food passes through the pancreas", "Food does not pass through the pancreas", "The pancreas stores waste", "The pancreas chews food"],
+            question: "Which statement about the pancreas is correct?"
+          }
+        ]
+      },
+      title: `${topic} ${mode}`,
+      warmUp: "Name three digestive organs and write one job for each. Then circle the organ where most nutrients are absorbed."
+    };
+  }
 
   return {
     conceptExplanation: `${topic} becomes easier when the student first understands the main idea, sees one clear model, and then practices in small steps. The tutor should connect each step back to the student's question and check understanding before moving forward.`,
