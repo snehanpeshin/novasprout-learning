@@ -144,7 +144,7 @@ function looksLikeTutorProcedure(value?: string) {
 
 export function detectSubjectKey(subject?: string, topic?: string): SubjectKey {
   const normalizedTopic = normalizePlainText(topic, 120).toLowerCase();
-  if (/\b(digest|biology|cell|organ|organism|ecosystem|photosynthesis|respiration|force|motion|energy|matter|atom|chemical)\b/.test(normalizedTopic)) {
+  if (/\b(digest|biology|cell|organ|organism|ecosystem|photosynthesis|respiration|force|motion|energy|matter|atom|chemical|electric|electricity|circuit|current|voltage|charge|resistance)\b/.test(normalizedTopic)) {
     return "science";
   }
   if (/\b(ratio|proportion|fraction|equation|algebra|geometry|graph|linear|percent|integer)\b/.test(normalizedTopic)) {
@@ -252,6 +252,9 @@ function vocabularyFor(subjectKey: SubjectKey, topic: string) {
   if (subjectKey === "science" && lowerTopic.includes("digest")) {
     return ["mouth", "esophagus", "stomach", "small intestine", "large intestine", "enzyme", "bile", "villi"];
   }
+  if (subjectKey === "science" && /\b(electric|circuit|current|voltage|charge|resistance)\b/.test(lowerTopic)) {
+    return ["electric charge", "current", "voltage", "circuit", "conductor", "insulator", "resistance", "switch"];
+  }
   if (subjectKey === "math" && (lowerTopic.includes("ratio") || lowerTopic.includes("proportion"))) {
     return ["ratio", "unit rate", "equivalent ratio", "proportion", "scale factor", "constant of proportionality"];
   }
@@ -357,6 +360,103 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
             id: "villi-structure-function",
             title: "Structure supports function",
             type: "structure_function"
+          }
+        ]
+      )
+    ];
+  }
+
+  if (subjectKey === "science" && /\b(electric|circuit|current|voltage|charge|resistance)\b/.test(lowerTopic)) {
+    return [
+      makeSlide(
+        "electric-circuit-map",
+        "labeled_diagram",
+        "Simple Circuit Map",
+        4,
+        {
+          bullets: [
+            "A complete circuit is a closed path for electric charge.",
+            "A battery supplies the push that moves charge around the circuit.",
+            "A bulb or motor changes electrical energy into light, motion, heat, or sound."
+          ],
+          keyIdea: "Electricity needs a complete path and an energy source."
+        },
+        [
+          {
+            accessibilityLabel: "Simple circuit with battery, wires, switch, and bulb labeled.",
+            caption: "Closed path means current can flow.",
+            id: "simple-circuit-labeled",
+            labels: ["Battery", "Wire", "Switch", "Bulb", "Closed path"],
+            title: "Simple circuit",
+            type: "labeled_system"
+          }
+        ]
+      ),
+      makeSlide(
+        "charge-flow",
+        "process",
+        "How Current Flows",
+        4,
+        {
+          bullets: [
+            "Charges are already present in the wires.",
+            "The battery creates an electric push across the circuit.",
+            "When the path is closed, charges drift and transfer energy to devices."
+          ],
+          keyIdea: "Current is the rate of charge flow, not a substance used up by the bulb."
+        },
+        [
+          {
+            accessibilityLabel: "Process showing battery push, closed path, charge flow, and energy transfer.",
+            caption: "Push to flow to energy transfer.",
+            id: "current-flow-process",
+            steps: ["Battery push", "Closed path", "Charge flow", "Energy transfer"],
+            type: "process_sequence"
+          }
+        ]
+      ),
+      makeSlide(
+        "voltage-current-resistance",
+        "comparison",
+        "Voltage, Current, Resistance",
+        4,
+        {
+          keyIdea: "Voltage pushes, current flows, and resistance opposes the flow.",
+          bullets: ["Higher voltage can push more current.", "Higher resistance makes current smaller.", "Devices use resistance to change electrical energy."]
+        },
+        [
+          {
+            accessibilityLabel: "Comparison table for voltage, current, and resistance.",
+            columns: [
+              { items: ["Electric push", "Measured in volts"], title: "Voltage" },
+              { items: ["Charge flow rate", "Measured in amps"], title: "Current" },
+              { items: ["Opposes flow", "Measured in ohms"], title: "Resistance" }
+            ],
+            id: "vcr-comparison",
+            title: "Three circuit ideas",
+            type: "comparison_table"
+          }
+        ]
+      ),
+      makeSlide(
+        "conductors-insulators",
+        "comparison",
+        "Conductors and Insulators",
+        4,
+        {
+          keyIdea: "Conductors let charge move easily. Insulators slow charge movement.",
+          bullets: ["Metals are usually good conductors.", "Plastic and rubber are common insulators.", "Wires often have metal inside and plastic outside."]
+        },
+        [
+          {
+            accessibilityLabel: "Comparison table between conductors and insulators.",
+            columns: [
+              { items: ["Copper", "Aluminum", "Metal wire"], title: "Conductors" },
+              { items: ["Plastic", "Rubber", "Dry wood"], title: "Insulators" }
+            ],
+            id: "conductors-insulators-table",
+            title: "Materials and charge flow",
+            type: "comparison_table"
           }
         ]
       )
@@ -570,18 +670,25 @@ export function legacyLessonToSlidePlan({
   slides.push(...subjectVisualSlides(subjectKey, topic));
 
   chunkText(removeTutorInstructionLanguage(lesson?.guidedExample, 3200), 220, 6).forEach((chunk, index) => {
-    slides.push(
-      makeSlide(`worked-example-${index + 1}`, "worked_example", slideTitle("Example", chunk, `Worked Example ${index + 1}`), 4, {
-        explanation: chunk,
-        steps: chunk.split(/(?:Step\s*\d+:|;\s*)/i).map((item) => normalizePlainText(item, 120)).filter(Boolean).slice(0, 4)
-      }, [
-        {
+    const exampleSteps = chunk.split(/(?:Step\s*\d+:|;\s*)/i).map((item) => normalizePlainText(item, 120)).filter(Boolean).slice(0, 4);
+    const exampleVisual: VisualSpec = subjectKey === "math"
+      ? {
           accessibilityLabel: "Worked example steps.",
           id: `worked-example-steps-${index + 1}`,
-          steps: chunk.split(/(?:Step\s*\d+:|;\s*)/i).map((item) => normalizePlainText(item, 120)).filter(Boolean).slice(0, 4),
+          steps: exampleSteps,
           type: "equation_steps"
         }
-      ], "medium")
+      : {
+          accessibilityLabel: "Worked example learning steps.",
+          id: `worked-example-process-${index + 1}`,
+          steps: exampleSteps.length > 1 ? exampleSteps : ["Notice the situation", "Apply the idea", "Check the result"],
+          type: "process_sequence"
+        };
+    slides.push(
+      makeSlide(`worked-example-${index + 1}`, "worked_example", subjectKey === "math" ? slideTitle("Example", chunk, `Worked Example ${index + 1}`) : `Worked Example ${index + 1}`, 4, {
+        explanation: chunk,
+        steps: exampleSteps
+      }, [exampleVisual], "medium")
     );
   });
 

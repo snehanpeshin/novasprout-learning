@@ -122,8 +122,8 @@ type SubjectTheme = {
 
 const accessStorageKey = "novasprout_ai_access_token";
 const leadStorageKey = "novasprout_ai_lead";
-const assetPlanningTimeoutMs = 18000;
-const imageGenerationTimeoutMs = 240000;
+const assetPlanningTimeoutMs = 285000;
+const imageGenerationTimeoutMs = 285000;
 const minimumBuildStageMs = {
   compile: 7000,
   images: 12000,
@@ -1492,6 +1492,7 @@ export default function AILessonGenerator() {
   const [examStartedAt, setExamStartedAt] = useState<number | null>(null);
   const [examSubmitted, setExamSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
@@ -1565,6 +1566,7 @@ export default function AILessonGenerator() {
   async function generateLesson(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setNotice("");
     setLesson(null);
     setLessonText("");
     setIsDeckOpen(false);
@@ -1614,11 +1616,12 @@ export default function AILessonGenerator() {
       }
       setLesson(generatedLesson);
       setLessonText(data.lessonText ?? "");
-      setError(data.warning ?? "");
+      setNotice(data.warning ?? "");
       if (generatedLesson?.timedExam?.questions?.length) {
         setExamStartedAt(Date.now());
       }
     } catch (generatorError) {
+      setNotice("");
       setError(generatorError instanceof Error ? generatorError.message : "Could not generate a lesson.");
     } finally {
       setIsGenerating(false);
@@ -1903,8 +1906,10 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
             Lock AI Tools
           </button>
           <p className="generator-note">
-            Do not enter a child&apos;s full name, school ID, private address, or sensitive personal information.
+            Comprehensive AI lessons can take a few minutes. Do not enter a child&apos;s full name,
+            school ID, private address, or sensitive personal information.
           </p>
+          {notice ? <p className="generator-note">{notice}</p> : null}
           {error ? <p className="form-error">{error}</p> : null}
         </form>
 

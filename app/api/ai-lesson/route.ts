@@ -2,9 +2,13 @@ import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
-const openAiLessonTimeoutMs = 22000;
+const openAiLessonTimeoutMs = Math.min(
+  285000,
+  Math.max(15000, Number(process.env.OPENAI_LESSON_TIMEOUT_MS ?? 240000))
+);
+const openAiLessonModel = process.env.OPENAI_MODEL?.trim() || "gpt-4.1-mini";
 
 type LessonRequest = {
   difficulty?: string;
@@ -286,7 +290,127 @@ function fallbackLesson({
 }) {
   const durationMinutes = Number(duration.match(/\d+/)?.[0] ?? 45);
   const studentFit = `For a ${grade} student studying ${subject.toLowerCase()} who is ${level.toLowerCase()} and wants help with ${topic.toLowerCase()} for ${goal.toLowerCase()}.`;
-  const isDigestiveSystem = topic.toLowerCase().includes("digest");
+  const lowerTopic = topic.toLowerCase();
+  const isDigestiveSystem = lowerTopic.includes("digest");
+  const isElectricity = /\b(electric|electricity|circuit|current|voltage|charge|resistance)\b/.test(lowerTopic);
+
+  if (isElectricity) {
+    return {
+      conceptExplanation:
+        "Electricity is the movement and transfer of energy through electric charges. In a wire, tiny charged particles are already present. A battery does not create the charges; it provides an electric push called voltage. When the circuit is closed, charges drift through the wire and transfer energy to devices such as bulbs, motors, buzzers, and heaters. Current means how much charge flows each second. Resistance means how strongly a material or device opposes that flow. A complete circuit needs an energy source, conducting path, and device. If the path is broken, current stops. Conductors such as copper let charge move easily. Insulators such as plastic and rubber slow charge movement and help keep circuits safer.",
+      customPlan: {
+        focusAreas: ["Complete circuits", "Current, voltage, and resistance", "Conductors, insulators, and safety"],
+        recommendedCadence: "Start with one visual circuit lesson, then practice circuit predictions, vocabulary, and simple troubleshooting.",
+        summary: "A Grade 7 electricity lesson focused on understanding charge flow, complete circuits, and how electrical energy is transferred.",
+        weeklyPlan: [
+          "Session 1: label a simple circuit and explain why a bulb lights only when the path is closed.",
+          "Session 2: compare voltage, current, and resistance using circuit examples.",
+          "Session 3: solve circuit prediction questions and identify common misconceptions."
+        ]
+      },
+      duration,
+      fullLessonSegments: [
+        {
+          activity: "Electricity starts with electric charge. Charges can transfer energy when they move through a closed conducting path. A circuit is complete only when there is no break in the path from one side of the battery, through the device, and back to the other side.",
+          time: "0-10 min",
+          title: "Charge and Circuits"
+        },
+        {
+          activity: "A battery supplies voltage, which is the electric push across the circuit. Current is the rate of charge flow. Resistance is opposition to current. A helpful model is water in pipes: voltage is like pressure, current is like flow rate, and resistance is like a narrow pipe.",
+          time: "10-22 min",
+          title: "Voltage Current Resistance"
+        },
+        {
+          activity: "A bulb lights because electrical energy is transferred in the bulb's filament or LED. The charges are not used up. Energy is transferred to light and heat, while charges continue moving around the closed circuit.",
+          time: "22-34 min",
+          title: "Energy Transfer"
+        },
+        {
+          activity: "Conductors let charges move easily, so copper and aluminum are used inside wires. Insulators slow charge movement, so plastic or rubber covers wires. The metal inside carries current; the outer plastic helps prevent unwanted contact.",
+          time: "34-42 min",
+          title: "Materials and Safety"
+        },
+        {
+          activity: "Common mistakes: thinking electricity is used up by a bulb, thinking a battery sends current from only one side, or thinking a circuit can work with a gap. A working circuit needs a complete loop.",
+          time: `42-${durationMinutes} min`,
+          title: "Misconceptions"
+        }
+      ],
+      guidedExample:
+        "Example: A bulb, battery, switch, and wires are connected in a loop. Step 1: Check whether the path is complete from one battery terminal to the other. Step 2: If the switch is open, there is a gap, so no current flows and the bulb stays off. Step 3: If the switch is closed, current flows through the bulb. Step 4: The bulb changes electrical energy into light and heat. Final check: the charges are not used up; energy is transferred.",
+      learningObjectives: [
+        "Explain why a complete circuit is needed for current to flow.",
+        "Compare voltage, current, and resistance in simple words.",
+        "Identify conductors, insulators, and common circuit misconceptions."
+      ],
+      mode,
+      parentTutorNotes: `Fallback electricity lesson generated because live AI was unavailable. Student note: ${studentQuestion || "No extra student question provided."}`,
+      practiceQuestions: [
+        "Try: A bulb is connected to a battery with one loose wire. Will it light? Hint: Look for a complete path. Answer: no. Why: a gap stops current.",
+        "Try: What does a battery provide in a circuit? Hint: It creates the push. Answer: voltage. Why: voltage pushes charges around a closed circuit.",
+        "Try: Is current used up by a bulb? Hint: Think about energy versus charge. Answer: no. Why: energy is transferred in the bulb, but charge continues around the circuit.",
+        "Try: Why is copper used inside many wires? Hint: Think about conductors. Answer: copper lets charge move easily. Why: it has low resistance compared with many materials.",
+        "Try: Why is plastic used outside wires? Hint: Think about insulators. Answer: plastic slows charge movement. Why: it helps prevent unwanted current paths and contact."
+      ],
+      prerequisiteCheck: [
+        "Can you name one object that uses electrical energy?",
+        "What do you think happens when a switch opens a circuit?"
+      ],
+      quickAssessment: [
+        "Question: What three things does a simple working circuit need? Answer: an energy source, a conducting path, and a device.",
+        "Question: What is current? Answer: the rate of electric charge flow.",
+        "Question: What is resistance? Answer: opposition to the flow of current.",
+        "Question: Why does an open switch stop a bulb from lighting? Answer: it breaks the circuit path."
+      ],
+      recommendedNextSession:
+        "Request a live tutor if circuit diagrams, voltage-current-resistance relationships, or series and parallel predictions still feel confusing. Share quiz results and which circuit questions were missed.",
+      studentFit,
+      timedExam: {
+        durationMinutes: Math.min(20, Math.max(10, Math.round(durationMinutes / 3))),
+        passingScore: 70,
+        questions: [
+          {
+            answerIndex: 1,
+            explanation: "A closed circuit has a complete conducting path, so current can flow.",
+            options: ["The bulb is large", "The path is complete", "The wire is colored", "The switch is missing"],
+            question: "Why does current flow in a closed circuit?"
+          },
+          {
+            answerIndex: 0,
+            explanation: "Voltage is the electric push supplied by a battery or power source.",
+            options: ["Voltage", "Resistance", "Insulation", "Friction"],
+            question: "What does a battery mainly provide to a circuit?"
+          },
+          {
+            answerIndex: 2,
+            explanation: "Current is the rate at which electric charge flows.",
+            options: ["Stored light", "Broken wire", "Charge flow rate", "Plastic covering"],
+            question: "What is current?"
+          },
+          {
+            answerIndex: 3,
+            explanation: "Resistance opposes current, so higher resistance usually means less current for the same voltage.",
+            options: ["It creates more batteries", "It removes charge", "It makes wires invisible", "It opposes current"],
+            question: "What does resistance do?"
+          },
+          {
+            answerIndex: 0,
+            explanation: "Copper is a conductor, which means charge can move through it easily.",
+            options: ["Copper wire", "Plastic ruler", "Rubber band", "Dry wood"],
+            question: "Which material is usually a good conductor?"
+          },
+          {
+            answerIndex: 1,
+            explanation: "A bulb transfers electrical energy to light and heat; charge is not used up.",
+            options: ["Current disappears forever", "Energy changes to light and heat", "The wire becomes plastic", "The battery creates new atoms"],
+            question: "What happens in a glowing bulb?"
+          }
+        ]
+      },
+      title: `${topic} ${mode}`,
+      warmUp: "Look around and name three devices that use electrical energy. For one device, write what energy output you notice: light, heat, sound, or motion."
+    };
+  }
 
   if (isDigestiveSystem) {
     return {
@@ -399,63 +523,200 @@ function fallbackLesson({
     };
   }
 
+  const normalizedSubject = subject.toLowerCase();
+  const subjectFamily = normalizedSubject.includes("math") || normalizedSubject.includes("statistics") || normalizedSubject.includes("accounting")
+    ? "math"
+    : normalizedSubject.includes("science") || normalizedSubject.includes("biology") || normalizedSubject.includes("chemistry") || normalizedSubject.includes("physics") || normalizedSubject.includes("health")
+      ? "science"
+      : normalizedSubject.includes("english") || normalizedSubject.includes("language")
+        ? "english"
+        : normalizedSubject.includes("history") || normalizedSubject.includes("geography") || normalizedSubject.includes("civics") || normalizedSubject.includes("economics") || normalizedSubject.includes("social") || normalizedSubject.includes("psychology")
+          ? "social"
+          : normalizedSubject.includes("computer") || normalizedSubject.includes("coding") || normalizedSubject.includes("robotics") || normalizedSubject.includes("engineering")
+            ? "coding"
+            : "general";
+  const fallbackByFamily = {
+    coding: {
+      assessment: [
+        `Question: What is the input in a ${topic} task? Answer: the information the program starts with.`,
+        "Question: Why do we trace steps? Answer: to find what changes and where mistakes happen.",
+        "Question: What is debugging? Answer: finding and fixing errors in logic or code."
+      ],
+      concept:
+        `${topic} is best learned by thinking like a builder: identify the input, decide the process, check the output, and then improve the design. A program or technical system follows instructions in order, but real problem solving also requires testing. If the output is wrong, the goal is not to guess again; the goal is to trace the steps, find where the logic changed, and repair that part. Good coding and engineering lessons connect vocabulary, diagrams, examples, and small experiments.`,
+      example:
+        `Example: Build a simple ${topic} solution. Step 1: State the goal in one sentence. Step 2: List the inputs needed. Step 3: Write the process as ordered steps or pseudocode. Step 4: Predict the output before running or checking it. Step 5: Test with one normal case and one unusual case. Final check: if the output does not match the goal, trace the step where the logic first becomes wrong.`,
+      focusAreas: [`Input-process-output model for ${topic}`, "Step tracing and debugging", "Testing with examples"],
+      objectives: [`Describe ${topic} using input, process, and output.`, "Trace a worked example step by step.", "Find one likely error and explain how to fix it."],
+      practice: [
+        `Try: Write the input, process, and output for a simple ${topic} example. Hint: start with what the user or system knows. Answer: input is starting information, process is the steps, output is the result. Why: this structure makes the problem testable.`,
+        "Try: A program gives the wrong answer. What should you do first? Hint: do not rewrite everything. Answer: trace the steps. Why: tracing finds the first point where the logic breaks.",
+        `Try: Create one test case for ${topic}. Hint: use a normal example first. Answer: choose input with a known expected output. Why: known outputs make errors easier to spot.`
+      ],
+      prerequisite: ["Can you describe a set of instructions in order?", "Can you explain the difference between an input and an output?"],
+      segments: [
+        { activity: `${topic} starts with a clear goal. A strong technical solution says what information comes in, what steps happen, and what result should come out.`, time: "0-10 min", title: "Problem Model" },
+        { activity: "Tracing means following each step carefully and watching how values or decisions change. It is one of the fastest ways to understand code and find mistakes.", time: "10-22 min", title: "Trace the Steps" },
+        { activity: "Testing means trying examples to check whether the solution works. Good tests include normal cases, edge cases, and cases where mistakes are likely.", time: "22-38 min", title: "Test and Debug" },
+        { activity: "A finished solution should be explainable in plain language. If you cannot explain why each step is there, the design may need simplification.", time: `38-${durationMinutes} min`, title: "Explain the Design" }
+      ],
+      title: "Build, test, and debug"
+    },
+    english: {
+      assessment: [
+        `Question: What is the main idea of a ${topic} passage or task? Answer: the central message or point.`,
+        "Question: What makes evidence strong? Answer: it directly supports the answer or claim.",
+        "Question: Why revise a response? Answer: to make meaning, structure, and evidence clearer."
+      ],
+      concept:
+        `${topic} becomes stronger when reading and writing are treated as evidence-based thinking. First, identify the purpose: understand, explain, argue, describe, or analyze. Next, find the main idea and the details that support it. In writing, a strong answer usually has a clear claim, relevant evidence, and explanation that connects the evidence back to the point. In reading, strong comprehension comes from noticing word choice, structure, context, and what the author wants the reader to understand.`,
+      example:
+        `Example: Answer a ${topic} question. Step 1: Restate what the question is asking. Step 2: Find the main idea or claim. Step 3: Choose one piece of evidence that directly supports it. Step 4: Explain how the evidence proves the answer. Step 5: Check that the response answers the exact question. Final check: remove any sentence that does not support the main point.`,
+      focusAreas: [`Main idea and purpose in ${topic}`, "Evidence and explanation", "Clear written response"],
+      objectives: [`Identify the main idea or task in ${topic}.`, "Use evidence to support an answer.", "Write or revise a clear explanation."],
+      practice: [
+        `Try: Write one sentence explaining the main idea of ${topic}. Hint: ask what the whole passage or task is mostly about. Answer: a main idea should be broad but specific. Why: it guides the rest of the answer.`,
+        "Try: Choose better evidence: a random detail or a sentence that proves your answer. Hint: evidence must connect directly. Answer: choose the sentence that proves your answer. Why: strong evidence makes the explanation convincing.",
+        "Try: Improve this response by adding because. Hint: connect claim to evidence. Answer: add a reason that explains how the evidence supports the claim. Why: explanation is what turns evidence into reasoning."
+      ],
+      prerequisite: ["Can you tell the difference between a topic and a main idea?", "Can you point to a sentence that supports an answer?"],
+      segments: [
+        { activity: `${topic} starts with purpose. Decide whether the task asks you to understand, explain, argue, compare, or create.`, time: "0-10 min", title: "Purpose" },
+        { activity: "A main idea is the central point. Details matter when they support that point, not when they are simply interesting.", time: "10-22 min", title: "Main Idea" },
+        { activity: "Evidence should be specific and relevant. Explanation tells why the evidence matters and connects it to the answer.", time: "22-38 min", title: "Evidence" },
+        { activity: "Revision checks clarity. A strong final answer is focused, supported, and easy to follow.", time: `38-${durationMinutes} min`, title: "Revision" }
+      ],
+      title: "Read, support, and explain"
+    },
+    general: {
+      assessment: [
+        `Question: What is the main idea of ${topic}? Answer: the central concept that explains the smaller details.`,
+        "Question: Why use examples? Answer: examples show how the idea works in real situations.",
+        "Question: What should you do if confused? Answer: identify the exact step or word that caused confusion."
+      ],
+      concept:
+        `${topic} can be learned by separating the big idea from the details. The big idea explains what the topic is mostly about. Details show how it works, when it applies, and why it matters. A good lesson uses definitions, examples, visuals, practice, and checks. If a topic feels confusing, the best move is to find the exact word, step, or relationship that is unclear, then connect it to an example.`,
+      example:
+        `Example: Learn ${topic} with a three-part model. Step 1: Define the topic in one sentence. Step 2: Give one example and one non-example. Step 3: Explain the difference between them. Step 4: Try a practice question. Step 5: check whether your answer matches the definition. Final check: you should be able to explain ${topic} without copying notes.`,
+      focusAreas: [`Core meaning of ${topic}`, "Examples and non-examples", "Practice and reflection"],
+      objectives: [`Explain ${topic} in your own words.`, "Use an example to show how the idea works.", "Identify one next step for practice."],
+      practice: [
+        `Try: Write a one-sentence definition of ${topic}. Hint: start with "${topic} is...". Answer: a good definition names the category and the key feature. Why: definitions organize details.`,
+        `Try: Give one example of ${topic}. Hint: choose something clear and familiar. Answer: the example should show the key feature. Why: examples make abstract ideas concrete.`,
+        "Try: Write one question you still have. Hint: focus on a word, step, or relationship. Answer: a specific question is easier to solve. Why: vague confusion is harder to fix."
+      ],
+      prerequisite: [`What have you heard about ${topic} before?`, "Can you give one example related to this topic?"],
+      segments: [
+        { activity: `Start with the big idea of ${topic}. Separate what the topic means from extra details that can be added later.`, time: "0-10 min", title: "Big Idea" },
+        { activity: "Use examples and non-examples to make the idea clearer. A non-example is useful because it shows what the topic is not.", time: "10-22 min", title: "Examples" },
+        { activity: "Practice with one question at a time. After each answer, check which part of the definition or model was used.", time: "22-38 min", title: "Practice" },
+        { activity: "Finish by naming the strongest understanding and the one part that needs more practice.", time: `38-${durationMinutes} min`, title: "Reflect" }
+      ],
+      title: "Understand, practice, check"
+    },
+    math: {
+      assessment: [
+        `Question: What should you identify first in a ${topic} problem? Answer: what is given and what is being asked.`,
+        "Question: Why show steps? Answer: steps make errors easier to find and correct.",
+        "Question: What makes an answer reasonable? Answer: it matches the question, units, and expected size."
+      ],
+      concept:
+        `${topic} in mathematics is learned through meaning, representation, procedure, and checking. Meaning tells what the idea represents. A representation could be a diagram, table, number line, graph, equation, or words. A procedure is the step-by-step method used to solve. Checking asks whether the answer is reasonable and whether it answers the exact question. Strong math learning connects all four parts instead of memorizing steps alone.`,
+      example:
+        `Example: Solve a ${topic} problem. Step 1: Read the question and underline what is given. Step 2: Identify what must be found. Step 3: Choose a representation such as a table, diagram, equation, or graph. Step 4: Solve one step at a time and keep units or labels. Step 5: Substitute or estimate to check the answer. Final check: explain why the answer makes sense.`,
+      focusAreas: [`Meaning and representation of ${topic}`, "Step-by-step solving", "Checking for reasonableness"],
+      objectives: [`Explain what ${topic} means, not just the rule.`, "Solve a worked example with labeled steps.", "Check whether an answer is reasonable."],
+      practice: [
+        `Try: Write what is given and what is asked in a ${topic} problem. Hint: do not solve yet. Answer: list known values and the unknown. Why: setup prevents wrong operations.`,
+        `Try: Choose a representation for ${topic}. Hint: table, diagram, equation, or graph. Answer: choose the model that shows the relationship most clearly. Why: models reduce confusion.`,
+        "Try: Check an answer using estimation or substitution. Hint: ask whether the size makes sense. Answer: a reasonable answer fits the original question. Why: checking catches many errors."
+      ],
+      prerequisite: ["Can you identify known and unknown quantities in a word problem?", "Can you explain one math step in words?"],
+      segments: [
+        { activity: `${topic} starts with meaning. Before using a formula or rule, identify what the numbers, symbols, or shapes represent.`, time: "0-10 min", title: "Meaning" },
+        { activity: "Represent the problem with a diagram, table, equation, graph, or number line. The representation should show the relationship clearly.", time: "10-22 min", title: "Model" },
+        { activity: "Solve in small steps and label each step. Labels help connect the calculation back to the problem.", time: "22-38 min", title: "Solve" },
+        { activity: "Check the answer by estimating, substituting, or explaining why it fits the question.", time: `38-${durationMinutes} min`, title: "Check" }
+      ],
+      title: "Model, solve, and check"
+    },
+    science: {
+      assessment: [
+        `Question: What should a science explanation of ${topic} include? Answer: a claim, evidence, and reasoning.`,
+        "Question: Why are diagrams useful? Answer: they show parts, relationships, and processes that are hard to see in words only.",
+        "Question: What is a common science habit? Answer: compare what you observe with the model or evidence."
+      ],
+      concept:
+        `${topic} in science is best understood as a system, process, or relationship that can be modeled. A system has parts that interact. A process happens in a sequence. A relationship explains how one change affects another. Strong science learning uses vocabulary, diagrams, examples, evidence, and reasoning. Instead of memorizing isolated facts, connect each fact to what it does, what causes it, or how it can be observed.`,
+      example:
+        `Example: Explain ${topic} using claim, evidence, and reasoning. Step 1: Make a clear claim about what happens. Step 2: Name the evidence or observation that supports it. Step 3: Explain the science idea that connects the evidence to the claim. Step 4: Use a diagram or model to show the parts or sequence. Step 5: check for a common misconception. Final check: the explanation should answer both what happens and why.`,
+      focusAreas: [`System or process model for ${topic}`, "Vocabulary and diagrams", "Claim, evidence, and reasoning"],
+      objectives: [`Describe the main parts or steps in ${topic}.`, "Use a diagram or model to explain the idea.", "Answer a question with evidence and reasoning."],
+      practice: [
+        `Try: Is ${topic} best shown as parts, steps, or cause and effect? Hint: choose the model that fits the idea. Answer: use parts for systems, steps for processes, and arrows for cause and effect. Why: the model controls the explanation.`,
+        `Try: Write one claim about ${topic}. Hint: make it a complete sentence. Answer: the claim should say what happens or what is true. Why: claims focus the explanation.`,
+        "Try: Add evidence to your claim. Hint: use an observation, fact, or diagram label. Answer: evidence supports the claim. Why: science explanations need support."
+      ],
+      prerequisite: ["Can you describe the difference between an observation and an explanation?", `Can you name one part, step, or example related to ${topic}?`],
+      segments: [
+        { activity: `${topic} should be organized as a model. Decide whether it is mostly a system of parts, a sequence of steps, or a cause-and-effect relationship.`, time: "0-10 min", title: "Model the Idea" },
+        { activity: "Vocabulary matters because science words often name parts, processes, or measurable quantities. Connect each word to what it does.", time: "10-22 min", title: "Key Words" },
+        { activity: "Use a diagram to show relationships. Arrows can show movement, transfer, cause, sequence, or interaction.", time: "22-38 min", title: "Visual Explanation" },
+        { activity: "Finish with claim, evidence, and reasoning. This turns facts into a complete science explanation.", time: `38-${durationMinutes} min`, title: "Explain with Evidence" }
+      ],
+      title: "Model, explain, and reason"
+    },
+    social: {
+      assessment: [
+        `Question: What should you identify first in ${topic}? Answer: who, where, when, what happened, and why it mattered.`,
+        "Question: Why compare perspectives? Answer: people and groups may experience the same event differently.",
+        "Question: What makes evidence useful? Answer: it supports a claim about cause, effect, change, or significance."
+      ],
+      concept:
+        `${topic} in social studies is understood by asking context questions: who was involved, where it happened, when it happened, what changed, and why it mattered. Strong answers connect facts to causes, effects, perspectives, and evidence. A map, timeline, source, chart, or comparison table can make the topic clearer. Instead of memorizing facts alone, explain how the facts connect to people, places, choices, and consequences.`,
+      example:
+        `Example: Analyze ${topic}. Step 1: Identify the time and place. Step 2: Name the people, groups, or institutions involved. Step 3: Find one cause and one effect. Step 4: Consider at least one perspective. Step 5: Use evidence to support the explanation. Final check: the answer should explain why the topic matters, not only what happened.`,
+      focusAreas: [`Context for ${topic}`, "Cause and effect", "Evidence and perspective"],
+      objectives: [`Explain the context of ${topic}.`, "Connect causes and effects.", "Use evidence or perspective in an answer."],
+      practice: [
+        `Try: Write who, where, and when for ${topic}. Hint: context comes before explanation. Answer: identify people/groups, place, and time. Why: context prevents vague answers.`,
+        "Try: Name one cause and one effect. Hint: cause comes before, effect comes after. Answer: connect them with because or therefore. Why: social studies explains change.",
+        "Try: Add one perspective. Hint: ask who benefited, who was harmed, or who disagreed. Answer: perspectives show complexity. Why: events affect groups differently."
+      ],
+      prerequisite: ["Can you explain the difference between cause and effect?", "Can you use a fact as evidence for an answer?"],
+      segments: [
+        { activity: `${topic} starts with context: time, place, people, and setting. Without context, facts are harder to understand.`, time: "0-10 min", title: "Context" },
+        { activity: "Cause and effect explain why events or ideas develop. Some topics have more than one cause and more than one effect.", time: "10-22 min", title: "Cause and Effect" },
+        { activity: "Perspective asks how different people or groups saw the issue. Evidence supports which interpretation is strongest.", time: "22-38 min", title: "Perspective" },
+        { activity: "A strong answer explains significance: why the topic mattered then and why it may still matter now.", time: `38-${durationMinutes} min`, title: "Significance" }
+      ],
+      title: "Context, cause, and evidence"
+    }
+  } as const;
+  const fallback = fallbackByFamily[subjectFamily as keyof typeof fallbackByFamily];
+
   return {
-    conceptExplanation: `${topic} becomes easier when you first understand the main idea, see one clear model, and then practice in small steps. Focus on the meaning first, then use examples to check whether each step makes sense.`,
+    conceptExplanation: fallback.concept,
     customPlan: {
-      focusAreas: [`Core idea of ${topic}`, "Step-by-step problem solving", "Independent practice with feedback"],
-      recommendedCadence: "Start with one focused session, then review progress before scheduling the next lesson.",
-      summary: `A short personalized plan for ${topic} based on the selected grade, level, and goal.`,
+      focusAreas: [...fallback.focusAreas],
+      recommendedCadence: "Start with the AI lesson deck, complete the practice and quiz, then request live tutor help only for the weak areas.",
+      summary: `A student-facing ${subject.toLowerCase()} lesson for ${topic} based on the selected grade, level, and goal.`,
       weeklyPlan: [
-        `Session 1: introduce ${topic} with a simple model and guided example.`,
-        "Session 2: practice mixed examples and correct common mistakes.",
-        "Session 3: apply the idea to homework-style or test-style questions."
+        `Lesson 1: study the core model for ${topic} and complete the guided example.`,
+        "Lesson 2: practice mixed questions and review mistakes.",
+        "Lesson 3: use quiz results to decide whether a live tutor request is needed."
       ]
     },
     duration,
-    fullLessonSegments: [
-      {
-        activity: `Start by naming the goal of the lesson: understand ${topic} clearly enough to explain the main idea and try a simple example.`,
-        time: "0-5 min",
-        title: "Set the Goal"
-      },
-      {
-        activity: `Read the core idea of ${topic} in plain language. Connect the definition to one visual model and one everyday example.`,
-        time: "5-15 min",
-        title: "Build the Concept"
-      },
-      {
-        activity: "Study one guided example slowly. Notice what is given, what the question asks, which step comes first, and how the final answer is checked.",
-        time: "15-30 min",
-        title: "Guided Example"
-      },
-      {
-        activity: "Try short practice questions, compare with the hints and answers, then write the one step that still needs more practice.",
-        time: `30-${durationMinutes} min`,
-        title: "Practice and Check"
-      }
-    ],
-    guidedExample: `Tutor model: Start with a simple ${topic} question. Identify what is given, choose the first step, solve carefully, and check whether the answer makes sense.`,
-    learningObjectives: [
-      `Explain the main idea of ${topic} in simple words.`,
-      `Solve a guided ${topic} example with support.`,
-      `Try independent practice and identify one next area to improve.`
-    ],
+    fullLessonSegments: [...fallback.segments],
+    guidedExample: fallback.example,
+    learningObjectives: [...fallback.objectives],
     mode,
-    parentTutorNotes: `This fallback lesson was generated without live AI because the AI service was unavailable. A tutor can still use it as a structured starting point and personalize examples during the session. Student note: ${studentQuestion || "No extra student question provided."}`,
-    practiceQuestions: [
-      `What is the most important idea to remember about ${topic}?`,
-      `Solve one beginner-level ${topic} example and show each step.`,
-      `Create one question about ${topic} that you still want to ask.`
-    ],
-    prerequisiteCheck: [
-      `What do you already know about ${topic}?`,
-      "Which step usually feels hardest: starting, solving, checking, or explaining?"
-    ],
-    quickAssessment: [
-      `Explain ${topic} in one sentence.`,
-      "Solve one similar question without looking at the guided example."
-    ],
-    recommendedNextSession: `Continue with targeted practice on ${topic}, using the student's mistakes from this session to choose the next examples.`,
+    parentTutorNotes: `Fallback ${subject.toLowerCase()} lesson generated without live AI because the AI service was unavailable. Student note: ${studentQuestion || "No extra student question provided."}`,
+    practiceQuestions: [...fallback.practice],
+    prerequisiteCheck: [...fallback.prerequisite],
+    quickAssessment: [...fallback.assessment],
+    recommendedNextSession: `Use quiz results to identify the weakest part of ${topic}. Request a live tutor if the student misses questions about ${fallback.focusAreas[0].toLowerCase()} or cannot explain the guided example independently.`,
     studentFit,
     timedExam: {
       durationMinutes: Math.min(20, Math.max(10, Math.round(durationMinutes / 3))),
@@ -463,44 +724,44 @@ function fallbackLesson({
       questions: [
         {
           answerIndex: 1,
-          explanation: "A good first step is to identify what the question is asking before solving.",
-          options: ["Guess quickly", "Identify the goal", "Skip the example", "Memorize only"],
-          question: `What should you do first when solving a ${topic} problem?`
+          explanation: "A clear first step is to identify the goal before choosing details or procedures.",
+          options: ["Guess quickly", "Identify the goal", "Skip the model", "Memorize only"],
+          question: `What should you do first when studying ${topic}?`
         },
         {
           answerIndex: 2,
-          explanation: "Checking helps catch mistakes and improves confidence.",
-          options: ["It wastes time", "It changes the topic", "It helps catch mistakes", "It removes all practice"],
-          question: "Why is checking your answer useful?"
+          explanation: "A model makes relationships visible and helps organize the explanation.",
+          options: ["It replaces learning", "It hides mistakes", "It shows relationships", "It removes practice"],
+          question: "Why is a model or representation useful?"
         },
         {
           answerIndex: 0,
-          explanation: "Explaining steps shows whether the concept is understood.",
-          options: ["Explain each step", "Hide your work", "Avoid questions", "Only copy answers"],
+          explanation: "Explaining steps shows understanding better than copying an answer.",
+          options: ["Explain each step", "Hide your work", "Avoid examples", "Only copy answers"],
           question: "Which habit best supports learning?"
         },
         {
           answerIndex: 3,
-          explanation: "Asking a focused question helps the tutor personalize support.",
+          explanation: "A focused question helps identify the exact weak area for practice or live tutoring.",
           options: ["Say nothing", "Change subject", "Rush ahead", "Ask a focused question"],
           question: "What should you do if a step is confusing?"
         },
         {
           answerIndex: 1,
-          explanation: "Short practice with feedback is usually better than passive reading only.",
+          explanation: "Practice with feedback reveals what is understood and what needs review.",
           options: ["Only read notes", "Practice with feedback", "Avoid examples", "Skip review"],
           question: "Which method helps most after a guided example?"
         },
         {
           answerIndex: 0,
-          explanation: "A next step should target the student's current weak spot.",
+          explanation: "A useful next step targets the student's current weak spot.",
           options: ["Target the weak spot", "Repeat everything forever", "Stop practicing", "Ignore mistakes"],
           question: "What makes a next session useful?"
         }
       ]
     },
     title: `${topic} ${mode}`,
-    warmUp: `In two minutes, write what you already know about ${topic} and one question you want answered today.`
+    warmUp: `In two minutes, write what you already know about ${topic}, one example you can think of, and one question you want answered today.`
   };
 }
 
@@ -529,8 +790,8 @@ async function requestOpenAiLesson({
   const timeout = setTimeout(() => controller.abort(), openAiLessonTimeoutMs);
   const body = {
     input: prompt,
-    max_output_tokens: 2800,
-    model: process.env.OPENAI_MODEL ?? "gpt-5-mini",
+    max_output_tokens: 3400,
+    model: openAiLessonModel,
     text: {
       format: {
         type: "json_schema",
@@ -604,10 +865,10 @@ export async function POST(request: Request) {
   }
 
   if (!apiKey) {
-    return NextResponse.json({
-      lesson: fallbackLesson({ duration, goal, grade, level, mode, studentQuestion, subject, topic }),
-      warning: "OPENAI_API_KEY is not configured for this deployment. A fallback lesson was generated instead."
-    });
+    return NextResponse.json(
+      { error: "OPENAI_API_KEY is not configured for this deployment, so the live AI lesson cannot be generated." },
+      { status: 503 }
+    );
   }
 
   const prompt = `
@@ -658,36 +919,39 @@ Keep claims cautious. Do not promise grades, test scores, admissions results, di
     const { payload, response } = await requestOpenAiLesson({ apiKey, prompt });
 
     if (!response.ok) {
-      return NextResponse.json({
-        lesson: fallbackLesson({ duration, goal, grade, level, mode, studentQuestion, subject, topic }),
-        warning:
+      return NextResponse.json(
+        {
+          error:
           payload?.error?.message ??
           payload?.message ??
-          `OpenAI returned ${response.status}. A fallback lesson was generated instead.`
-      });
+          `OpenAI returned ${response.status}.`
+        },
+        { status: 502 }
+      );
     }
 
     const outputText = extractOutputText(payload);
     const lesson = parseLessonJson(outputText);
 
     if (!lesson) {
-      return NextResponse.json({
-        lesson: fallbackLesson({ duration, goal, grade, level, mode, studentQuestion, subject, topic }),
-        warning: "The AI response was incomplete, so a fallback lesson was generated instead."
-      });
+      return NextResponse.json(
+        { error: "The live AI response was incomplete. Please try generating the lesson again." },
+        { status: 422 }
+      );
     }
 
     return NextResponse.json({ lesson });
   } catch (error) {
     const timedOut = error instanceof Error && error.name === "AbortError";
-    return NextResponse.json({
-      lesson: fallbackLesson({ duration, goal, grade, level, mode, studentQuestion, subject, topic }),
-      warning:
-        timedOut
-          ? "The AI lesson service took too long, so a fallback lesson was generated instead."
+    return NextResponse.json(
+      {
+        error: timedOut
+          ? "The live AI lesson took longer than expected. Please try again, or choose a shorter lesson length."
           : error instanceof Error
-          ? `Could not reach the AI lesson service: ${error.message}. A fallback lesson was generated instead.`
-          : "Could not reach the AI lesson service. A fallback lesson was generated instead."
-    });
+            ? `Could not reach the live AI lesson service: ${error.message}.`
+            : "Could not reach the live AI lesson service."
+      },
+      { status: timedOut ? 504 : 502 }
+    );
   }
 }

@@ -47,7 +47,7 @@ aws lambda update-function-code --function-name novasprout-latex-compiler --imag
 Recommended Lambda settings:
 
 - Memory: 1024 MB or 2048 MB
-- Timeout: 60 seconds
+- Timeout: 300 seconds
 - Ephemeral storage: 1024 MB
 - Function URL auth: `NONE`, protected by `LATEX_COMPILE_SERVICE_TOKEN`
 

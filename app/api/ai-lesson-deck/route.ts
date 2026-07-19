@@ -8,10 +8,10 @@ import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 import { legacyLessonToSlidePlan, type LessonPlanSlide, type VisualSpec } from "../../lib/lessonSlidePlan";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const execFileAsync = promisify(execFile);
-const remoteCompilerTimeoutMs = 25000;
+const remoteCompilerTimeoutMs = 285000;
 const maxEmbeddedImageAssets = 4;
 const maxEmbeddedImageBytes = 1_100_000;
 const maxRemoteAssetPayloadBytes = 3_600_000;
@@ -1296,7 +1296,7 @@ async function compileDeckRequest(request: Request) {
     for (let pass = 0; pass < compiler.passes; pass += 1) {
       await execFileAsync(compiler.command, compiler.args, {
         cwd: workDir,
-        timeout: 30000
+        timeout: 180000
       });
     }
 

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 
 export const runtime = "nodejs";
-export const maxDuration = 180;
+export const maxDuration = 300;
 
 type ImageAssetRequest = {
   assets?: Array<{
