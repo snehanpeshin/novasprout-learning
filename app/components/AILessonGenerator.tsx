@@ -123,7 +123,7 @@ type SubjectTheme = {
 const accessStorageKey = "novasprout_ai_access_token";
 const leadStorageKey = "novasprout_ai_lead";
 const assetPlanningTimeoutMs = 18000;
-const imageGenerationTimeoutMs = 180000;
+const imageGenerationTimeoutMs = 240000;
 
 const grades = [
   "Grade 3",

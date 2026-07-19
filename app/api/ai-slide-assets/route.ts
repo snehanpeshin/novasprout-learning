@@ -139,19 +139,6 @@ function deterministicAssetPlan({
         prompt:
           `${grade} friendly clean educational anatomical illustration of the human digestive system, showing mouth, esophagus, stomach, small intestine, large intestine, liver, pancreas, simplified for middle school science, colorful flat medical illustration, no text, no labels, white background`,
         type: "image"
-      },
-      {
-        assetId: "intestinal-villi-image",
-        alt: "Close-up illustration of villi inside the small intestine absorbing nutrients.",
-        aspectRatio: "1:1",
-        caption: "Villi create more surface area for absorption.",
-        educationalPurpose: "Shows why villi help nutrient absorption.",
-        filename: "intestinal-villi.png",
-        latex: "",
-        placement: placementForSlide(slideTitles, /villi|small intestine/i, 11, "rb"),
-        prompt:
-          `${grade} friendly close-up science illustration of intestinal villi lining the small intestine, tiny nutrient particles moving into blood vessels, simplified and colorful, no text, no labels, white background`,
-        type: "image"
       }
     ];
   }

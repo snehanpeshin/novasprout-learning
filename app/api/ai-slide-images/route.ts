@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 180;
 
 type ImageAssetRequest = {
   assets?: Array<{
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       prompt: cleanText(asset.prompt, 900)
     }))
     .filter((asset) => asset.prompt && asset.placement)
-    .slice(0, 2);
+    .slice(0, 1);
 
   if (!imageAssets.length) {
     return NextResponse.json({ images: [] });
