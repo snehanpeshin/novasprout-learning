@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 const execFileAsync = promisify(execFile);
+const remoteCompilerTimeoutMs = 45000;
 
 type DeckAsset = {
   assetId?: string;
@@ -387,6 +388,13 @@ async function readJsonResponse(response: Response) {
   }
 }
 
+function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeout));
+}
+
 async function compileWithRemoteService({
   assets,
   expectedPageCount,
@@ -402,24 +410,43 @@ async function compileWithRemoteService({
   }
 
   const serviceToken = process.env.LATEX_COMPILE_SERVICE_TOKEN?.trim();
-  const response = await fetch(compileUrl, {
-    body: JSON.stringify({
-      assets: assets
-        .filter((asset) => asset.type === "image" && asset.dataUrl && asset.filename)
-        .map((asset) => ({
-          dataUrl: asset.dataUrl,
-          filename: asset.filename,
-          placement: asset.placement
-        })),
-      expectedPageCount,
-      tex
-    }),
-    headers: {
-      ...(serviceToken ? { Authorization: `Bearer ${serviceToken}` } : {}),
-      "Content-Type": "application/json"
-    },
-    method: "POST"
-  });
+  let response: Response;
+  try {
+    response = await fetchWithTimeout(
+      compileUrl,
+      {
+        body: JSON.stringify({
+          assets: assets
+            .filter((asset) => asset.type === "image" && asset.dataUrl && asset.filename)
+            .map((asset) => ({
+              dataUrl: asset.dataUrl,
+              filename: asset.filename,
+              placement: asset.placement
+            })),
+          expectedPageCount,
+          tex
+        }),
+        headers: {
+          ...(serviceToken ? { Authorization: `Bearer ${serviceToken}` } : {}),
+          "Content-Type": "application/json"
+        },
+        method: "POST"
+      },
+      remoteCompilerTimeoutMs
+    );
+  } catch (error) {
+    return {
+      compilerStatus: "compile_failed",
+      error:
+        error instanceof Error && error.name === "AbortError"
+          ? "The external LaTeX compiler timed out. Increase the Lambda timeout/memory or try a shorter lesson."
+          : `Could not reach the external LaTeX compiler service: ${
+              error instanceof Error ? error.message : "network request failed"
+            }`,
+      ok: false
+    };
+  }
+
   const payload = await readJsonResponse(response);
 
   if (!response.ok) {

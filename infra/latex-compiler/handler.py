@@ -28,8 +28,11 @@ def response(status_code, payload):
 
 
 def parse_event(event):
-    if event.get("requestContext", {}).get("http", {}).get("method") == "OPTIONS":
+    method = event.get("requestContext", {}).get("http", {}).get("method")
+    if method == "OPTIONS":
         return "options", {}
+    if method == "GET":
+        return "health", {}
 
     headers = {str(k).lower(): v for k, v in (event.get("headers") or {}).items()}
     expected_token = os.environ.get("LATEX_COMPILE_SERVICE_TOKEN", "").strip()
@@ -135,6 +138,8 @@ def handler(event, context):
         method, body = parse_event(event)
         if method == "options":
             return response(200, {"ok": True})
+        if method == "health":
+            return response(200, {"ok": True, "service": "novasprout-latex-compiler"})
         return response(200, compile_latex(body))
     except PermissionError as error:
         return response(401, {"error": str(error)})
