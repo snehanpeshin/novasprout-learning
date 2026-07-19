@@ -410,20 +410,32 @@ export const resourceItems = [
 
 export const pricingPlans = [
   {
+    title: "Free Tutoring Demo",
+    price: "Free",
+    copy: "A short introductory online demo to discuss the student's needs, subject, schedule, and tutoring fit.",
+    features: ["Introductory online session", "Subject and goal review", "No payment required"]
+  },
+  {
     paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_ONE_HOUR_TUTORING_PAYMENT_LINK,
     productKey: "tutoring_session",
-    title: "AI Tutor Single Class",
-    price: "$40-$60 / 1 hour",
-    copy: "One live online tutoring class supported by an AI-generated lesson deck, guided practice, and a quick assessment.",
-    features: ["1-hour live online tutor session", "AI-generated lesson plan and deck", "Practice questions and follow-up notes"]
+    title: "1 Hour Tutoring",
+    price: "$40-$60 / hour",
+    copy: "One live online tutoring session for homework, concept clarity, test prep, or guided practice.",
+    features: ["Live online tutor session", "Follow-up notes or practice", "AI tutor access can be added for approved users"]
   },
   {
     paymentLink: process.env.NEXT_PUBLIC_STRIPE_NOVASPROUT_MONTHLY_PACKAGE_PAYMENT_LINK,
     productKey: "monthly_subscription",
-    title: "AI Tutor Monthly Plan",
+    title: "Monthly Tutoring Plan",
     price: "$199-$499 / month",
-    copy: "Ongoing AI-supported tutoring with recurring live sessions, generated lessons, timed quizzes, and progress follow-up.",
-    features: ["Recurring live tutoring support", "Personalized AI lesson materials", "Monthly practice and progress rhythm"]
+    copy: "Recurring support based on subject, goals, session frequency, and learning plan.",
+    features: ["Weekly or flexible tutoring", "Session notes and practice", "Approved email can unlock protected AI tutor tools"]
+  },
+  {
+    title: "Locked AI Tutor Access",
+    price: "Protected access",
+    copy: "AI-generated lesson decks, personalized explanations, timed quizzes, and study plans for approved users.",
+    features: ["Unlock by access code", "Unlock by approved paid-user email", "Designed to support, not replace, live tutoring"]
   }
 ] satisfies Array<{
   copy: string;

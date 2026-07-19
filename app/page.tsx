@@ -45,11 +45,11 @@ export default function Home() {
       <section className="demo-strip" aria-label="NovaSprout AI tutor launch">
         <div className="demo-track">
           <span>AI tutor launch: personalized lesson decks, live tutoring, timed quiz</span>
-          <span>Try a single 1-hour AI-supported class</span>
-          <span>Monthly AI tutor plans for ongoing support</span>
+          <span>Normal tutoring demo, 1-hour, and monthly plans available</span>
+          <span>AI tutor locked by access code or approved paid email</span>
           <span>AI tutor launch: personalized lesson decks, live tutoring, timed quiz</span>
-          <span>Try a single 1-hour AI-supported class</span>
-          <span>Monthly AI tutor plans for ongoing support</span>
+          <span>Normal tutoring demo, 1-hour, and monthly plans available</span>
+          <span>AI tutor locked by access code or approved paid email</span>
         </div>
       </section>
 
@@ -58,8 +58,9 @@ export default function Home() {
           <p className="eyebrow">AI tutor launch</p>
           <h1>AI-Supported Online Tutoring With Live Human Guidance.</h1>
           <p className="hero-text">
-            NovaSprout Learning now combines live online tutoring with AI-generated lesson decks,
-            timed quizzes, guided practice, and follow-up notes for math, science, coding, and study skills.
+            NovaSprout Learning keeps normal online tutoring simple: free demo, 1-hour sessions,
+            and monthly plans. Approved users can also unlock AI-generated lesson decks, timed
+            quizzes, guided practice, and follow-up notes.
           </p>
           <div className="hero-highlights" aria-label="Tutoring benefits">
             <span>
@@ -81,7 +82,7 @@ export default function Home() {
           </div>
           <div className="hero-actions">
             <a className="button primary" href="/ai-lesson-generator">
-              Try AI Tutor
+              Unlock AI Tutor
               <ArrowRight aria-hidden="true" size={18} />
             </a>
             <TrackedLink className="button primary" eventName="book_meeting_click" href={bookingUrl} target="_blank">
@@ -89,7 +90,7 @@ export default function Home() {
               Book AI Tutor Demo
             </TrackedLink>
             <a className="button secondary" href="/pricing">
-              View AI Tutor Plans
+              View Tutoring Plans
             </a>
           </div>
         </div>
@@ -243,27 +244,43 @@ export default function Home() {
       <section className="section compact-section" id="pricing-summary">
         <div className="section-heading">
           <p className="eyebrow">Pricing summary</p>
-          <h2>Two ways to start with AI-supported tutoring.</h2>
+          <h2>Keep normal tutoring plans, with AI tutor access protected.</h2>
           <p>
-            Choose a single live AI tutor class or a monthly AI-supported tutoring plan. Questions
-            before checkout can still come by email or demo booking.
+            Start with a free demo, a 1-hour tutoring session, or a monthly tutoring plan. AI tutor
+            tools stay locked behind an access code or approved paid-user email.
           </p>
         </div>
-        <div className="pricing-grid pricing-grid-two">
+        <div className="pricing-grid">
           <article className="price-card">
-            <h3>AI Tutor Single Class</h3>
-            <strong>$40-$60 / 1 hour</strong>
-            <p>One live online class with an AI-generated lesson deck, guided practice, and follow-up notes.</p>
-            <a className="button primary full" href="/pricing">
-              Buy 1-Hour Class
+            <h3>Free Tutoring Demo</h3>
+            <strong>Free</strong>
+            <p>A short online demo to discuss the student&apos;s needs, subject, schedule, and fit.</p>
+            <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
+              Book Free Demo
+            </TrackedLink>
+          </article>
+          <article className="price-card">
+            <h3>1 Hour Tutoring</h3>
+            <strong>$40-$60 / hour</strong>
+            <p>One live online session for homework, concept clarity, test prep, or guided practice.</p>
+            <a className="button secondary full" href="/pricing">
+              View Checkout
             </a>
           </article>
           <article className="price-card">
-            <h3>AI Tutor Monthly Plan</h3>
+            <h3>Monthly Tutoring Plan</h3>
             <strong>$199-$499 / month</strong>
-            <p>Recurring tutoring with personalized AI lessons, timed checks, progress rhythm, and practice.</p>
+            <p>Recurring tutoring based on subject, goals, frequency, and learning plan.</p>
             <a className="button secondary full" href="/pricing">
               View Monthly Plan
+            </a>
+          </article>
+          <article className="price-card">
+            <h3>Locked AI Tutor Access</h3>
+            <strong>Code or approved email</strong>
+            <p>AI lesson decks, timed quizzes, and study plans for approved users.</p>
+            <a className="button secondary full" href="/ai-lesson-generator">
+              Unlock AI Tutor
             </a>
           </article>
         </div>
@@ -287,10 +304,10 @@ export default function Home() {
       <section className="booking-section" id="book">
         <div className="booking-copy">
           <p className="eyebrow">Start</p>
-          <h2>Start With an AI Tutor Plan or Ask a Question First.</h2>
+          <h2>Start With Tutoring, Then Unlock AI Support When Ready.</h2>
           <p>
-            Try the AI lesson generator, book a demo, or choose a single class/monthly plan. Tell us
-            the subject, grade or level, current challenge, and preferred schedule.
+            Book a demo, choose a 1-hour/monthly tutoring plan, or request AI access. Tell us the
+            subject, grade or level, current challenge, and preferred schedule.
           </p>
           <ul>
             <li>
@@ -309,7 +326,7 @@ export default function Home() {
         </div>
         <div className="booking-actions">
           <a className="button primary full" href="/pricing">
-            View AI Tutor Plans
+            View Tutoring Plans
             <ArrowRight aria-hidden="true" size={18} />
           </a>
           <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">

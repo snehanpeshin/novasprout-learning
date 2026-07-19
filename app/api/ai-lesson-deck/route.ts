@@ -4,6 +4,7 @@ import { tmpdir } from "os";
 import path from "path";
 import { promisify } from "util";
 import { NextResponse } from "next/server";
+import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -647,11 +648,8 @@ async function compileWithRemoteService({
 }
 
 async function compileDeckRequest(request: Request) {
-  const expectedAccessToken = process.env.AI_LESSON_ACCESS_TOKEN?.trim();
-  const providedAccessToken = request.headers.get("x-ai-access-token")?.trim();
-
-  if (!expectedAccessToken || providedAccessToken !== expectedAccessToken) {
-    return NextResponse.json({ error: "Enter the NovaSprout AI access code to compile lesson decks." }, { status: 401 });
+  if (!isAiAccessAllowed(request)) {
+    return NextResponse.json({ error: aiAccessError }, { status: 401 });
   }
 
   let body: LessonDeckRequest;

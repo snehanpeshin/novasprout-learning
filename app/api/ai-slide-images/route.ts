@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 
 export const runtime = "nodejs";
 
@@ -35,15 +36,13 @@ async function readJsonResponse(response: Response) {
 
 export async function POST(request: Request) {
   const apiKey = process.env.OPENAI_API_KEY;
-  const expectedAccessToken = process.env.AI_LESSON_ACCESS_TOKEN?.trim();
-  const providedAccessToken = request.headers.get("x-ai-access-token")?.trim();
 
   if (!apiKey) {
     return NextResponse.json({ error: "OPENAI_API_KEY is not configured." }, { status: 500 });
   }
 
-  if (!expectedAccessToken || providedAccessToken !== expectedAccessToken) {
-    return NextResponse.json({ error: "Enter the NovaSprout AI access code to use this tool." }, { status: 401 });
+  if (!isAiAccessAllowed(request)) {
+    return NextResponse.json({ error: aiAccessError }, { status: 401 });
   }
 
   let body: ImageAssetRequest;

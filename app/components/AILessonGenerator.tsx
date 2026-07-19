@@ -1246,7 +1246,7 @@ export default function AILessonGenerator() {
     event.preventDefault();
     const cleanedToken = accessToken.trim();
     if (!cleanedToken) {
-      setError("Enter the AI access code.");
+      setError("Enter the AI access code or approved paid-user email.");
       return;
     }
 
@@ -1344,11 +1344,11 @@ Interested in: Free trial / Paid AI-generated lessons
         >
           <X aria-hidden="true" size={18} />
         </button>
-        <p className="eyebrow">Free AI access</p>
-        <h3 id="ai-access-title">Try AI-generated tutoring lessons.</h3>
+        <p className="eyebrow">Locked AI tutor</p>
+        <h3 id="ai-access-title">Unlock AI-generated tutoring lessons.</h3>
         <p>
-          Enter an email or phone number to request free access. Paid AI-generated lesson access is
-          available from the pricing page when you want regular use.
+          Enter an email or phone number to request access. Paid users can unlock the AI tutor with
+          their approved email address after NovaSprout adds it to the access list.
         </p>
         <label>
           Email or phone
@@ -1363,7 +1363,7 @@ Interested in: Free trial / Paid AI-generated lessons
           <Gift aria-hidden="true" size={18} />
         </button>
         <a className="button secondary full" href="/pricing">
-          View Paid AI Access
+          View Tutoring Plans
           <CreditCard aria-hidden="true" size={18} />
         </a>
         <a className="text-link popup-mail-link" href={requestAccessHref}>
@@ -1380,20 +1380,20 @@ Interested in: Free trial / Paid AI-generated lessons
         <section className="section demo-generator-section" id="generator">
         <div className="section-heading">
           <p className="eyebrow">Protected AI tutoring tools</p>
-          <h2>Enter the NovaSprout access code to generate lessons and exams.</h2>
+          <h2>Enter the NovaSprout access code or approved paid-user email.</h2>
           <p>
-            This keeps OpenAI usage controlled while still allowing selected students, parents, and tutors
-            to preview personalized AI-supported tutoring.
+            This keeps OpenAI usage controlled while allowing selected students, parents, tutors,
+            and paid users to generate personalized AI-supported lessons.
           </p>
         </div>
         <form className="ai-access-card" onSubmit={unlockTools}>
           <LockKeyhole aria-hidden="true" size={34} />
           <label>
-            AI access code
+            AI access code or paid email
             <input
               onChange={(event) => setAccessToken(event.target.value)}
-              placeholder="Enter access code"
-              type="password"
+              placeholder="Access code or paid@email.com"
+              type="text"
               value={accessToken}
             />
           </label>
