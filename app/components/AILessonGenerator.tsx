@@ -122,6 +122,7 @@ type SubjectTheme = {
 
 const accessStorageKey = "novasprout_ai_access_token";
 const leadStorageKey = "novasprout_ai_lead";
+const lessonGenerationAttempts = 3;
 const assetPlanningTimeoutMs = 285000;
 const imageGenerationTimeoutMs = 285000;
 const minimumBuildStageMs = {
@@ -1576,38 +1577,62 @@ export default function AILessonGenerator() {
     setIsGenerating(true);
 
     try {
-      const response = await fetch("/api/ai-lesson", {
-        body: JSON.stringify({
-          difficulty,
-          duration,
-          goal,
-          grade,
-          includeInLesson,
-          language: lessonLanguage,
-          level,
-          mode,
-          studentQuestion,
-          subject,
-          teachingStyle,
-          topic
-        }),
-        headers: {
-          "Content-Type": "application/json",
-          "x-ai-access-token": accessToken.trim()
-        },
-        method: "POST"
-      });
-      const responseText = await response.text();
       let data: { error?: string; lesson?: GeneratedLesson; lessonText?: string; warning?: string } = {};
+      let lastGenerationError = "";
 
-      try {
-        data = responseText ? JSON.parse(responseText) : {};
-      } catch {
-        throw new Error(responseText || "The AI lesson service returned an unreadable response.");
-      }
+      for (let attempt = 1; attempt <= lessonGenerationAttempts; attempt += 1) {
+        setNotice(
+          attempt === 1
+            ? "Generating live AI lesson..."
+            : `The AI service needed more time. Retrying live generation (${attempt}/${lessonGenerationAttempts})...`
+        );
 
-      if (!response.ok) {
-        throw new Error(data.error ? `Lesson generation failed (${response.status}): ${data.error}` : `Could not generate a lesson (${response.status}).`);
+        const response = await fetch("/api/ai-lesson", {
+          body: JSON.stringify({
+            difficulty,
+            duration,
+            goal,
+            grade,
+            includeInLesson,
+            language: lessonLanguage,
+            level,
+            mode,
+            studentQuestion,
+            subject,
+            teachingStyle,
+            topic
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            "x-ai-access-token": accessToken.trim()
+          },
+          method: "POST"
+        });
+        const responseText = await response.text();
+
+        try {
+          data = responseText ? JSON.parse(responseText) : {};
+        } catch {
+          if (!response.ok) {
+            data = { error: responseText ? responseText.slice(0, 220) : "The hosting layer returned an unreadable error." };
+          } else {
+            throw new Error(responseText || "The AI lesson service returned an unreadable response.");
+          }
+        }
+
+        if (response.ok) {
+          break;
+        }
+
+        lastGenerationError = data.error
+          ? `Lesson generation failed (${response.status}): ${data.error}`
+          : `Could not generate a lesson (${response.status}).`;
+
+        if (![502, 503, 504].includes(response.status) || attempt === lessonGenerationAttempts) {
+          throw new Error(lastGenerationError);
+        }
+
+        await sleep(1200);
       }
 
       const generatedLesson = data.lesson ?? null;

@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 
 export const runtime = "nodejs";
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 const openAiLessonTimeoutMs = Math.min(
-  285000,
-  Math.max(15000, Number(process.env.OPENAI_LESSON_TIMEOUT_MS ?? 240000))
+  28000,
+  Math.max(15000, Number(process.env.OPENAI_LESSON_TIMEOUT_MS ?? 24000))
 );
 const openAiLessonModel = process.env.OPENAI_MODEL?.trim() || "gpt-4.1-mini";
 
