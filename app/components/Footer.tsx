@@ -8,13 +8,11 @@ export default function Footer() {
         <span>Online tutoring for curious, growing students.</span>
       </div>
       <nav className="footer-links" aria-label="Footer links">
-        <a href="/curriculum-demo">Curriculum Demos</a>
-        <a href="/ai-lesson-generator">AI Lesson Generator</a>
-        <a href="/find-a-tutor">Live Tutoring</a>
-        <a href="/contact">Contact Form</a>
+        <a href="/#services">Services</a>
+        <a href="/ai-lesson-generator">AI Tutor</a>
+        <a href="/#contact">Contact</a>
         <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
         <a href={contactPhoneHref}>{contactPhone}</a>
-        <a href="/become-a-tutor">Become a Tutor</a>
         <a href="/privacy">Privacy Policy</a>
         <a href="/refund-policy">Refund Policy</a>
         <a href="https://www.facebook.com/profile.php?id=61591516287177" target="_blank" rel="noreferrer">

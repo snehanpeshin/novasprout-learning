@@ -1671,7 +1671,7 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
           </button>
           <div className="access-help-actions">
             <a className="text-link" href={requestAccessHref}>Request free access</a>
-            <a className="text-link" href="/pricing">View plans</a>
+            <a className="text-link" href="/#pricing">View plans</a>
           </div>
           {error ? <p className="form-error">{error}</p> : null}
         </form>

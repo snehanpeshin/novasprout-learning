@@ -1,10 +1,5 @@
-import SubjectLanding from "../components/SubjectLanding";
-
-export const metadata = {
-  title: "Math Tutoring | NovaSprout Learning",
-  description: "Online math tutoring for confidence, homework, algebra basics, word problems, and steady school progress."
-};
+import { redirect } from "next/navigation";
 
 export default function MathTutoringPage() {
-  return <SubjectLanding slug="math-tutoring" />;
+  redirect("/#subjects");
 }

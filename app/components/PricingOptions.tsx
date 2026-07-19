@@ -54,7 +54,7 @@ export default function PricingOptions() {
                     </TrackedLink>
                   ) : null}
                   {plan.action === "contact" ? (
-                    <a className="button primary full" href="/contact">
+                    <a className="button primary full" href="/#contact">
                       Contact to Start
                       <ArrowRight aria-hidden="true" size={18} />
                     </a>

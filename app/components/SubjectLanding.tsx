@@ -24,8 +24,8 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
         <nav aria-label="Main navigation">
           <a href="/#subjects">Subjects</a>
           <a href="/ai-lesson-generator">AI Tutor</a>
-          <a href="/find-a-tutor">Live Tutoring</a>
-          <a href="/pricing">Pricing</a>
+          <a href="/#services">Live Tutoring</a>
+          <a href="/#pricing">Pricing</a>
         </nav>
       </header>
 
@@ -50,7 +50,7 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
               Book a Free Demo
               <ArrowRight aria-hidden="true" size={18} />
             </TrackedLink>
-            <a className="button secondary" href="/pricing">
+            <a className="button secondary" href="/#pricing">
               <CreditCard aria-hidden="true" size={18} />
               View pricing
             </a>
@@ -88,7 +88,7 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
           <p>
             Live tutoring is a flat $20 per class, including recurring weekly or monthly schedules.
           </p>
-          <a className="button secondary" href="/pricing">
+          <a className="button secondary" href="/#pricing">
             <CreditCard aria-hidden="true" size={18} />
             View pricing details
           </a>

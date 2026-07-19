@@ -20,9 +20,9 @@ export default function AILessonGeneratorPage() {
         </a>
         <nav aria-label="Main navigation">
           <a href="/#subjects">Subjects</a>
-          <a href="/find-a-tutor">Live Tutoring</a>
+          <a href="/#services">Live Tutoring</a>
           <a href="#how-ai-tutor-works">How it works</a>
-          <a href="/pricing">Pricing</a>
+          <a href="/#pricing">Pricing</a>
           <TrackedLink className="nav-cta" eventName="book_meeting_click" href={bookingUrl} target="_blank">
             Book Live Demo
           </TrackedLink>
@@ -38,7 +38,7 @@ export default function AILessonGeneratorPage() {
             Create a Lesson
             <ArrowRight aria-hidden="true" size={18} />
           </a>
-          <a className="button secondary" href="/pricing">View Plans</a>
+          <a className="button secondary" href="/#pricing">View Plans</a>
         </div>
       </section>
 

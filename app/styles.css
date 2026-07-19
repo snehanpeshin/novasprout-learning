@@ -25,7 +25,12 @@ html {
 }
 
 #generator,
-#how-ai-tutor-works {
+#how-ai-tutor-works,
+#services,
+#subjects,
+#how-it-works,
+#pricing,
+#contact {
   scroll-margin-top: 72px;
 }
 
@@ -412,6 +417,85 @@ h3 {
   color: var(--muted);
   line-height: 1.65;
   margin: 0 0 18px;
+}
+
+.centered-heading {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.single-page-section,
+.single-page-pricing {
+  background: var(--white);
+}
+
+.single-page-subjects {
+  background: #fff9df;
+  border-bottom: 1px solid #f1df9c;
+  border-top: 1px solid #f1df9c;
+}
+
+.single-page-subject-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 26px;
+}
+
+.single-page-subject {
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #e9d786;
+  border-radius: 8px;
+  display: flex;
+  gap: 13px;
+  min-width: 0;
+  padding: 18px;
+}
+
+.single-page-subject > svg {
+  color: var(--blue);
+  flex: 0 0 auto;
+}
+
+.single-page-subject h3 {
+  margin-bottom: 5px;
+}
+
+.single-page-subject p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.single-page-process {
+  background: #eef8f5;
+}
+
+.concise-pricing-grid .price-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 260px;
+}
+
+.concise-pricing-grid .price-card > p {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.concise-pricing-grid .price-card .button {
+  margin-top: auto;
+}
+
+.single-page-contact {
+  background: #f4f9fd;
+  border-top: 1px solid #cfe4f4;
+}
+
+.single-page-contact .contact-page-copy {
+  position: static;
 }
 
 .subject-grid,
@@ -2109,18 +2193,6 @@ h3 {
   gap: 7px;
 }
 
-.contact-form .field-label {
-  align-items: baseline;
-  display: flex;
-  gap: 7px;
-}
-
-.contact-form .field-label small {
-  color: var(--muted);
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
 .contact-form input,
 .contact-form select,
 .contact-form textarea {
@@ -2487,6 +2559,7 @@ footer div span:first-child {
   }
 
   .subject-grid,
+  .single-page-subject-grid,
   .pricing-grid,
   .feature-grid,
   .support-grid,
@@ -2616,6 +2689,10 @@ footer div span:first-child {
   .metric-grid,
   .admin-grid,
   .steps {
+    grid-template-columns: 1fr;
+  }
+
+  .single-page-subject-grid {
     grid-template-columns: 1fr;
   }
 

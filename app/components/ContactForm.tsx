@@ -13,15 +13,11 @@ export default function ContactForm() {
     const data = new FormData(form);
     const name = String(data.get("name") ?? "").trim();
     const email = String(data.get("email") ?? "").trim();
-    const phone = String(data.get("phone") ?? "").trim();
-    const service = String(data.get("service") ?? "General question").trim();
     const message = String(data.get("message") ?? "").trim();
-    const subject = `NovaSprout inquiry: ${service}`;
+    const subject = "NovaSprout Learning inquiry";
     const body = [
       `Name: ${name}`,
       `Email: ${email}`,
-      `Phone: ${phone || "Not provided"}`,
-      `Interested in: ${service}`,
       "",
       message
     ].join("\n");
@@ -41,21 +37,6 @@ export default function ContactForm() {
           <label>
             Email
             <input autoComplete="email" maxLength={120} name="email" required type="email" />
-          </label>
-          <label>
-            <span className="field-label">Phone <small>Optional</small></span>
-            <input autoComplete="tel" maxLength={30} name="phone" type="tel" />
-          </label>
-          <label>
-            Interested in
-            <select defaultValue="Live Tutoring" name="service">
-              <option>Live Tutoring</option>
-              <option>AI Tutor</option>
-              <option>Free Live Demo</option>
-              <option>Monthly Tutoring</option>
-              <option>Becoming a Tutor</option>
-              <option>General Question</option>
-            </select>
           </label>
         </div>
         <label>
