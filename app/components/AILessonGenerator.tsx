@@ -124,6 +124,13 @@ const accessStorageKey = "novasprout_ai_access_token";
 const leadStorageKey = "novasprout_ai_lead";
 const assetPlanningTimeoutMs = 18000;
 const imageGenerationTimeoutMs = 240000;
+const minimumBuildStageMs = {
+  compile: 7000,
+  images: 12000,
+  latex: 1800,
+  quality: 2500,
+  visuals: 4500
+};
 
 const grades = [
   "Grade 3",
@@ -212,6 +219,17 @@ function getSubjectTheme(subject: string): SubjectTheme {
 
 function countTextChunks(value?: string, maxLength = 360, maxChunks = 4) {
   return planningTextChunks(value, maxLength, maxChunks).length;
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function waitForMinimumElapsed(startedAt: number, minimumMs: number) {
+  const remainingMs = minimumMs - (Date.now() - startedAt);
+  if (remainingMs > 0) {
+    await sleep(remainingMs);
+  }
 }
 
 function planningTextChunks(value?: string, maxLength = 360, maxChunks = 4) {
@@ -904,6 +922,7 @@ function StudentSlideDeck({
     setAssetError("");
     setDeckStage("Planning visuals");
     setIsPlanningAssets(true);
+    const stageStartedAt = Date.now();
 
     try {
       const response = await fetchWithTimeout("/api/ai-slide-assets", {
@@ -922,10 +941,12 @@ function StudentSlideDeck({
         response,
         "Could not create the slide asset plan."
       );
+      await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.visuals);
       setAssets(data.assets ?? []);
       setDeckStage("Visual plan ready");
       return data.assets ?? [];
     } catch (error) {
+      await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.visuals);
       setAssetError("");
       setDeckStage("Visual planning skipped");
       return null;
@@ -938,6 +959,7 @@ function StudentSlideDeck({
     setAssetError("");
     setDeckStage("Generating images");
     setIsGeneratingImages(true);
+    const stageStartedAt = Date.now();
 
     try {
       const response = await fetchWithTimeout("/api/ai-slide-images", {
@@ -971,10 +993,12 @@ function StudentSlideDeck({
         throw new Error(`${missingImages.length} planned image asset${missingImages.length === 1 ? "" : "s"} did not return PNG data.`);
       }
 
+      await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.images);
       setAssets(mergedAssets);
       setDeckStage("Images ready");
       return mergedAssets;
     } catch (error) {
+      await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.images);
       setAssetError(error instanceof Error ? `Generated images skipped: ${error.message}` : "Generated images skipped.");
       setDeckStage("Images skipped");
       return null;
@@ -988,6 +1012,7 @@ function StudentSlideDeck({
     setCompiledDeck(null);
     setDeckStage("Compiling PDF");
     setIsCompilingDeck(true);
+    const stageStartedAt = Date.now();
 
     try {
       const response = await fetch("/api/ai-lesson-deck", {
@@ -1018,16 +1043,19 @@ function StudentSlideDeck({
 
       setCompiledDeck(data);
       setPdfPage(1);
+      await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.compile);
       if (!response.ok && data.error) {
         setAssetError(data.error);
       } else if (!response.ok) {
         setAssetError("Could not compile the LaTeX deck.");
       } else {
         setDeckStage("Checking quality");
-        window.setTimeout(() => setDeckStage("Ready"), 250);
+        await sleep(minimumBuildStageMs.quality);
+        setDeckStage("Ready");
       }
       return response.ok ? data : null;
     } catch (error) {
+      await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.compile);
       setAssetError(error instanceof Error ? error.message : "Could not compile the LaTeX deck.");
       return null;
     } finally {
@@ -1042,6 +1070,7 @@ function StudentSlideDeck({
 
     try {
       setDeckStage("Generating LaTeX");
+      await sleep(minimumBuildStageMs.latex);
       const plannedAssets = await planSlideAssets();
       const safePlannedAssets = plannedAssets ?? [];
 
