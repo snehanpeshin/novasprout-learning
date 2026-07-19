@@ -210,30 +210,48 @@ function getSubjectTheme(subject: string): SubjectTheme {
 }
 
 function countTextChunks(value?: string, maxLength = 360, maxChunks = 4) {
+  return planningTextChunks(value, maxLength, maxChunks).length;
+}
+
+function planningTextChunks(value?: string, maxLength = 360, maxChunks = 4) {
   const text = (value ?? "").replace(/\s+/g, " ").trim();
   if (!text) {
-    return 0;
+    return [];
   }
 
   const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
-  let chunks = 0;
+  const chunks: string[] = [];
   let current = "";
 
   sentences.forEach((sentence) => {
-    if (chunks >= maxChunks) {
+    if (chunks.length >= maxChunks) {
       return;
     }
 
     const next = current ? `${current} ${sentence}` : sentence;
     if (next.length > maxLength && current) {
-      chunks += 1;
+      chunks.push(current);
       current = sentence;
     } else {
       current = next;
     }
   });
 
-  return Math.min(maxChunks, chunks + (current ? 1 : 0)) || 1;
+  if (current && chunks.length < maxChunks) {
+    chunks.push(current);
+  }
+
+  return chunks.length ? chunks : [text.slice(0, maxLength)];
+}
+
+function planningTeachingTitle(prefix: string, text: string, index: number) {
+  const words = text
+    .replace(/[^\w\s:+\-/%]/g, "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 7)
+    .join(" ");
+  return words ? `${prefix}: ${words}` : `${prefix} ${index + 1}`;
 }
 
 function countItemChunks(items?: string[], size = 3, maxChunks = 4) {
@@ -255,31 +273,31 @@ function subjectVisualTitles(subject: string) {
 }
 
 function pdfDeckPlanningTitles(lesson: GeneratedLesson, subject: string) {
-  const titles = [lesson.title ?? "NovaSprout Lesson"];
+  const titles = [`Learn ${lesson.title ?? "the topic"}`];
   if (lesson.warmUp) {
-    titles.push("Warm-Up");
+    titles.push("Start by noticing this");
   }
 
-  const conceptCount = countTextChunks(lesson.conceptExplanation, 360, 4);
-  Array.from({ length: Math.min(2, conceptCount) }).forEach((_, index) => {
-    titles.push(index === 0 ? "Core Idea" : `Core Idea ${index + 1}`);
+  const conceptChunks = planningTextChunks(lesson.conceptExplanation, 360, 4);
+  conceptChunks.slice(0, 2).forEach((chunk, index) => {
+    titles.push(planningTeachingTitle("Understand", chunk, index));
   });
   titles.push(...subjectVisualTitles(subject));
-  Array.from({ length: Math.max(0, conceptCount - 2) }).forEach((_, index) => {
-    titles.push(`Core Idea ${index + 3}`);
+  conceptChunks.slice(2).forEach((chunk, index) => {
+    titles.push(planningTeachingTitle("Understand", chunk, index + 2));
   });
 
-  Array.from({ length: countTextChunks(lesson.guidedExample, 360, 4) }).forEach((_, index) => {
-    titles.push(index === 0 ? "Worked Example" : `Worked Example ${index + 1}`);
+  planningTextChunks(lesson.guidedExample, 360, 4).forEach((chunk, index) => {
+    titles.push(planningTeachingTitle("Example step", chunk, index));
   });
-  Array.from({ length: Math.min(2, lesson.fullLessonSegments?.filter((segment) => segment.activity?.trim()).length ?? 0) }).forEach((_, index) => {
-    titles.push(index === 0 ? "Guided Activity" : `Guided Activity ${index + 1}`);
+  (lesson.fullLessonSegments ?? []).filter((segment) => segment.activity?.trim()).slice(0, 2).forEach((segment, index) => {
+    titles.push(planningTeachingTitle("Tutor-guided move", segment.activity ?? "", index));
   });
   Array.from({ length: countItemChunks(lesson.practiceQuestions, 3, 4) }).forEach((_, index) => {
-    titles.push(index === 0 ? "Practice Set" : `Practice Set ${index + 1}`);
+    titles.push(index === 0 ? "Try these problems" : `Practice round ${index + 1}`);
   });
   Array.from({ length: countItemChunks(lesson.quickAssessment, 3, 2) }).forEach((_, index) => {
-    titles.push(index === 0 ? "Quick Check" : `Quick Check ${index + 1}`);
+    titles.push(index === 0 ? "Show what you know" : `Final check ${index + 1}`);
   });
   if (lesson.recommendedNextSession) {
     titles.push("Next Practice");

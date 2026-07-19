@@ -166,7 +166,7 @@ Lesson details:
 - Practice: ${(body.lesson?.practiceQuestions ?? []).slice(0, 4).join(" | ")}
 - Quick checks: ${(body.lesson?.quickAssessment ?? []).join(" | ")}
 
-Return a compact JSON object with 3 to 6 assets total.
+Return a compact JSON object with 8 to 12 assets total.
 Use two asset types:
 - image: a kid-friendly educational diagram prompt, no text labels inside the image
 - latex: a short formula, symbolic relationship, or structured notation when helpful
@@ -187,15 +187,17 @@ lt, ct, rt, lm, cm, rm, lb, cb, rb.
 Example: 1lb means slide 1, left bottom.
 
 Rules:
-- Create at most 2 image assets.
-- Do not put images on every slide.
+- Create 3 to 4 image assets when the topic benefits from diagrams or models.
+- Create latex/notation overlays for as many concept, example, and practice slides as useful.
+- Do not put image assets on every slide, but most slides should have either an image or a latex overlay.
 - Do not create decorative images. Every image must clarify the lesson.
-- Prefer images for the two slides where a visual most improves understanding: concept, diagram, model, graph, experiment, worked example, or practice.
+- Prefer images for slides where a visual most improves understanding: concept, diagram, model, graph, experiment, worked example, or practice.
 - For math, prefer visual models such as bars, number lines, coordinate grids, geometric sketches, or proportional tables.
 - For science, prefer process diagrams, experiment setups, cause/effect models, or observation diagrams.
 - For ELA/study skills, prefer organizing visuals such as flowcharts, annotation models, or planning maps.
 - For coding/data, prefer flow diagrams, input-process-output models, table/chart concepts, or dashboard sketches.
 - Prefer latex for math/science formulas and concise symbolic notation.
+- Use varied indexed placements such as 2rb, 3lb, 4rm, 6cb, 7rt; avoid stacking multiple assets in the same place unless intentional.
 - If no latex is useful for a slide, do not create a latex asset for that slide.
 - Use only slide numbers that exist in the slide-title list.
 - Return only JSON.
@@ -210,7 +212,7 @@ Rules:
       },
       body: JSON.stringify({
         input: prompt,
-        max_output_tokens: 1800,
+        max_output_tokens: 3200,
         model: process.env.OPENAI_MODEL ?? "gpt-5-mini",
         text: {
           format: {

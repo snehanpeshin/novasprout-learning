@@ -11,9 +11,9 @@ export const maxDuration = 60;
 
 const execFileAsync = promisify(execFile);
 const remoteCompilerTimeoutMs = 25000;
-const maxEmbeddedImageAssets = 2;
-const maxEmbeddedImageBytes = 1_400_000;
-const maxRemoteAssetPayloadBytes = 4_200_000;
+const maxEmbeddedImageAssets = 4;
+const maxEmbeddedImageBytes = 1_100_000;
+const maxRemoteAssetPayloadBytes = 3_600_000;
 
 type DeckAsset = {
   assetId?: string;
@@ -109,6 +109,14 @@ function escapeLatex(value?: string) {
     .replace(/\^/g, "\\textasciicircum{}");
 }
 
+function safeInlineLatex(value?: string) {
+  return cleanText(value, 240)
+    .replace(/\\(?:input|include|write|read|openout|openin|usepackage|documentclass|begin|end)\b/gi, "")
+    .replace(/[{}]/g, "")
+    .replace(/[^a-zA-Z0-9\\+\-*/=().,:;_\^\s<>|[\]]/g, "")
+    .trim();
+}
+
 function latexItems(items?: string[]) {
   const safeItems = items?.filter(Boolean).slice(0, 6);
   if (!safeItems?.length) {
@@ -149,7 +157,7 @@ function assetFilename(asset: DeckAsset, index: number) {
 
 function normalizeAssets(assets: DeckAsset[], slideCount: number) {
   const errors: string[] = [];
-  const normalized = assets.slice(0, 10).map((asset, index) => {
+  const normalized = assets.slice(0, 18).map((asset, index) => {
     const slideNumber = assetSlideNumber(asset.placement);
     const position = assetPosition(asset.placement);
     const placement = `${slideNumber}${position}`;
@@ -250,17 +258,21 @@ function frameBody(title: string, body: string, assets: DeckAsset[], slideNumber
       const filename = asset.type === "image" && asset.dataUrl ? asset.filename : "";
 
       if (asset.type === "image" && filename) {
-        return String.raw`\begin{textblock*}{3.2cm}(${position.x},${position.y})
+        return String.raw`\begin{textblock*}{4.3cm}(${position.x},${position.y})
 ${position.anchor}
-\includegraphics[width=2.8cm]{${filename}}
+\includegraphics[width=3.9cm]{${filename}}
 ${asset.caption ? `\\\\{\\scriptsize ${escapeLatex(asset.caption)}}` : ""}
 \end{textblock*}`;
       }
 
       if (asset.type === "latex" && asset.latex) {
+        const latex = safeInlineLatex(asset.latex);
+        if (!latex) {
+          return "";
+        }
         return String.raw`\begin{textblock*}{4cm}(${position.x},${position.y})
 ${position.anchor}
-\fcolorbox{NovaBlue!35}{white}{\parbox{3.45cm}{\centering\small\texttt{${escapeLatex(asset.latex)}}}}
+\fcolorbox{NovaBlue!35}{white}{\parbox{3.45cm}{\centering\Large $${latex}$}}
 \end{textblock*}`;
       }
 
@@ -450,6 +462,16 @@ function textChunks(value?: string, maxLength = 380, maxChunks = 4) {
   return chunks;
 }
 
+function teachingTitle(prefix: string, text: string, index: number) {
+  const words = cleanText(text, 120)
+    .replace(/[^\w\s:+\-/%]/g, "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 7)
+    .join(" ");
+  return words ? `${prefix}: ${words}` : `${prefix} ${index + 1}`;
+}
+
 function itemChunks(items?: string[], size = 3, maxChunks = 4) {
   const cleaned = (items ?? []).map((item) => cleanText(item, 260)).filter(Boolean);
   const chunks: string[][] = [];
@@ -461,17 +483,31 @@ function itemChunks(items?: string[], size = 3, maxChunks = 4) {
 
 function textSlide(title: string, body?: string) {
   return {
-    body: String.raw`\small ${escapeLatex(body)}`,
+    body: String.raw`\begin{block}{Student explanation}
+\small ${escapeLatex(body)}
+\end{block}
+\vfill
+\begin{center}
+\begin{tikzpicture}[scale=0.92]
+\draw[very thick, SubjectAccent, rounded corners] (0,0) rectangle (8.6,0.75);
+\fill[SubjectAccent!18, rounded corners] (0,0) rectangle (2.8,0.75);
+\node at (1.4,0.38) {\scriptsize Notice};
+\node at (4.3,0.38) {\scriptsize Connect};
+\node at (7.1,0.38) {\scriptsize Apply};
+\end{tikzpicture}
+\end{center}`,
     title
   };
 }
 
 function listSlide(title: string, items: string[], ordered = false) {
   return {
-    body: String.raw`${ordered ? "\\begin{enumerate}" : "\\begin{itemize}"}
+    body: String.raw`\begin{block}{Work through these}
+${ordered ? "\\begin{enumerate}" : "\\begin{itemize}"}
 \small
 ${latexItems(items)}
-${ordered ? "\\end{enumerate}" : "\\end{itemize}"}`,
+${ordered ? "\\end{enumerate}" : "\\end{itemize}"}
+\end{block}`,
     title
   };
 }
@@ -479,40 +515,58 @@ ${ordered ? "\\end{enumerate}" : "\\end{itemize}"}`,
 function buildSlideBodies(request: LessonDeckRequest) {
   const lesson = request.lesson ?? {};
   const conceptSlides = textChunks(lesson.conceptExplanation, 360, 4).map((chunk, index) =>
-    textSlide(index === 0 ? "Core Idea" : `Core Idea ${index + 1}`, chunk)
+    textSlide(teachingTitle("Understand", chunk, index), chunk)
   );
   const exampleSlides = textChunks(lesson.guidedExample, 360, 4).map((chunk, index) =>
-    textSlide(index === 0 ? "Worked Example" : `Worked Example ${index + 1}`, chunk)
+    textSlide(teachingTitle("Example step", chunk, index), chunk)
   );
   const practiceSlides = itemChunks(lesson.practiceQuestions, 3, 4).map((items, index) =>
-    listSlide(index === 0 ? "Practice Set" : `Practice Set ${index + 1}`, items, true)
+    listSlide(index === 0 ? "Try these problems" : `Practice round ${index + 1}`, items, true)
   );
   const quickCheckSlides = itemChunks(lesson.quickAssessment, 3, 2).map((items, index) =>
-    listSlide(index === 0 ? "Quick Check" : `Quick Check ${index + 1}`, items, true)
+    listSlide(index === 0 ? "Show what you know" : `Final check ${index + 1}`, items, true)
   );
   const guidedActivitySlides = (lesson.fullLessonSegments ?? [])
     .map((segment) => cleanText(segment.activity, 420))
     .filter(Boolean)
     .slice(0, 2)
-    .map((activity, index) => textSlide(index === 0 ? "Guided Activity" : `Guided Activity ${index + 1}`, activity));
+    .map((activity, index) => textSlide(teachingTitle("Tutor-guided move", activity, index), activity));
   const slides = [
     {
-      body: String.raw`\Large ${escapeLatex(request.context?.topic ?? lesson.title ?? "NovaSprout Lesson")}
+      body: String.raw`\begin{columns}[T]
+\begin{column}{0.58\textwidth}
+\Large ${escapeLatex(request.context?.topic ?? lesson.title ?? "NovaSprout Lesson")}
 \vspace{0.8em}
 
 \small ${escapeLatex(lesson.studentFit)}
-\vspace{0.8em}
-
-\begin{block}{Focus}
+\end{column}
+\begin{column}{0.36\textwidth}
+\begin{block}{Today you will}
 \begin{itemize}
+\small
 ${latexItems((lesson.learningObjectives ?? []).slice(0, 3))}
 \end{itemize}
 \end{block}
+\end{column}
+\end{columns}
+\vspace{0.8em}
+
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+\node[draw, rounded corners, fill=SubjectAccent!12, minimum width=2.2cm, minimum height=0.7cm] (a) {See};
+\node[draw, rounded corners, fill=NovaMint!12, right=0.55cm of a, minimum width=2.2cm, minimum height=0.7cm] (b) {Explain};
+\node[draw, rounded corners, fill=SubjectAccent!12, right=0.55cm of b, minimum width=2.2cm, minimum height=0.7cm] (c) {Practice};
+\node[draw, rounded corners, fill=NovaMint!12, right=0.55cm of c, minimum width=2.2cm, minimum height=0.7cm] (d) {Check};
+\draw[->, thick, SubjectAccent] (a) -- (b);
+\draw[->, thick, SubjectAccent] (b) -- (c);
+\draw[->, thick, SubjectAccent] (c) -- (d);
+\end{tikzpicture}
+\end{center}
 \vfill
 \small NovaSprout Learning`,
-      title: lesson.title ?? "NovaSprout Lesson"
+      title: `Learn ${request.context?.topic ?? lesson.title ?? "the topic"}`
     },
-    ...(lesson.warmUp ? [textSlide("Warm-Up", lesson.warmUp)] : []),
+    ...(lesson.warmUp ? [textSlide("Start by noticing this", lesson.warmUp)] : []),
     ...conceptSlides.slice(0, 2),
     ...subjectVisualSlides(request),
     ...conceptSlides.slice(2),
