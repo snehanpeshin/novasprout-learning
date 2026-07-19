@@ -5,7 +5,10 @@ import re
 import shutil
 import subprocess
 import tempfile
+import uuid
 from pathlib import Path
+
+import boto3
 
 
 MAX_TEX_BYTES = 220_000
@@ -92,6 +95,32 @@ def page_count(work_dir):
         return len(re.findall(rb"/Type\s*/Page\b", pdf_bytes))
 
 
+def pdf_response(pdf_bytes, metadata):
+    bucket = os.environ.get("PDF_OUTPUT_BUCKET", "").strip()
+    if bucket:
+        key_prefix = os.environ.get("PDF_OUTPUT_PREFIX", "compiled-lessons").strip().strip("/")
+        key = f"{key_prefix}/{uuid.uuid4()}.pdf"
+        s3 = boto3.client("s3")
+        s3.put_object(
+            Bucket=bucket,
+            Key=key,
+            Body=pdf_bytes,
+            ContentType="application/pdf",
+            ServerSideEncryption="AES256",
+        )
+        url = s3.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket, "Key": key},
+            ExpiresIn=int(os.environ.get("PDF_URL_EXPIRES_SECONDS", "3600")),
+        )
+        return {**metadata, "pdfUrl": url}
+
+    return {
+        **metadata,
+        "pdfDataUrl": "data:application/pdf;base64," + base64.b64encode(pdf_bytes).decode("ascii"),
+    }
+
+
 def compile_latex(body):
     tex = str(body.get("tex", ""))
     expected_page_count = int(body.get("expectedPageCount") or 0)
@@ -121,14 +150,13 @@ def compile_latex(body):
       if len(pdf_bytes) < 1000:
           warnings.append("Compiled PDF is unexpectedly small.")
 
-      return {
+      return pdf_response(pdf_bytes, {
           "assetManifest": written_assets,
           "compilerName": compiler,
           "pageCount": pages,
-          "pdfDataUrl": "data:application/pdf;base64," + base64.b64encode(pdf_bytes).decode("ascii"),
           "pdfSize": len(pdf_bytes),
           "warnings": warnings,
-      }
+      })
     finally:
       shutil.rmtree(work_dir, ignore_errors=True)
 

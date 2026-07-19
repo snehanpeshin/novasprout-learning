@@ -214,6 +214,146 @@ ${assetTex}
 \end{frame}`;
 }
 
+function subjectVisualSlides(request: LessonDeckRequest) {
+  const subject = cleanText(request.context?.subject, 80).toLowerCase();
+  const topic = escapeLatex(request.context?.topic ?? "this topic");
+
+  if (subject.includes("science")) {
+    return [
+      {
+        body: String.raw`\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+\begin{block}{Claim}
+What do we think is true about ${topic}?
+\end{block}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{block}{Evidence}
+What observation, data, or example supports it?
+\end{block}
+\end{column}
+\begin{column}{0.32\textwidth}
+\begin{block}{Reasoning}
+Why does the evidence support the claim?
+\end{block}
+\end{column}
+\end{columns}
+\vspace{0.5em}
+\begin{center}
+\begin{tikzpicture}[scale=0.85]
+\draw[thick,SubjectAccent] (0,0) circle (0.55);
+\draw[thick,SubjectAccent,->] (0.65,0) -- (2.2,0);
+\draw[thick,SubjectAccent] (2.8,0) circle (0.55);
+\draw[thick,SubjectAccent,->] (3.45,0) -- (5,0);
+\draw[thick,SubjectAccent] (5.6,0) circle (0.55);
+\node at (0,-1.05) {\small Observe};
+\node at (2.8,-1.05) {\small Explain};
+\node at (5.6,-1.05) {\small Apply};
+\end{tikzpicture}
+\end{center}`,
+        title: "Visual Reasoning Model"
+      }
+    ];
+  }
+
+  if (subject.includes("ela") || subject.includes("english") || subject.includes("study")) {
+    return [
+      {
+        body: String.raw`\begin{columns}[T]
+\begin{column}{0.45\textwidth}
+\begin{block}{Read}
+Find the key sentence, question, or instruction.
+\end{block}
+\begin{block}{Think}
+Ask: What is the main idea? What evidence matters?
+\end{block}
+\end{column}
+\begin{column}{0.45\textwidth}
+\begin{block}{Explain}
+Answer in your own words with one clear reason.
+\end{block}
+\begin{center}
+\Large Main Idea $\rightarrow$ Evidence $\rightarrow$ Explanation
+\end{center}
+\end{column}
+\end{columns}`,
+        title: "Study Strategy Map"
+      }
+    ];
+  }
+
+  if (subject.includes("coding") || subject.includes("data")) {
+    return [
+      {
+        body: String.raw`\begin{center}
+\begin{tikzpicture}[node distance=1.1cm, every node/.style={draw, rounded corners, thick, minimum width=2.4cm, minimum height=0.8cm}]
+\node[fill=SubjectAccent!12] (input) {Input};
+\node[fill=SubjectAccent!12, right=of input] (process) {Process};
+\node[fill=SubjectAccent!12, right=of process] (output) {Output};
+\draw[->, thick, SubjectAccent] (input) -- (process);
+\draw[->, thick, SubjectAccent] (process) -- (output);
+\end{tikzpicture}
+\end{center}
+\begin{block}{Debugging question}
+If the output is wrong, check one step at a time: input, rule, then result.
+\end{block}`,
+        title: "Input Process Output"
+      }
+    ];
+  }
+
+  return [
+    {
+      body: String.raw`\begin{columns}[T]
+\begin{column}{0.45\textwidth}
+\begin{block}{Ratio}
+\[
+a:b = \frac{a}{b}
+\]
+A ratio compares two quantities.
+\end{block}
+\begin{block}{Proportion}
+\[
+\frac{a}{b}=\frac{c}{d} \quad \Rightarrow \quad ad=bc
+\]
+Equivalent ratios keep the same relationship.
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.72]
+\foreach \x in {0,1} {\fill[SubjectAccent!75] (\x,2.2) rectangle +(0.85,0.45);}
+\foreach \x in {0,1,2} {\fill[NovaMint!75] (\x,1.6) rectangle +(0.85,0.45);}
+\foreach \x in {0,1,2,3} {\fill[SubjectAccent!75] (\x,0.65) rectangle +(0.85,0.45);}
+\foreach \x in {0,1,2,3,4,5} {\fill[NovaMint!75] (\x,0.05) rectangle +(0.85,0.45);}
+\node[left] at (-0.2,2.42) {\small 2};
+\node[left] at (-0.2,1.82) {\small 3};
+\node[left] at (-0.2,0.87) {\small 4};
+\node[left] at (-0.2,0.27) {\small 6};
+\node at (2.5,-0.55) {\small $2:3$ scales to $4:6$};
+\end{tikzpicture}
+\end{center}
+\end{column}
+\end{columns}`,
+      title: "Visual Model"
+    },
+    {
+      body: String.raw`\begin{block}{Worked proportion}
+\[
+\frac{2}{3}=\frac{x}{9}
+\]
+\[
+x = 9\cdot\frac{2}{3}=6
+\]
+\end{block}
+\begin{center}
+\Large Check: $3 \rightarrow 9$ is $\times 3$, so $2 \rightarrow 6$ is also $\times 3$.
+\end{center}`,
+      title: "Equation Walkthrough"
+    }
+  ];
+}
+
 function buildSlideBodies(request: LessonDeckRequest) {
   const lesson = request.lesson ?? {};
   const slides = [
@@ -237,6 +377,7 @@ ${latexItems(lesson.learningObjectives)}
       body: escapeLatex(lesson.conceptExplanation),
       title: "Big Idea"
     },
+    ...subjectVisualSlides(request),
     {
       body: escapeLatex(lesson.guidedExample),
       title: "Worked Example"
@@ -301,6 +442,7 @@ function buildBeamerTex(request: LessonDeckRequest) {
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{tikz}
+\usetikzlibrary{positioning}
 \definecolor{NovaBlue}{HTML}{1976D2}
 \definecolor{NovaMint}{HTML}{0F9B78}
 \definecolor{NovaInk}{HTML}{10263F}
@@ -455,10 +597,12 @@ async function compileWithRemoteService({
     };
   }
 
-  if (typeof payload?.pdfDataUrl !== "string" || !payload.pdfDataUrl.startsWith("data:application/pdf;base64,")) {
+  const hasPdfDataUrl = typeof payload?.pdfDataUrl === "string" && payload.pdfDataUrl.startsWith("data:application/pdf;base64,");
+  const hasPdfUrl = typeof payload?.pdfUrl === "string" && payload.pdfUrl.startsWith("https://");
+  if (!hasPdfDataUrl && !hasPdfUrl) {
     return {
       compilerStatus: "compile_failed",
-      error: "The external LaTeX compiler service did not return a compiled PDF.",
+      error: "The external LaTeX compiler service did not return a compiled PDF URL.",
       ok: false
     };
   }
@@ -469,6 +613,7 @@ async function compileWithRemoteService({
     ok: true,
     pageCount: Number(payload?.pageCount ?? 0),
     pdfDataUrl: payload?.pdfDataUrl,
+    pdfUrl: payload?.pdfUrl,
     pdfSize: Number(payload?.pdfSize ?? 0),
     warnings: Array.isArray(payload?.warnings) ? payload.warnings : []
   };
@@ -566,6 +711,7 @@ async function compileDeckRequest(request: Request) {
       compilerStatus: "compiled",
       pageCount,
       pdfDataUrl: remoteCompile.pdfDataUrl,
+      pdfUrl: remoteCompile.pdfUrl,
       qualityChecks: [
         ...qualityChecks,
         `Compiled successfully with ${remoteCompile.compilerName}.`,

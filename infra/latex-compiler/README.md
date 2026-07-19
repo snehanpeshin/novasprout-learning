@@ -20,6 +20,9 @@ Set these on the Lambda function:
 LATEX_COMPILE_SERVICE_TOKEN=use-a-long-random-shared-secret
 ALLOWED_ORIGIN=https://www.novasproutlearning.com
 LATEX_COMPILER=pdflatex
+PDF_OUTPUT_BUCKET=your-private-compiled-pdf-bucket
+PDF_OUTPUT_PREFIX=compiled-lessons
+PDF_URL_EXPIRES_SECONDS=3600
 ```
 
 Set these on Amplify:
@@ -47,5 +50,33 @@ Recommended Lambda settings:
 - Timeout: 60 seconds
 - Ephemeral storage: 1024 MB
 - Function URL auth: `NONE`, protected by `LATEX_COMPILE_SERVICE_TOKEN`
+
+## S3 Output Bucket
+
+Create a private S3 bucket for compiled PDFs, for example:
+
+```bash
+aws s3 mb s3://novasprout-compiled-lessons-ACCOUNT_ID --region us-east-1
+aws s3api put-public-access-block \
+  --bucket novasprout-compiled-lessons-ACCOUNT_ID \
+  --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true
+```
+
+Give the Lambda execution role permission to write/read objects:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject"],
+      "Resource": "arn:aws:s3:::novasprout-compiled-lessons-ACCOUNT_ID/*"
+    }
+  ]
+}
+```
+
+When `PDF_OUTPUT_BUCKET` is set, the Lambda returns a short signed `pdfUrl` instead of embedding the whole PDF in JSON. This avoids Lambda/Amplify response-size failures.
 
 The Dockerfile intentionally uses `python:3.12-slim` plus `awslambdaric` instead of the Amazon Linux Lambda base image. That avoids region/version-specific `dnf` TeX package names and is more reliable for `pdflatex`, Beamer, TikZ, and `textpos`.

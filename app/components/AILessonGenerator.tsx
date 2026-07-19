@@ -98,6 +98,7 @@ type CompiledDeck = {
   error?: string;
   pageCount?: number;
   pdfDataUrl?: string;
+  pdfUrl?: string;
   qualityChecks?: string[];
   qualityWarnings?: string[];
   tex?: string;
@@ -775,7 +776,9 @@ function StudentSlideDeck({
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "") || "novasprout-lesson"}.tex`;
   const pdfFilename = texFilename.replace(/\.tex$/, ".pdf");
-  const pdfViewerSrc = compiledDeck?.pdfDataUrl ? `${compiledDeck.pdfDataUrl}#page=${pdfPage}&zoom=${pdfZoom}` : "";
+  const compiledPdfHref = compiledDeck?.pdfUrl ?? compiledDeck?.pdfDataUrl ?? "";
+  const compiledPageCount = compiledDeck?.pageCount ?? slides.length;
+  const pdfViewerSrc = compiledPdfHref ? `${compiledPdfHref}#page=${pdfPage}&zoom=${pdfZoom}` : "";
   const buildStages = ["Generating LaTeX", "Planning visuals", "Generating images", "Compiling PDF", "Checking quality", "Ready"];
   const stageAliases: Record<string, string> = {
     "Images ready": "Generating images",
@@ -973,7 +976,7 @@ function StudentSlideDeck({
         <div className="lesson-player-progress" aria-label={`${progress}% complete`}>
           <span style={{ width: `${progress}%` }} />
         </div>
-        {compiledDeck?.pdfDataUrl ? (
+        {compiledPdfHref ? (
           <article className="compiled-pdf-primary" id="compiled-pdf-viewer">
             <iframe src={pdfViewerSrc} title="Compiled NovaSprout lesson PDF" />
           </article>
@@ -1010,7 +1013,7 @@ function StudentSlideDeck({
             {renderSlideAssets(assets, activeSlideIndex)}
           </article>
         )}
-        {compiledDeck ? (
+        {compiledDeck && (!compiledPdfHref || compiledDeck.qualityWarnings?.length || compiledDeck.validationErrors?.length) ? (
           <aside className="compiled-deck-panel">
             <div>
               <p className="mini-label">Backend LaTeX deck</p>
@@ -1036,7 +1039,7 @@ function StudentSlideDeck({
               ) : null}
               {compiledDeck.error ? <p className="form-error">{compiledDeck.error}</p> : null}
             </div>
-            {compiledDeck.pdfDataUrl ? <p className="generator-note">The compiled PDF above is the lesson display and the downloadable deck.</p> : null}
+            {compiledPdfHref ? <p className="generator-note">The compiled PDF above is the lesson display and the downloadable deck.</p> : null}
           </aside>
         ) : null}
         <div className="print-deck" aria-hidden="true">
@@ -1063,7 +1066,7 @@ function StudentSlideDeck({
             ) : null}
           </div>
           {assetError ? <p className="form-error deck-asset-error">{assetError}</p> : null}
-          {compiledDeck?.pdfDataUrl ? (
+          {compiledPdfHref ? (
             <>
               <button
                 className="button secondary"
@@ -1078,13 +1081,13 @@ function StudentSlideDeck({
                 Page
               </button>
               <span className="pdf-page-count">
-                {pdfPage} / {compiledDeck.pageCount ?? slides.length}
+                {pdfPage} / {compiledPageCount}
               </span>
               <button
                 className="button secondary"
-                disabled={pdfPage >= (compiledDeck.pageCount ?? slides.length)}
+                disabled={pdfPage >= compiledPageCount}
                 onClick={() => {
-                  setPdfPage((page) => Math.min(compiledDeck.pageCount ?? slides.length, page + 1));
+                  setPdfPage((page) => Math.min(compiledPageCount, page + 1));
                   setActiveSlideIndex((index) => Math.min(slides.length - 1, index + 1));
                 }}
                 type="button"
@@ -1105,7 +1108,7 @@ function StudentSlideDeck({
               >
                 Fullscreen
               </button>
-              <a className="button primary" download={pdfFilename} href={compiledDeck.pdfDataUrl}>
+              <a className="button primary" download={pdfFilename} href={compiledPdfHref}>
                 <Printer aria-hidden="true" size={18} />
                 Download PDF
               </a>
@@ -1116,7 +1119,7 @@ function StudentSlideDeck({
               Preview PDF
             </button>
           )}
-          {!compiledDeck?.pdfDataUrl && !isFullPipelineRunning ? (
+          {!compiledPdfHref && !isFullPipelineRunning ? (
             <>
               <button
                 className="button secondary"

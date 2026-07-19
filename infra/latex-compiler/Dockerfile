@@ -12,7 +12,7 @@ RUN apt-get update \
       texlive-latex-extra \
       texlive-latex-recommended \
       texlive-pictures \
-    && pip install --no-cache-dir awslambdaric \
+    && pip install --no-cache-dir awslambdaric boto3 \
     && apt-get purge -y build-essential \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
