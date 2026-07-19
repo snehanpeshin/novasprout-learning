@@ -1244,7 +1244,7 @@ export default function AILessonGenerator() {
         method: "POST"
       });
       const responseText = await response.text();
-      let data: { error?: string; lesson?: GeneratedLesson; lessonText?: string } = {};
+      let data: { error?: string; lesson?: GeneratedLesson; lessonText?: string; warning?: string } = {};
 
       try {
         data = responseText ? JSON.parse(responseText) : {};
@@ -1258,6 +1258,7 @@ export default function AILessonGenerator() {
 
       setLesson(data.lesson ?? null);
       setLessonText(data.lessonText ?? "");
+      setError(data.warning ?? "");
       if (data.lesson?.timedExam?.questions?.length) {
         setExamStartedAt(Date.now());
       }

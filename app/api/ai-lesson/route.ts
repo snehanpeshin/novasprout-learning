@@ -186,6 +186,133 @@ function parseLessonJson(outputText: string) {
   }
 }
 
+function fallbackLesson({
+  duration,
+  goal,
+  grade,
+  level,
+  mode,
+  studentQuestion,
+  subject,
+  topic
+}: {
+  duration: string;
+  goal: string;
+  grade: string;
+  level: string;
+  mode: string;
+  studentQuestion: string;
+  subject: string;
+  topic: string;
+}) {
+  const durationMinutes = Number(duration.match(/\d+/)?.[0] ?? 45);
+  const studentFit = `For a ${grade} student studying ${subject.toLowerCase()} who is ${level.toLowerCase()} and wants help with ${topic.toLowerCase()} for ${goal.toLowerCase()}.`;
+
+  return {
+    conceptExplanation: `${topic} becomes easier when the student first understands the main idea, sees one clear model, and then practices in small steps. The tutor should connect each step back to the student's question and check understanding before moving forward.`,
+    customPlan: {
+      focusAreas: [`Core idea of ${topic}`, "Step-by-step problem solving", "Independent practice with feedback"],
+      recommendedCadence: "Start with one focused session, then review progress before scheduling the next lesson.",
+      summary: `A short personalized plan for ${topic} based on the selected grade, level, and goal.`,
+      weeklyPlan: [
+        `Session 1: introduce ${topic} with a simple model and guided example.`,
+        "Session 2: practice mixed examples and correct common mistakes.",
+        "Session 3: apply the idea to homework-style or test-style questions."
+      ]
+    },
+    duration,
+    fullLessonSegments: [
+      {
+        activity: `Introduce the goal of the lesson and ask what feels confusing about ${topic}.`,
+        time: "0-5 min",
+        title: "Set the Goal"
+      },
+      {
+        activity: `Explain the core idea of ${topic} using plain language and one visual or example.`,
+        time: "5-15 min",
+        title: "Build the Concept"
+      },
+      {
+        activity: "Work through one guided example slowly, asking the student to explain each step.",
+        time: "15-30 min",
+        title: "Guided Example"
+      },
+      {
+        activity: "Give the student short practice questions, correct mistakes, and summarize the next step.",
+        time: `30-${durationMinutes} min`,
+        title: "Practice and Check"
+      }
+    ],
+    guidedExample: `Tutor model: Start with a simple ${topic} question. Identify what is given, choose the first step, solve carefully, and check whether the answer makes sense.`,
+    learningObjectives: [
+      `Explain the main idea of ${topic} in simple words.`,
+      `Solve a guided ${topic} example with support.`,
+      `Try independent practice and identify one next area to improve.`
+    ],
+    mode,
+    parentTutorNotes: `This fallback lesson was generated without live AI because the AI service was unavailable. A tutor can still use it as a structured starting point and personalize examples during the session. Student note: ${studentQuestion || "No extra student question provided."}`,
+    practiceQuestions: [
+      `What is the most important idea to remember about ${topic}?`,
+      `Solve one beginner-level ${topic} example and show each step.`,
+      `Create one question about ${topic} that you still want to ask.`
+    ],
+    prerequisiteCheck: [
+      `What do you already know about ${topic}?`,
+      "Which step usually feels hardest: starting, solving, checking, or explaining?"
+    ],
+    quickAssessment: [
+      `Explain ${topic} in one sentence.`,
+      "Solve one similar question without looking at the guided example."
+    ],
+    recommendedNextSession: `Continue with targeted practice on ${topic}, using the student's mistakes from this session to choose the next examples.`,
+    studentFit,
+    timedExam: {
+      durationMinutes: Math.min(20, Math.max(10, Math.round(durationMinutes / 3))),
+      passingScore: 70,
+      questions: [
+        {
+          answerIndex: 1,
+          explanation: "A good first step is to identify what the question is asking before solving.",
+          options: ["Guess quickly", "Identify the goal", "Skip the example", "Memorize only"],
+          question: `What should you do first when solving a ${topic} problem?`
+        },
+        {
+          answerIndex: 2,
+          explanation: "Checking helps catch mistakes and improves confidence.",
+          options: ["It wastes time", "It changes the topic", "It helps catch mistakes", "It removes all practice"],
+          question: "Why is checking your answer useful?"
+        },
+        {
+          answerIndex: 0,
+          explanation: "Explaining steps shows whether the concept is understood.",
+          options: ["Explain each step", "Hide your work", "Avoid questions", "Only copy answers"],
+          question: "Which habit best supports learning?"
+        },
+        {
+          answerIndex: 3,
+          explanation: "Asking a focused question helps the tutor personalize support.",
+          options: ["Say nothing", "Change subject", "Rush ahead", "Ask a focused question"],
+          question: "What should you do if a step is confusing?"
+        },
+        {
+          answerIndex: 1,
+          explanation: "Short practice with feedback is usually better than passive reading only.",
+          options: ["Only read notes", "Practice with feedback", "Avoid examples", "Skip review"],
+          question: "Which method helps most after a guided example?"
+        },
+        {
+          answerIndex: 0,
+          explanation: "A next step should target the student's current weak spot.",
+          options: ["Target the weak spot", "Repeat everything forever", "Stop practicing", "Ignore mistakes"],
+          question: "What makes a next session useful?"
+        }
+      ]
+    },
+    title: `${topic} ${mode}`,
+    warmUp: `In two minutes, write what you already know about ${topic} and one question you want answered today.`
+  };
+}
+
 async function readJsonResponse(response: Response) {
   const text = await response.text();
 
@@ -308,40 +435,33 @@ Keep claims cautious. Do not promise grades, test scores, admissions results, di
     const { payload, response } = await requestOpenAiLesson({ apiKey, prompt });
 
     if (!response.ok) {
-      return NextResponse.json(
-        {
-          error:
-            payload?.error?.message ??
-            payload?.message ??
-            `OpenAI returned ${response.status}. Please check billing, model, and API key settings.`
-        },
-        { status: response.status }
-      );
+      return NextResponse.json({
+        lesson: fallbackLesson({ duration, goal, grade, level, mode, studentQuestion, subject, topic }),
+        warning:
+          payload?.error?.message ??
+          payload?.message ??
+          `OpenAI returned ${response.status}. A fallback lesson was generated instead.`
+      });
     }
 
     const outputText = extractOutputText(payload);
     const lesson = parseLessonJson(outputText);
 
     if (!lesson) {
-      return NextResponse.json(
-        {
-          error:
-            "The AI response was incomplete or not valid lesson JSON. Please try Demo session or shorten the topic."
-        },
-        { status: 502 }
-      );
+      return NextResponse.json({
+        lesson: fallbackLesson({ duration, goal, grade, level, mode, studentQuestion, subject, topic }),
+        warning: "The AI response was incomplete, so a fallback lesson was generated instead."
+      });
     }
 
     return NextResponse.json({ lesson });
   } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? `Could not reach the AI lesson service: ${error.message}`
-            : "Could not reach the AI lesson service."
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      lesson: fallbackLesson({ duration, goal, grade, level, mode, studentQuestion, subject, topic }),
+      warning:
+        error instanceof Error
+          ? `Could not reach the AI lesson service: ${error.message}. A fallback lesson was generated instead.`
+          : "Could not reach the AI lesson service. A fallback lesson was generated instead."
+    });
   }
 }
