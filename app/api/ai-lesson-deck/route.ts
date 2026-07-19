@@ -851,7 +851,7 @@ function renderVisualSpec(visual: VisualSpec) {
   }
 }
 
-function renderPlanSlideBody(slide: LessonPlanSlide) {
+function renderPlanSlideBody(slide: LessonPlanSlide, hasImageAsset = false) {
   const content = slide.studentContent;
   const textParts = [
     content.keyIdea ? String.raw`\begin{alertblock}{Key idea}
@@ -870,7 +870,7 @@ function renderPlanSlideBody(slide: LessonPlanSlide) {
 \small ${escapeLatex(content.answer)}
 \end{block}` : ""
   ].filter(Boolean);
-  const visualTex = slide.visuals.slice(0, 1).map(renderVisualSpec).filter(Boolean).join("\n");
+  const visualTex = hasImageAsset ? "" : slide.visuals.slice(0, 1).map(renderVisualSpec).filter(Boolean).join("\n");
 
   if (visualTex && textParts.length) {
     return String.raw`\begin{columns}[T]
@@ -894,8 +894,15 @@ ${visualTex}
 
 function buildSlideBodies(request: LessonDeckRequest) {
   const plan = legacyLessonToSlidePlan({ context: request.context, lesson: request.lesson });
-  return plan.slides.map((slide) => ({
-    body: renderPlanSlideBody(slide),
+  const imageSlideNumbers = new Set(
+    (request.assets ?? [])
+      .filter((asset) => asset.type === "image")
+      .map((asset) => assetSlideNumber(asset.placement))
+      .filter(Boolean)
+  );
+
+  return plan.slides.map((slide, index) => ({
+    body: renderPlanSlideBody(slide, imageSlideNumbers.has(index + 1)),
     title: slide.title
   }));
 }

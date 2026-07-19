@@ -106,6 +106,102 @@ function parseJson(outputText: string) {
   }
 }
 
+function placementForSlide(slideTitles: string[], titlePattern: RegExp, fallbackSlide: number, position: string) {
+  const slideIndex = slideTitles.findIndex((title) => titlePattern.test(title));
+  return `${slideIndex >= 0 ? slideIndex + 1 : fallbackSlide}${position}`;
+}
+
+function deterministicAssetPlan({
+  grade,
+  slideTitles,
+  subject,
+  topic
+}: {
+  grade: string;
+  slideTitles: string[];
+  subject: string;
+  topic: string;
+}) {
+  const normalizedTopic = topic.toLowerCase();
+  const normalizedSubject = subject.toLowerCase();
+
+  if (normalizedTopic.includes("digest")) {
+    return [
+      {
+        assetId: "digestive-system-anatomy-image",
+        alt: "Student-friendly digestive system anatomical illustration without text labels.",
+        aspectRatio: "1:1",
+        caption: "A visual overview of the digestive organs.",
+        educationalPurpose: "Helps students recognize the organs before reading the labeled diagram.",
+        filename: "digestive-system-anatomy.png",
+        latex: "",
+        placement: placementForSlide(slideTitles, /digestive system map/i, 8, "rb"),
+        prompt:
+          `${grade} friendly clean educational anatomical illustration of the human digestive system, showing mouth, esophagus, stomach, small intestine, large intestine, liver, pancreas, simplified for middle school science, colorful flat medical illustration, no text, no labels, white background`,
+        type: "image"
+      },
+      {
+        assetId: "digestive-food-path-image",
+        alt: "Food moving through the digestive tract as a simplified process illustration.",
+        aspectRatio: "1:1",
+        caption: "Food moves through the tract in order.",
+        educationalPurpose: "Shows the path food follows during digestion.",
+        filename: "digestive-food-path.png",
+        latex: "",
+        placement: placementForSlide(slideTitles, /food becomes nutrients|digestive process/i, 9, "rb"),
+        prompt:
+          `${grade} friendly illustration of food moving through a simplified digestive tract path from mouth to stomach to intestines, arrows as visual shapes only, no words, no labels, clean science tutoring style, white background`,
+        type: "image"
+      },
+      {
+        assetId: "mechanical-chemical-digestion-image",
+        alt: "Side-by-side illustration contrasting food being chewed and molecules being broken down.",
+        aspectRatio: "1:1",
+        caption: "Physical breakdown and chemical breakdown are different.",
+        educationalPurpose: "Clarifies mechanical versus chemical digestion visually.",
+        filename: "mechanical-chemical-digestion.png",
+        latex: "",
+        placement: placementForSlide(slideTitles, /mechanical vs chemical/i, 10, "rb"),
+        prompt:
+          `${grade} friendly split educational illustration, left side food pieces being physically broken smaller by chewing, right side large nutrient molecules breaking into smaller molecules with enzyme shapes, no text, no labels, clean colorful tutoring slide style`,
+        type: "image"
+      },
+      {
+        assetId: "intestinal-villi-image",
+        alt: "Close-up illustration of villi inside the small intestine absorbing nutrients.",
+        aspectRatio: "1:1",
+        caption: "Villi create more surface area for absorption.",
+        educationalPurpose: "Shows why villi help nutrient absorption.",
+        filename: "intestinal-villi.png",
+        latex: "",
+        placement: placementForSlide(slideTitles, /villi|small intestine/i, 11, "rb"),
+        prompt:
+          `${grade} friendly close-up science illustration of intestinal villi lining the small intestine, tiny nutrient particles moving into blood vessels, simplified and colorful, no text, no labels, white background`,
+        type: "image"
+      }
+    ];
+  }
+
+  if (normalizedSubject.includes("science")) {
+    return [
+      {
+        assetId: "science-concept-image",
+        alt: `Student-friendly science diagram for ${topic}.`,
+        aspectRatio: "1:1",
+        caption: "A visual model for the science idea.",
+        educationalPurpose: `Helps students visualize ${topic}.`,
+        filename: "science-concept-image.png",
+        latex: "",
+        placement: placementForSlide(slideTitles, /visual|model|understand/i, 6, "rb"),
+        prompt: `${grade} friendly clean educational science illustration for ${topic}, simple visual model, no words, no labels, white background`,
+        type: "image"
+      }
+    ];
+  }
+
+  return [];
+}
+
 async function readJsonResponse(response: Response) {
   const text = await response.text();
   if (!text) {
@@ -120,12 +216,6 @@ async function readJsonResponse(response: Response) {
 }
 
 export async function POST(request: Request) {
-  const apiKey = process.env.OPENAI_API_KEY;
-
-  if (!apiKey) {
-    return NextResponse.json({ error: "OPENAI_API_KEY is not configured." }, { status: 500 });
-  }
-
   if (!isAiAccessAllowed(request)) {
     return NextResponse.json({ error: aiAccessError }, { status: 401 });
   }
@@ -145,6 +235,17 @@ export async function POST(request: Request) {
 
   if (!grade || !subject || !topic || !title || !slideTitles.length) {
     return NextResponse.json({ error: "Missing lesson, context, or slide titles." }, { status: 400 });
+  }
+
+  const deterministicAssets = deterministicAssetPlan({ grade, slideTitles, subject, topic });
+  if (deterministicAssets.length) {
+    return NextResponse.json({ assets: deterministicAssets });
+  }
+
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    return NextResponse.json({ error: "OPENAI_API_KEY is not configured." }, { status: 500 });
   }
 
   const prompt = `
@@ -226,19 +327,31 @@ Rules:
     const payload = await readJsonResponse(response);
 
     if (!response.ok) {
-      return NextResponse.json(
-        { error: payload?.error?.message ?? "Could not generate slide assets." },
-        { status: response.status }
-      );
+      const fallbackAssets = deterministicAssetPlan({ grade, slideTitles, subject, topic });
+      if (fallbackAssets.length) {
+        return NextResponse.json({ assets: fallbackAssets });
+      }
+
+      return NextResponse.json({ error: payload?.error?.message ?? "Could not generate slide assets." }, { status: response.status });
     }
 
     const parsed = parseJson(extractOutputText(payload));
     if (!parsed?.assets?.length) {
+      const fallbackAssets = deterministicAssetPlan({ grade, slideTitles, subject, topic });
+      if (fallbackAssets.length) {
+        return NextResponse.json({ assets: fallbackAssets });
+      }
+
       return NextResponse.json({ error: "The AI did not return a usable asset plan." }, { status: 502 });
     }
 
     return NextResponse.json({ assets: parsed.assets });
   } catch (error) {
+    const fallbackAssets = deterministicAssetPlan({ grade, slideTitles, subject, topic });
+    if (fallbackAssets.length) {
+      return NextResponse.json({ assets: fallbackAssets });
+    }
+
     return NextResponse.json(
       {
         error:
