@@ -90,10 +90,11 @@ export default function PrivacyPolicy() {
         <article>
           <h2>Cookies and Advertising</h2>
           <p>
-            Our website may use cookies, pixels, or similar technologies from services such as
-            Google Ads to understand website visits, measure ad performance, and improve our
-            outreach. You can control cookies through your browser settings and may also use
-            Google advertising controls where available.
+            Optional Google Ads and analytics storage is denied by default. If you select
+            "Accept cookies," Google may use cookies or similar technologies to measure website
+            activity and advertising performance. If you decline, those optional storage signals
+            remain denied. Your choice is saved in your browser and can be changed through the
+            Cookie settings button.
           </p>
         </article>
 
