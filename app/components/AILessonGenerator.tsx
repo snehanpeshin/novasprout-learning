@@ -1356,6 +1356,46 @@ function StudentSlideDeck({
   );
 }
 
+function PrivateLessonPreparing({
+  onClose,
+  topic
+}: {
+  onClose: () => void;
+  topic: string;
+}) {
+  return (
+    <div className="lesson-player-backdrop" role="dialog" aria-modal="true" aria-labelledby="private-lesson-preparing-title">
+      <section className="student-deck">
+        <header className="student-deck-header">
+          <div>
+            <p className="eyebrow">Private lesson window</p>
+            <h2 id="private-lesson-preparing-title">Preparing {topic || "your lesson"}</h2>
+            <p>Generating the lesson plan before visuals, images, and PDF compilation.</p>
+          </div>
+          <button className="icon-button" onClick={onClose} type="button" aria-label="Close private lesson window">
+            <X aria-hidden="true" size={18} />
+          </button>
+        </header>
+        <div className="lesson-player-progress" aria-label="Preparing private lesson">
+          <span style={{ width: "14%" }} />
+        </div>
+        <article className="deck-build-status">
+          <FileCode2 aria-hidden="true" size={42} />
+          <p className="eyebrow">Preparing private lesson</p>
+          <h3>Generating lesson plan</h3>
+          <ol>
+            <li className="active">Generating lesson plan</li>
+            <li>Planning visuals</li>
+            <li>Generating images</li>
+            <li>Compiling PDF</li>
+            <li>Checking quality</li>
+          </ol>
+        </article>
+      </section>
+    </div>
+  );
+}
+
 export default function AILessonGenerator() {
   const [accessToken, setAccessToken] = useState("");
   const [leadContact, setLeadContact] = useState("");
@@ -1442,7 +1482,7 @@ export default function AILessonGenerator() {
     setError("");
     setLesson(null);
     setLessonText("");
-    setIsDeckOpen(false);
+    setIsDeckOpen(true);
     setExamAnswers({});
     setExamStartedAt(null);
     setExamSubmitted(false);
@@ -1587,6 +1627,9 @@ Interested in: Free trial / Paid AI-generated lessons
           lesson={lesson}
           onClose={() => setIsDeckOpen(false)}
         />
+      ) : null}
+      {!lesson && isDeckOpen && isGenerating ? (
+        <PrivateLessonPreparing onClose={() => setIsDeckOpen(false)} topic={topic} />
       ) : null}
       <section className="section demo-generator-section" id="generator">
       <div className="section-heading">

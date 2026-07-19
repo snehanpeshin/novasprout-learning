@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
+
+const openAiLessonTimeoutMs = 22000;
 
 type LessonRequest = {
   duration?: string;
@@ -447,6 +450,8 @@ async function requestOpenAiLesson({
   apiKey: string;
   prompt: string;
 }) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), openAiLessonTimeoutMs);
   const body = {
     input: prompt,
     max_output_tokens: 2800,
@@ -459,19 +464,24 @@ async function requestOpenAiLesson({
     }
   };
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(body)
-  });
+  try {
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
 
-  return {
-    payload: await readJsonResponse(response),
-    response
-  };
+    return {
+      payload: await readJsonResponse(response),
+      response
+    };
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function POST(request: Request) {
@@ -574,10 +584,13 @@ Keep claims cautious. Do not promise grades, test scores, admissions results, di
 
     return NextResponse.json({ lesson });
   } catch (error) {
+    const timedOut = error instanceof Error && error.name === "AbortError";
     return NextResponse.json({
       lesson: fallbackLesson({ duration, goal, grade, level, mode, studentQuestion, subject, topic }),
       warning:
-        error instanceof Error
+        timedOut
+          ? "The AI lesson service took too long, so a fallback lesson was generated instead."
+          : error instanceof Error
           ? `Could not reach the AI lesson service: ${error.message}. A fallback lesson was generated instead.`
           : "Could not reach the AI lesson service. A fallback lesson was generated instead."
     });
