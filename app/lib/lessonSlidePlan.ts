@@ -125,7 +125,15 @@ export function stripDuplicateNumbering(value?: string) {
   return normalizePlainText(value, 900).replace(/^\s*(?:Q?\d+[\).:-]\s*)+/i, "");
 }
 
-export function detectSubjectKey(subject?: string): SubjectKey {
+export function detectSubjectKey(subject?: string, topic?: string): SubjectKey {
+  const normalizedTopic = normalizePlainText(topic, 120).toLowerCase();
+  if (/\b(digest|biology|cell|organ|organism|ecosystem|photosynthesis|respiration|force|motion|energy|matter|atom|chemical)\b/.test(normalizedTopic)) {
+    return "science";
+  }
+  if (/\b(ratio|proportion|fraction|equation|algebra|geometry|graph|linear|percent|integer)\b/.test(normalizedTopic)) {
+    return "math";
+  }
+
   const normalized = normalizePlainText(subject, 80).toLowerCase();
   if (normalized.includes("science")) {
     return "science";
@@ -460,7 +468,7 @@ export function legacyLessonToSlidePlan({
 }): LessonSlidePlan {
   const topic = normalizePlainText(context?.topic || lesson?.title || "the topic", 100);
   const subject = normalizePlainText(context?.subject || "Math", 80);
-  const subjectKey = detectSubjectKey(subject);
+  const subjectKey = detectSubjectKey(subject, topic);
   const grade = normalizePlainText(context?.grade || "Student", 40);
   const title = normalizePlainText(lesson?.title || topic, 120);
   const durationMinutes = durationToMinutes(lesson?.duration);

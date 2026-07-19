@@ -145,7 +145,15 @@ function frameTitle(title: string) {
   return normalized.length > 72 ? `${normalized.slice(0, 69).trim()}...` : normalized;
 }
 
-function getSubjectTemplate(subject?: string) {
+function getSubjectTemplate(subject?: string, topic?: string) {
+  const normalizedTopic = cleanText(topic, 120).toLowerCase();
+  if (/\b(digest|biology|cell|organ|organism|ecosystem|photosynthesis|respiration|force|motion|energy|matter|atom|chemical)\b/.test(normalizedTopic)) {
+    return subjectTemplates.science;
+  }
+  if (/\b(ratio|proportion|fraction|equation|algebra|geometry|graph|linear|percent|integer)\b/.test(normalizedTopic)) {
+    return subjectTemplates.math;
+  }
+
   const normalized = cleanText(subject, 80).toLowerCase();
   if (normalized.includes("science")) {
     return subjectTemplates.science;
@@ -919,7 +927,7 @@ function buildBeamerTex(request: LessonDeckRequest) {
   const lesson = request.lesson ?? {};
   const context = request.context ?? {};
   const assets = request.assets ?? [];
-  const template = getSubjectTemplate(context.subject);
+  const template = getSubjectTemplate(context.subject, context.topic);
   const slideBodies = buildSlideBodies(request);
   const frames = slideBodies
     .map((slide, index) => frameBody(slide.title, slide.body, assets, index + 1))
