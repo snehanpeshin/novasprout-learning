@@ -1,8 +1,8 @@
-import { ArrowRight, Bot, CalendarCheck, CheckCircle2, ShieldCheck } from "lucide-react";
+import { ArrowRight, BookOpenCheck, CalendarCheck, GraduationCap, Timer } from "lucide-react";
 import AILessonGenerator from "../components/AILessonGenerator";
 import Footer from "../components/Footer";
 import TrackedLink from "../components/TrackedLink";
-import { adminAutomationItems, aiTutoringWorkflow, bookingUrl } from "../site-data";
+import { bookingUrl } from "../site-data";
 
 export const metadata = {
   title: "AI-Generated Tutoring | NovaSprout Learning",
@@ -13,49 +13,49 @@ export const metadata = {
 export default function AILessonGeneratorPage() {
   return (
     <main className="landing-page">
-      <header className="site-header">
+      <header className="site-header ai-tutor-header">
         <a className="brand" href="/" aria-label="NovaSprout Learning home">
           <img className="brand-logo" src="/novasprout-logo.png" alt="" />
           <span>NovaSprout Learning</span>
         </a>
         <nav aria-label="Main navigation">
           <a href="/#subjects">Subjects</a>
-          <a href="/curriculum-demo">Curriculum</a>
-          <a href="/#how-it-works">How it works</a>
+          <a href="#how-ai-tutor-works">How it works</a>
           <a href="/pricing">Pricing</a>
           <TrackedLink className="nav-cta" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-            Book a Free Demo
+            Free Demo
           </TrackedLink>
         </nav>
       </header>
 
-      <section className="landing-hero compact-hero">
-        <div>
-          <p className="eyebrow">AI-generated tutoring</p>
-          <h1>Personalized lessons, study plans, and timed exams for online tutoring.</h1>
-          <p>
-            NovaSprout can use AI to prepare fresh tutoring material after login: full lessons,
-            custom plans based on student questions, and scored practice exams. Human tutors remain
-            central to live teaching and final guidance.
-          </p>
-          <div className="hero-actions">
-            <a className="button primary" href="#generator">
-              Try the Generator
-              <ArrowRight aria-hidden="true" size={18} />
-            </a>
-            <TrackedLink className="button secondary" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-              <CalendarCheck aria-hidden="true" size={18} />
-              Book a Free Demo
-            </TrackedLink>
-          </div>
+      <section className="ai-tutor-hero">
+        <p className="eyebrow">NovaSprout AI Tutor</p>
+        <h1>Create a personalized lesson in minutes.</h1>
+        <p>Choose a topic. Get a visual lesson, guided practice, and a scored quiz.</p>
+        <div className="hero-actions">
+          <a className="button primary" href="#generator">
+            Create a Lesson
+            <ArrowRight aria-hidden="true" size={18} />
+          </a>
+          <a className="button secondary" href="/pricing">View Plans</a>
         </div>
-        <div className="landing-panel">
-          <Bot aria-hidden="true" size={42} />
-          <h2>What it generates</h2>
-          <p>
-            Demo sessions, comprehensive lessons, learning plans, practice questions, timed exams,
-            instant scores, and parent/tutor notes.
-          </p>
+      </section>
+
+      <section className="ai-tutor-steps" id="how-ai-tutor-works" aria-label="How the AI Tutor works">
+        <div>
+          <GraduationCap aria-hidden="true" size={22} />
+          <span>1</span>
+          <p>Choose grade and topic</p>
+        </div>
+        <div>
+          <BookOpenCheck aria-hidden="true" size={22} />
+          <span>2</span>
+          <p>Create the visual lesson</p>
+        </div>
+        <div>
+          <Timer aria-hidden="true" size={22} />
+          <span>3</span>
+          <p>Learn, practice, and take the quiz</p>
         </div>
       </section>
 
@@ -63,63 +63,18 @@ export default function AILessonGeneratorPage() {
         <AILessonGenerator />
       </div>
 
-      <section className="split-section">
-        <div>
-          <p className="eyebrow">AI Tutor Support</p>
-          <h2>Personalized support for preparation, practice, and follow-up.</h2>
-          <p>
-            The generator is a first step toward a larger NovaSprout workspace where AI helps create
-            lesson plans and human tutors use them to guide live sessions.
-          </p>
-        </div>
-        <div className="tutor-list">
-          {aiTutoringWorkflow.map((item) => (
-            <article className="tutor-card" key={item}>
-              <span className="subject-icon">
-                <CheckCircle2 aria-hidden="true" size={22} />
-              </span>
-              <p>{item}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="section-heading">
-          <p className="eyebrow">Admin Automation Roadmap</p>
-          <h2>Later, connect generated lessons to tutoring operations.</h2>
-          <p>
-            This first version does not save student records. The next platform layer can connect
-            lessons to attendance, scheduling, payments, tutor notes, and parent reports.
-          </p>
-        </div>
-        <div className="feature-grid">
-          {adminAutomationItems.map((item) => (
-            <article className="feature-card" key={item}>
-              <ShieldCheck aria-hidden="true" size={22} />
-              <h3>{item}</h3>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="booking-section">
+      <section className="booking-section ai-tutor-help">
         <div className="booking-copy">
-          <p className="eyebrow">Use it with a tutor</p>
-          <h2>Turn a generated sample into a live tutoring session.</h2>
-          <p>
-            If a generated lesson matches what your student needs, book a free demo and NovaSprout
-            can confirm the right tutor, rate, and next step.
-          </p>
+          <p className="eyebrow">Need human help?</p>
+          <h2>Meet a live tutor.</h2>
+          <p>Book a free call when a student needs personal explanation or ongoing support.</p>
         </div>
         <div className="booking-actions">
           <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-            Book a Free Demo
+            <CalendarCheck aria-hidden="true" size={18} />
+            Book Free Demo
             <ArrowRight aria-hidden="true" size={18} />
           </TrackedLink>
-          <a className="button secondary full" href="/curriculum-demo">
-            View Curriculum Demos
-          </a>
         </div>
       </section>
 

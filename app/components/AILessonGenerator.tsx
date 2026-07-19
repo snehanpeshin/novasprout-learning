@@ -11,9 +11,7 @@ import {
   CheckCircle2,
   Clock,
   Code2,
-  CreditCard,
   FileCode2,
-  Gift,
   Images,
   LockKeyhole,
   Printer,
@@ -121,7 +119,6 @@ type SubjectTheme = {
 };
 
 const accessStorageKey = "novasprout_ai_access_token";
-const leadStorageKey = "novasprout_ai_lead";
 const lessonGenerationAttempts = 3;
 const assetPlanningTimeoutMs = 285000;
 const imageGenerationTimeoutMs = 285000;
@@ -160,24 +157,14 @@ const goals = [
   "Build confidence",
   "Complete a school project"
 ];
-const modes = [
-  "Quick explanation",
-  "Comprehensive lesson",
-  "Homework help",
-  "Exam preparation",
-  "Practice worksheet",
-  "Interactive quiz"
-];
+const modes = ["Comprehensive lesson", "Quick explanation", "Exam preparation"];
 const durations = [
   "20-minute lesson",
   "30-minute lesson",
   "45-minute comprehensive lesson",
   "60-minute deep lesson"
 ];
-const teachingStyles = ["Simple and friendly", "Step-by-step", "Visual", "Exam-focused"];
-const difficulties = ["Easy", "Standard", "Challenging", "Adaptive"];
-const languages = ["English", "Hindi", "Spanish", "Bilingual", "Simplified English"];
-const lessonIncludes = [
+const defaultLessonIncludes = [
   "Key vocabulary",
   "Diagrams",
   "Worked examples",
@@ -1407,9 +1394,7 @@ function StudentSlideDeck({
 
 export default function AILessonGenerator() {
   const [accessToken, setAccessToken] = useState("");
-  const [leadContact, setLeadContact] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const [showLeadPopup, setShowLeadPopup] = useState(false);
   const [grade, setGrade] = useState("Grades 6-8");
   const [subject, setSubject] = useState("Science");
   const [topic, setTopic] = useState("Digestive system");
@@ -1417,19 +1402,10 @@ export default function AILessonGenerator() {
   const [goal, setGoal] = useState("Concept clarity");
   const [mode, setMode] = useState("Comprehensive lesson");
   const [duration, setDuration] = useState("45-minute comprehensive lesson");
-  const [teachingStyle, setTeachingStyle] = useState("Visual");
-  const [difficulty, setDifficulty] = useState("Adaptive");
-  const [lessonLanguage, setLessonLanguage] = useState("English");
-  const [includeInLesson, setIncludeInLesson] = useState<string[]>([
-    "Key vocabulary",
-    "Diagrams",
-    "Worked examples",
-    "Practice questions",
-    "Interactive quiz",
-    "Summary notes",
-    "Common mistakes",
-    "Live tutor option"
-  ]);
+  const teachingStyle = "Visual";
+  const difficulty = "Adaptive";
+  const lessonLanguage = "English";
+  const includeInLesson = defaultLessonIncludes;
   const [studentQuestion, setStudentQuestion] = useState("");
   const [lesson, setLesson] = useState<GeneratedLesson | null>(null);
   const [lessonText, setLessonText] = useState("");
@@ -1446,10 +1422,6 @@ export default function AILessonGenerator() {
     if (savedToken) {
       setAccessToken(savedToken);
       setIsUnlocked(true);
-    }
-
-    if (!window.localStorage.getItem(leadStorageKey)) {
-      setShowLeadPopup(true);
     }
   }, []);
 
@@ -1468,14 +1440,6 @@ export default function AILessonGenerator() {
   }, [examAnswers, lesson]);
   const topicSuggestions = topicSuggestionsBySubject[subject] ?? ["Homework help", "Chapter review", "Practice questions", "Exam preparation"];
 
-  function toggleIncludedLessonItem(item: string) {
-    setIncludeInLesson((current) =>
-      current.includes(item)
-        ? current.filter((selected) => selected !== item)
-        : [...current, item]
-    );
-  }
-
   function unlockTools(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cleanedToken = accessToken.trim();
@@ -1486,26 +1450,6 @@ export default function AILessonGenerator() {
 
     window.localStorage.setItem(accessStorageKey, cleanedToken);
     setIsUnlocked(true);
-    setError("");
-  }
-
-  function saveLead(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const cleanedContact = leadContact.trim();
-    if (!cleanedContact) {
-      setError("Enter an email or phone number for AI access.");
-      return;
-    }
-
-    window.localStorage.setItem(
-      leadStorageKey,
-      JSON.stringify({
-        contact: cleanedContact,
-        createdAt: new Date().toISOString(),
-        interest: "AI-generated tutoring access"
-      })
-    );
-    setShowLeadPopup(false);
     setError("");
   }
 
@@ -1634,84 +1578,41 @@ Notes from AI lesson:
 ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tutor."}
 `)}`;
 
-  const leadPopup = showLeadPopup ? (
-    <div className="lead-popup-backdrop" role="dialog" aria-modal="true" aria-labelledby="ai-access-title">
-      <form className="lead-popup" onSubmit={saveLead}>
-        <button
-          aria-label="Close access popup"
-          className="icon-button"
-          onClick={() => setShowLeadPopup(false)}
-          type="button"
-        >
-          <X aria-hidden="true" size={18} />
-        </button>
-        <p className="eyebrow">Locked AI tutor</p>
-        <h3 id="ai-access-title">Unlock AI-generated tutoring lessons.</h3>
-        <p>
-          Enter an email or phone number to request access. Paid users can unlock the AI tutor with
-          their approved email address after NovaSprout adds it to the access list.
-        </p>
-        <label>
-          Email or phone
-          <input
-            onChange={(event) => setLeadContact(event.target.value)}
-            placeholder="parent@email.com or phone"
-            value={leadContact}
-          />
-        </label>
-        <button className="button primary full" type="submit">
-          Continue
-          <Gift aria-hidden="true" size={18} />
-        </button>
-        <a className="button secondary full" href="/pricing">
-          View Tutoring Plans
-          <CreditCard aria-hidden="true" size={18} />
-        </a>
-        <a className="text-link popup-mail-link" href={requestAccessHref}>
-          Email NovaSprout for the access code
-        </a>
-      </form>
-    </div>
-  ) : null;
-
   if (!isUnlocked) {
     return (
-      <>
-        {leadPopup}
-        <section className="section demo-generator-section" id="generator">
+      <section className="section demo-generator-section" id="generator">
         <div className="section-heading">
-          <p className="eyebrow">Protected AI tutoring tools</p>
-          <h2>Enter the NovaSprout access code or approved paid-user email.</h2>
-          <p>
-            This keeps OpenAI usage controlled while allowing selected students, parents, tutors,
-            and paid users to generate personalized AI-supported lessons.
-          </p>
+          <p className="eyebrow">Start here</p>
+          <h2>Open your AI Tutor.</h2>
+          <p>Use your access code or the email approved for your plan.</p>
         </div>
         <form className="ai-access-card" onSubmit={unlockTools}>
           <LockKeyhole aria-hidden="true" size={34} />
           <label>
-            AI access code or paid email
+            Access code or approved email
             <input
               onChange={(event) => setAccessToken(event.target.value)}
-              placeholder="Access code or paid@email.com"
+              placeholder="Enter code or email"
               type="text"
               value={accessToken}
             />
           </label>
           <button className="button primary full" type="submit">
-            Unlock AI Tools
+            Continue
             <ArrowRight aria-hidden="true" size={18} />
           </button>
+          <div className="access-help-actions">
+            <a className="text-link" href={requestAccessHref}>Request free access</a>
+            <a className="text-link" href="/pricing">View plans</a>
+          </div>
           {error ? <p className="form-error">{error}</p> : null}
         </form>
       </section>
-      </>
     );
   }
 
   return (
     <>
-      {leadPopup}
       {lesson && isDeckOpen ? (
         <StudentSlideDeck
           accessToken={accessToken}
@@ -1722,26 +1623,15 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
       ) : null}
       <section className="section demo-generator-section" id="generator">
       <div className="section-heading">
-        <p className="eyebrow">AI-generated tutoring</p>
-        <h2>Create lessons, custom study plans, and scored timed exams.</h2>
-        <p>
-          Choose the student context and output type. NovaSprout uses AI to prepare fresh tutoring
-          material, while human tutors can refine the plan during live sessions.
-        </p>
+        <p className="eyebrow">Create a lesson</p>
+        <h2>What would you like to learn?</h2>
+        <p>Choose the basics. NovaSprout handles the lesson structure, visuals, practice, and quiz.</p>
       </div>
 
       <div className="ai-generator-layout">
         <form className="ai-generator-form" onSubmit={generateLesson}>
           <label>
-            Output type
-            <select onChange={(event) => setMode(event.target.value)} value={mode}>
-              {modes.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Grade or class
+            1. Grade
             <select onChange={(event) => setGrade(event.target.value)} value={grade}>
               {grades.map((item) => (
                 <option key={item}>{item}</option>
@@ -1749,7 +1639,7 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
             </select>
           </label>
           <label>
-            Subject
+            2. Subject
             <select
               onChange={(event) => {
                 const nextSubject = event.target.value;
@@ -1767,7 +1657,7 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
             </select>
           </label>
           <label>
-            Topic
+            3. Topic
             <input
               maxLength={90}
               onChange={(event) => setTopic(event.target.value)}
@@ -1777,7 +1667,7 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
             />
           </label>
           <div className="topic-suggestions" aria-label="Topic suggestions">
-            {topicSuggestions.slice(0, 8).map((item) => (
+            {topicSuggestions.slice(0, 4).map((item) => (
               <button
                 className={topic === item ? "selected" : ""}
                 key={item}
@@ -1789,83 +1679,57 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
             ))}
           </div>
           <label>
-            Student level
-            <select onChange={(event) => setLevel(event.target.value)} value={level}>
-              {levels.map((item) => (
+            4. Lesson type
+            <select onChange={(event) => setMode(event.target.value)} value={mode}>
+              {modes.map((item) => (
                 <option key={item}>{item}</option>
               ))}
             </select>
           </label>
-          <label>
-            Goal
-            <select onChange={(event) => setGoal(event.target.value)} value={goal}>
-              {goals.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Lesson length
-            <select onChange={(event) => setDuration(event.target.value)} value={duration}>
-              {durations.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Teaching style
-            <select onChange={(event) => setTeachingStyle(event.target.value)} value={teachingStyle}>
-              {teachingStyles.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Difficulty
-            <select onChange={(event) => setDifficulty(event.target.value)} value={difficulty}>
-              {difficulties.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Language
-            <select onChange={(event) => setLessonLanguage(event.target.value)} value={lessonLanguage}>
-              {languages.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <fieldset className="lesson-include-field">
-            <legend>Include in lesson</legend>
-            <div>
-              {lessonIncludes.map((item) => (
-                <label key={item}>
-                  <input
-                    checked={includeInLesson.includes(item)}
-                    onChange={() => toggleIncludedLessonItem(item)}
-                    type="checkbox"
-                  />
-                  <span>{item}</span>
-                </label>
-              ))}
+          <details className="generator-options">
+            <summary>Personalize lesson <span>Optional</span></summary>
+            <div className="generator-options-grid">
+              <label>
+                Student level
+                <select onChange={(event) => setLevel(event.target.value)} value={level}>
+                  {levels.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Learning goal
+                <select onChange={(event) => setGoal(event.target.value)} value={goal}>
+                  {goals.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Lesson length
+                <select onChange={(event) => setDuration(event.target.value)} value={duration}>
+                  {durations.map((item) => (
+                    <option key={item}>{item}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Student question or learning need
+                <textarea
+                  maxLength={900}
+                  onChange={(event) => setStudentQuestion(event.target.value)}
+                  placeholder="What is confusing or important?"
+                  value={studentQuestion}
+                />
+              </label>
             </div>
-          </fieldset>
-          <label>
-            Student question or learning need
-            <textarea
-              maxLength={900}
-              onChange={(event) => setStudentQuestion(event.target.value)}
-              placeholder="Example: I understand the formula but get confused when the word problem changes."
-              value={studentQuestion}
-            />
-          </label>
+          </details>
           <button className="button primary full" disabled={isGenerating || topic.trim().length < 3} type="submit">
-            {isGenerating ? "Generating lesson plan..." : "Generate Lesson Plan"}
+            {isGenerating ? "Creating your lesson..." : "Create My Lesson"}
             <ArrowRight aria-hidden="true" size={18} />
           </button>
           <button
-            className="button secondary full"
+            className="text-button"
             onClick={() => {
               window.localStorage.removeItem(accessStorageKey);
               setIsUnlocked(false);
@@ -1873,11 +1737,10 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
             }}
             type="button"
           >
-            Lock AI Tools
+            Use a different access code
           </button>
           <p className="generator-note">
-            Comprehensive AI lessons can take a few minutes. Do not enter a child&apos;s full name,
-            school ID, private address, or sensitive personal information.
+            Creation can take a few minutes. Do not enter sensitive student information.
           </p>
           {notice ? <p className="generator-note">{notice}</p> : null}
           {error ? <p className="form-error">{error}</p> : null}
@@ -1895,24 +1758,23 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
                 <>
                 <div className="lesson-launch-card">
                   <div>
-                    <p className="eyebrow">Lesson plan ready</p>
-                    <h4>Review the plan, then open the private PDF lesson.</h4>
-                    <p>
-                      The private lesson builds the LaTeX PDF deck, adds required visuals, starts the timer,
-                      and unlocks the quiz halfway through.
-                    </p>
+                    <p className="eyebrow">Ready to learn</p>
+                    <h4>Your private lesson is ready to build.</h4>
+                    <p>Open it for the visual PDF, lesson timer, and scored quiz.</p>
                   </div>
                   <div className="lesson-launch-actions">
                     <button className="button primary" onClick={() => setIsDeckOpen(true)} type="button">
                       <Images aria-hidden="true" size={18} />
-                      Start Private PDF Lesson
+                      Open Private Lesson
                     </button>
                     <a className="button secondary" href={liveTutorRequestHref}>
                       Request a Live Tutor
                     </a>
                   </div>
                 </div>
-                <div className="lesson-timeline">
+                <details className="lesson-plan-details">
+                  <summary>Review lesson plan</summary>
+                  <div className="lesson-timeline">
                   <LessonSection label="Learning objectives">
                     <ListBlock items={lesson.learningObjectives} />
                   </LessonSection>
@@ -2011,7 +1873,8 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
                   <LessonSection label="Parent/tutor notes">
                     <p>{lesson.parentTutorNotes}</p>
                   </LessonSection>
-                </div>
+                  </div>
+                </details>
                 </>
               ) : (
                 <pre className="lesson-text-fallback">{lessonText}</pre>
@@ -2020,16 +1883,8 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
           ) : (
             <div className="empty-generator-state">
               <Bot aria-hidden="true" size={42} />
-              <h3>Your AI-generated tutoring material will appear here.</h3>
-              <p>
-                Generate a full lesson, demo session, custom plan, or timed exam after choosing the
-                student&apos;s grade, subject, topic, and goal.
-              </p>
-              <ul>
-                <li><CheckCircle2 aria-hidden="true" size={16} /> AI-generated comprehensive lessons</li>
-                <li><CheckCircle2 aria-hidden="true" size={16} /> Custom plans from student questions</li>
-                <li><CheckCircle2 aria-hidden="true" size={16} /> Timed exams with instant scoring</li>
-              </ul>
+              <h3>Your lesson will appear here.</h3>
+              <p>Choose a grade, subject, topic, and lesson type, then select Create My Lesson.</p>
             </div>
           )}
         </article>

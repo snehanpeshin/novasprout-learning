@@ -24,6 +24,11 @@ html {
   scroll-behavior: smooth;
 }
 
+#generator,
+#how-ai-tutor-works {
+  scroll-margin-top: 72px;
+}
+
 body {
   background:
     linear-gradient(180deg, rgba(229, 245, 255, 0.95), rgba(248, 251, 255, 0.96) 430px),
@@ -496,10 +501,81 @@ h3 {
     var(--white);
 }
 
+.ai-tutor-hero {
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  padding: clamp(42px, 7vw, 76px) clamp(18px, 4vw, 56px);
+}
+
+.ai-tutor-hero h1 {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  max-width: 760px;
+}
+
+.ai-tutor-hero > p:not(.eyebrow) {
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.6;
+  max-width: 680px;
+}
+
+.ai-tutor-hero .hero-actions {
+  margin-top: 24px;
+}
+
+.ai-tutor-steps {
+  background: #f1f8fd;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 0 clamp(18px, 4vw, 56px);
+}
+
+.ai-tutor-steps > div {
+  align-items: center;
+  border-right: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  min-height: 82px;
+  padding: 18px clamp(14px, 3vw, 28px);
+}
+
+.ai-tutor-steps > div:first-child {
+  padding-left: 0;
+}
+
+.ai-tutor-steps > div:last-child {
+  border-right: 0;
+  padding-right: 0;
+}
+
+.ai-tutor-steps svg {
+  color: var(--blue);
+}
+
+.ai-tutor-steps span {
+  align-items: center;
+  background: var(--white);
+  border: 1px solid #b9dcff;
+  border-radius: 50%;
+  color: var(--blue);
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 800;
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+
+.ai-tutor-steps p {
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin: 0;
+}
+
 .demo-generator-section {
-  background:
-    linear-gradient(135deg, rgba(240, 237, 255, 0.86), rgba(248, 251, 255, 0.96)),
-    var(--paper);
+  background: var(--paper);
 }
 
 .demo-generator {
@@ -511,8 +587,8 @@ h3 {
 
 .ai-generator-layout {
   display: grid;
-  gap: 18px;
-  grid-template-columns: minmax(280px, 0.34fr) minmax(0, 0.66fr);
+  gap: 20px;
+  grid-template-columns: minmax(300px, 0.38fr) minmax(0, 0.62fr);
   margin-top: 28px;
 }
 
@@ -546,54 +622,17 @@ h3 {
   padding: 22px;
 }
 
-.lead-popup-backdrop {
+.access-help-actions {
   align-items: center;
-  background: rgba(16, 38, 63, 0.54);
   display: flex;
-  inset: 0;
+  flex-wrap: wrap;
+  gap: 18px;
   justify-content: center;
-  padding: 18px;
-  position: fixed;
-  z-index: 40;
 }
 
-.lead-popup {
-  background:
-    linear-gradient(135deg, rgba(255, 246, 201, 0.64), rgba(229, 245, 255, 0.95)),
-    var(--white);
-  border: 1px solid #b9dcff;
-  border-radius: 8px;
-  box-shadow: 0 24px 80px rgba(16, 38, 63, 0.24);
-  display: grid;
-  gap: 13px;
-  max-width: 460px;
-  padding: 24px;
-  position: relative;
-  width: min(100%, 460px);
-}
-
-.lead-popup p {
-  color: var(--muted);
-  line-height: 1.55;
-  margin-bottom: 0;
-}
-
-.lead-popup label {
-  color: var(--ink);
-  display: grid;
-  font-size: 0.86rem;
-  font-weight: 800;
-  gap: 8px;
-}
-
-.lead-popup input {
-  background: var(--white);
-  border: 1px solid #b9dcff;
-  border-radius: 8px;
-  color: var(--ink);
-  font: inherit;
-  min-height: 44px;
-  padding: 10px 12px;
+.access-help-actions .text-link {
+  font-size: 0.88rem;
+  margin: 0;
 }
 
 .icon-button {
@@ -610,11 +649,6 @@ h3 {
   right: 12px;
   top: 12px;
   width: 34px;
-}
-
-.popup-mail-link {
-  justify-content: center;
-  margin-top: 0;
 }
 
 .ai-access-card svg {
@@ -696,45 +730,54 @@ h3 {
   color: var(--white);
 }
 
-.lesson-include-field {
-  border: 1px solid #cfe4f4;
-  border-radius: 8px;
-  display: grid;
-  gap: 10px;
-  margin: 0;
-  padding: 12px;
+.generator-options {
+  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  margin: 2px 0;
+  padding: 2px 0;
 }
 
-.lesson-include-field legend {
+.generator-options summary,
+.lesson-plan-details summary {
   color: var(--ink);
-  font-size: 0.86rem;
+  cursor: pointer;
+  font-size: 0.9rem;
   font-weight: 800;
-  padding: 0 4px;
+  list-style-position: outside;
+  padding: 11px 4px;
 }
 
-.lesson-include-field > div {
+.generator-options summary span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.generator-options-grid {
   display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  padding: 6px 0 12px;
 }
 
-.lesson-include-field label {
-  align-items: center;
-  background: #f8fbff;
-  border: 1px solid #e1effa;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: row;
-  font-size: 0.82rem;
-  gap: 8px;
-  padding: 8px;
+.generator-options-grid textarea {
+  min-height: 88px;
 }
 
-.lesson-include-field input {
-  accent-color: var(--blue);
-  flex: 0 0 auto;
-  min-height: auto;
-  width: auto;
+.text-button {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  justify-self: center;
+  padding: 4px 8px;
+}
+
+.text-button:hover {
+  color: var(--blue);
 }
 
 .generator-note {
@@ -751,7 +794,7 @@ h3 {
 .empty-generator-state {
   display: grid;
   gap: 12px;
-  min-height: 320px;
+  min-height: 260px;
   place-content: center;
   text-align: left;
 }
@@ -824,6 +867,25 @@ h3 {
   flex-wrap: wrap;
   gap: 10px;
   justify-content: flex-end;
+}
+
+.lesson-plan-details {
+  border-top: 1px solid var(--line);
+  margin-top: 18px;
+}
+
+.lesson-plan-details summary {
+  color: var(--blue);
+  padding: 14px 2px;
+}
+
+.lesson-plan-details .lesson-timeline {
+  margin-top: 4px;
+}
+
+.ai-tutor-help {
+  padding-bottom: clamp(40px, 6vw, 68px);
+  padding-top: clamp(38px, 5vw, 58px);
 }
 
 .lesson-player-backdrop {
@@ -2185,6 +2247,22 @@ footer div span:first-child {
     justify-content: flex-end;
   }
 
+  .ai-tutor-header {
+    align-items: center;
+  }
+
+  .ai-tutor-header .brand span {
+    white-space: nowrap;
+  }
+
+  .ai-tutor-header nav {
+    gap: 8px;
+  }
+
+  .ai-tutor-header nav > a:nth-child(-n + 2) {
+    display: none;
+  }
+
   .hero {
     padding-top: 34px;
   }
@@ -2196,6 +2274,22 @@ footer div span:first-child {
   .hero-actions,
   .button {
     width: 100%;
+  }
+
+  .ai-tutor-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-tutor-steps > div,
+  .ai-tutor-steps > div:first-child,
+  .ai-tutor-steps > div:last-child {
+    border-bottom: 1px solid var(--line);
+    border-right: 0;
+    padding: 15px 0;
+  }
+
+  .ai-tutor-steps > div:last-child {
+    border-bottom: 0;
   }
 
   .lesson-launch-card,
