@@ -518,6 +518,29 @@ function getDensityWarnings(slides: Array<{ body: string; title: string }>) {
     .filter(Boolean);
 }
 
+function sanitizeCompilerError(message?: string) {
+  const cleaned = String(message || "").replace(/\s+/g, " ").trim();
+  if (!cleaned) {
+    return "The LaTeX compiler could not create the PDF deck. Please retry after checking the compiler service.";
+  }
+
+  if (/tcss\d+|Font .* not found|mktexpk|jknappen\/ec/i.test(cleaned)) {
+    return "The PDF compiler is missing a TeX font package. Rebuild the Lambda compiler image with the latest Dockerfile, then update the Lambda function code.";
+  }
+
+  if (/timed out|AbortError/i.test(cleaned)) {
+    return "The PDF compiler timed out. Try a shorter lesson or increase the Lambda timeout and memory.";
+  }
+
+  if (/Unauthorized compiler request/i.test(cleaned)) {
+    return "The PDF compiler rejected the request. Check that LATEX_COMPILE_SERVICE_TOKEN matches in Amplify and Lambda.";
+  }
+
+  return cleaned.length > 280
+    ? "The PDF compiler returned an error while creating the deck. Check the Lambda logs for details, then retry."
+    : cleaned;
+}
+
 async function readJsonResponse(response: Response) {
   const text = await response.text();
   if (!text) {
@@ -590,9 +613,13 @@ async function compileWithRemoteService({
   const payload = await readJsonResponse(response);
 
   if (!response.ok) {
+    if (payload?.error) {
+      console.error("NovaSprout LaTeX compiler failed:", payload.error);
+    }
+
     return {
       compilerStatus: "compile_failed",
-      error: payload?.error ?? "The external LaTeX compiler service could not compile this deck.",
+      error: sanitizeCompilerError(payload?.error ?? "The external LaTeX compiler service could not compile this deck."),
       ok: false
     };
   }
@@ -781,7 +808,7 @@ async function compileDeckRequest(request: Request) {
         compilerStatus: missingCompiler ? "compiler_missing" : "compile_failed",
         error: missingCompiler
           ? "LaTeX compiler is not installed in this deployment. Use a TeX-enabled AWS Lambda/container or install pdflatex/tectonic and set LATEX_COMPILER_PATH."
-          : message.slice(0, 1200),
+          : sanitizeCompilerError(message),
         qualityChecks: localQualityChecks,
         qualityWarnings: densityWarnings,
         tex: process.env.NODE_ENV === "development" ? tex : undefined

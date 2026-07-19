@@ -79,4 +79,4 @@ Give the Lambda execution role permission to write/read objects:
 
 When `PDF_OUTPUT_BUCKET` is set, the Lambda returns a short signed `pdfUrl` instead of embedding the whole PDF in JSON. This avoids Lambda/Amplify response-size failures.
 
-The Dockerfile intentionally uses `python:3.12-slim` plus `awslambdaric` instead of the Amazon Linux Lambda base image. That avoids region/version-specific `dnf` TeX package names and is more reliable for `pdflatex`, Beamer, TikZ, and `textpos`.
+The Dockerfile intentionally uses `python:3.12-slim` plus `awslambdaric` instead of the Amazon Linux Lambda base image. That avoids region/version-specific `dnf` TeX package names and is more reliable for `pdflatex`, Beamer, TikZ, and `textpos`. It also installs `cm-super` so Beamer/Text Companion fonts such as `tcss1095` are available without runtime font generation.

@@ -72,11 +72,22 @@ def write_assets(work_dir, assets):
 
 
 def run_command(command, work_dir, timeout):
+    tex_env = {
+        **os.environ,
+        "HOME": "/tmp",
+        "TEXMFCONFIG": "/tmp/texmf-config",
+        "TEXMFHOME": "/tmp/texmf-home",
+        "TEXMFVAR": "/tmp/texmf-var",
+    }
+    for path in (tex_env["TEXMFCONFIG"], tex_env["TEXMFHOME"], tex_env["TEXMFVAR"]):
+        Path(path).mkdir(parents=True, exist_ok=True)
+
     completed = subprocess.run(
         command,
         cwd=work_dir,
         check=False,
         capture_output=True,
+        env=tex_env,
         text=True,
         timeout=timeout,
     )
