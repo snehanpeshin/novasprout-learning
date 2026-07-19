@@ -1470,10 +1470,14 @@ export default function AILessonGenerator() {
         throw new Error(data.error ?? "Could not generate a lesson.");
       }
 
-      setLesson(data.lesson ?? null);
+      const generatedLesson = data.lesson ?? null;
+      setLesson(generatedLesson);
       setLessonText(data.lessonText ?? "");
       setError(data.warning ?? "");
-      if (data.lesson?.timedExam?.questions?.length) {
+      if (generatedLesson) {
+        setIsDeckOpen(true);
+      }
+      if (generatedLesson?.timedExam?.questions?.length) {
         setExamStartedAt(Date.now());
       }
     } catch (generatorError) {
@@ -1661,7 +1665,7 @@ Interested in: Free trial / Paid AI-generated lessons
             />
           </label>
           <button className="button primary full" disabled={isGenerating || topic.trim().length < 3} type="submit">
-            {isGenerating ? "Generating..." : "Generate Tutoring Material"}
+            {isGenerating ? "Generating private lesson..." : "Generate Private Lesson"}
             <ArrowRight aria-hidden="true" size={18} />
           </button>
           <button
@@ -1693,16 +1697,16 @@ Interested in: Free trial / Paid AI-generated lessons
                 <>
                 <div className="lesson-launch-card">
                   <div>
-                    <p className="eyebrow">Ready to teach</p>
-                    <h4>Review the plan, then start the private timed PDF lesson.</h4>
+                    <p className="eyebrow">Private lesson created</p>
+                    <h4>The timed PDF lesson opens automatically.</h4>
                     <p>
-                      The same LaTeX PDF deck opens in a focused window with page timing, controls, and download.
+                      This plan remains here for review after closing the lesson window.
                     </p>
                   </div>
                   <div className="lesson-launch-actions">
                     <button className="button primary" onClick={() => setIsDeckOpen(true)} type="button">
                       <Images aria-hidden="true" size={18} />
-                      Start Timed PDF Lesson
+                      Reopen Lesson
                     </button>
                   </div>
                 </div>
