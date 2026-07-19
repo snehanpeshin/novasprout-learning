@@ -141,32 +141,6 @@ function deterministicAssetPlan({
         type: "image"
       },
       {
-        assetId: "digestive-food-path-image",
-        alt: "Food moving through the digestive tract as a simplified process illustration.",
-        aspectRatio: "1:1",
-        caption: "Food moves through the tract in order.",
-        educationalPurpose: "Shows the path food follows during digestion.",
-        filename: "digestive-food-path.png",
-        latex: "",
-        placement: placementForSlide(slideTitles, /food becomes nutrients|digestive process/i, 9, "rb"),
-        prompt:
-          `${grade} friendly illustration of food moving through a simplified digestive tract path from mouth to stomach to intestines, arrows as visual shapes only, no words, no labels, clean science tutoring style, white background`,
-        type: "image"
-      },
-      {
-        assetId: "mechanical-chemical-digestion-image",
-        alt: "Side-by-side illustration contrasting food being chewed and molecules being broken down.",
-        aspectRatio: "1:1",
-        caption: "Physical breakdown and chemical breakdown are different.",
-        educationalPurpose: "Clarifies mechanical versus chemical digestion visually.",
-        filename: "mechanical-chemical-digestion.png",
-        latex: "",
-        placement: placementForSlide(slideTitles, /mechanical vs chemical/i, 10, "rb"),
-        prompt:
-          `${grade} friendly split educational illustration, left side food pieces being physically broken smaller by chewing, right side large nutrient molecules breaking into smaller molecules with enzyme shapes, no text, no labels, clean colorful tutoring slide style`,
-        type: "image"
-      },
-      {
         assetId: "intestinal-villi-image",
         alt: "Close-up illustration of villi inside the small intestine absorbing nutrients.",
         aspectRatio: "1:1",
