@@ -62,6 +62,15 @@ type GeneratedLesson = {
   warmUp?: string;
 };
 
+type LessonGenerationData = {
+  error?: string;
+  lesson?: GeneratedLesson;
+  lessonText?: string;
+  responseId?: string;
+  status?: string;
+  warning?: string;
+};
+
 type LessonSlide = {
   content: ReactNode;
   minutes: number;
@@ -119,7 +128,8 @@ type SubjectTheme = {
 };
 
 const accessStorageKey = "novasprout_ai_access_token";
-const lessonGenerationAttempts = 3;
+const lessonPollingIntervalMs = 2500;
+const lessonPollingTimeoutMs = 300000;
 const assetPlanningTimeoutMs = 285000;
 const imageGenerationTimeoutMs = 285000;
 const minimumBuildStageMs = {
@@ -157,14 +167,24 @@ const goals = [
   "Build confidence",
   "Complete a school project"
 ];
-const modes = ["Comprehensive lesson", "Quick explanation", "Exam preparation"];
+const modes = [
+  "Quick explanation",
+  "Comprehensive lesson",
+  "Homework help",
+  "Exam preparation",
+  "Practice worksheet",
+  "Interactive quiz"
+];
 const durations = [
   "20-minute lesson",
   "30-minute lesson",
   "45-minute comprehensive lesson",
   "60-minute deep lesson"
 ];
-const defaultLessonIncludes = [
+const teachingStyles = ["Simple and friendly", "Step-by-step", "Visual", "Exam-focused"];
+const difficulties = ["Easy", "Standard", "Challenging", "Adaptive"];
+const languages = ["English", "Hindi", "Spanish", "Bilingual", "Simplified English"];
+const lessonIncludes = [
   "Key vocabulary",
   "Diagrams",
   "Worked examples",
@@ -253,6 +273,21 @@ function countTextChunks(value?: string, maxLength = 360, maxChunks = 4) {
 
 function sleep(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function readLessonApiResponse(response: Response): Promise<LessonGenerationData> {
+  const responseText = await response.text();
+  if (!responseText) return {};
+
+  try {
+    return JSON.parse(responseText) as LessonGenerationData;
+  } catch {
+    return {
+      error: response.ok
+        ? "The AI lesson service returned an unreadable response."
+        : responseText.slice(0, 220) || "The hosting layer returned an unreadable error."
+    };
+  }
 }
 
 async function waitForMinimumElapsed(startedAt: number, minimumMs: number) {
@@ -1402,10 +1437,10 @@ export default function AILessonGenerator() {
   const [goal, setGoal] = useState("Concept clarity");
   const [mode, setMode] = useState("Comprehensive lesson");
   const [duration, setDuration] = useState("45-minute comprehensive lesson");
-  const teachingStyle = "Visual";
-  const difficulty = "Adaptive";
-  const lessonLanguage = "English";
-  const includeInLesson = defaultLessonIncludes;
+  const [teachingStyle, setTeachingStyle] = useState("Visual");
+  const [difficulty, setDifficulty] = useState("Adaptive");
+  const [lessonLanguage, setLessonLanguage] = useState("English");
+  const [includeInLesson, setIncludeInLesson] = useState<string[]>(lessonIncludes);
   const [studentQuestion, setStudentQuestion] = useState("");
   const [lesson, setLesson] = useState<GeneratedLesson | null>(null);
   const [lessonText, setLessonText] = useState("");
@@ -1440,6 +1475,14 @@ export default function AILessonGenerator() {
   }, [examAnswers, lesson]);
   const topicSuggestions = topicSuggestionsBySubject[subject] ?? ["Homework help", "Chapter review", "Practice questions", "Exam preparation"];
 
+  function toggleIncludedLessonItem(item: string) {
+    setIncludeInLesson((current) =>
+      current.includes(item)
+        ? current.filter((selected) => selected !== item)
+        : [...current, item]
+    );
+  }
+
   function unlockTools(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cleanedToken = accessToken.trim();
@@ -1466,62 +1509,87 @@ export default function AILessonGenerator() {
     setIsGenerating(true);
 
     try {
-      let data: { error?: string; lesson?: GeneratedLesson; lessonText?: string; warning?: string } = {};
-      let lastGenerationError = "";
+      setNotice("Starting your AI lesson...");
+      const startResponse = await fetch("/api/ai-lesson", {
+        body: JSON.stringify({
+          difficulty,
+          duration,
+          goal,
+          grade,
+          includeInLesson,
+          language: lessonLanguage,
+          level,
+          mode,
+          studentQuestion,
+          subject,
+          teachingStyle,
+          topic
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          "x-ai-access-token": accessToken.trim()
+        },
+        method: "POST"
+      });
+      let data = await readLessonApiResponse(startResponse);
 
-      for (let attempt = 1; attempt <= lessonGenerationAttempts; attempt += 1) {
-        setNotice(
-          attempt === 1
-            ? "Generating live AI lesson..."
-            : `The AI service needed more time. Retrying live generation (${attempt}/${lessonGenerationAttempts})...`
+      if (!startResponse.ok) {
+        throw new Error(
+          data.error
+            ? `Lesson generation failed (${startResponse.status}): ${data.error}`
+            : `Could not start the lesson (${startResponse.status}).`
         );
+      }
 
-        const response = await fetch("/api/ai-lesson", {
-          body: JSON.stringify({
-            difficulty,
-            duration,
-            goal,
-            grade,
-            includeInLesson,
-            language: lessonLanguage,
-            level,
-            mode,
-            studentQuestion,
-            subject,
-            teachingStyle,
-            topic
-          }),
-          headers: {
-            "Content-Type": "application/json",
-            "x-ai-access-token": accessToken.trim()
-          },
-          method: "POST"
-        });
-        const responseText = await response.text();
+      if (!data.lesson && data.responseId) {
+        const backgroundResponseId = data.responseId;
+        const pollingStartedAt = Date.now();
+        let temporaryFailures = 0;
 
-        try {
-          data = responseText ? JSON.parse(responseText) : {};
-        } catch {
-          if (!response.ok) {
-            data = { error: responseText ? responseText.slice(0, 220) : "The hosting layer returned an unreadable error." };
-          } else {
-            throw new Error(responseText || "The AI lesson service returned an unreadable response.");
+        while (Date.now() - pollingStartedAt < lessonPollingTimeoutMs) {
+          const elapsedMinutes = Math.max(1, Math.floor((Date.now() - pollingStartedAt) / 60000) + 1);
+          setNotice(
+            elapsedMinutes === 1
+              ? "Creating the lesson in the background. Keep this page open."
+              : `Still building the full lesson and visuals (${elapsedMinutes} min). Keep this page open.`
+          );
+          await sleep(lessonPollingIntervalMs);
+
+          const statusResponse = await fetch(
+            `/api/ai-lesson/status?responseId=${encodeURIComponent(backgroundResponseId)}`,
+            {
+              headers: { "x-ai-access-token": accessToken.trim() },
+              method: "GET"
+            }
+          );
+          const statusData = await readLessonApiResponse(statusResponse);
+
+          if (!statusResponse.ok) {
+            if ([502, 503, 504].includes(statusResponse.status) && temporaryFailures < 6) {
+              temporaryFailures += 1;
+              continue;
+            }
+            throw new Error(
+              statusData.error
+                ? `Lesson generation failed (${statusResponse.status}): ${statusData.error}`
+                : `Could not check the lesson (${statusResponse.status}).`
+            );
+          }
+
+          temporaryFailures = 0;
+          if (statusData.lesson || statusData.lessonText) {
+            data = statusData;
+            break;
+          }
+
+          if (!["queued", "in_progress"].includes(statusData.status ?? "")) {
+            throw new Error("The AI lesson stopped before it was complete. Please try again.");
           }
         }
 
-        if (response.ok) {
-          break;
+        if (!data.lesson && !data.lessonText) {
+          throw new Error("The AI lesson is still processing after five minutes. Please try again shortly.");
         }
-
-        lastGenerationError = data.error
-          ? `Lesson generation failed (${response.status}): ${data.error}`
-          : `Could not generate a lesson (${response.status}).`;
-
-        if (![502, 503, 504].includes(response.status) || attempt === lessonGenerationAttempts) {
-          throw new Error(lastGenerationError);
-        }
-
-        await sleep(1200);
       }
 
       const generatedLesson = data.lesson ?? null;
@@ -1631,7 +1699,15 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
       <div className="ai-generator-layout">
         <form className="ai-generator-form" onSubmit={generateLesson}>
           <label>
-            1. Grade
+            Output type
+            <select onChange={(event) => setMode(event.target.value)} value={mode}>
+              {modes.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Grade or class
             <select onChange={(event) => setGrade(event.target.value)} value={grade}>
               {grades.map((item) => (
                 <option key={item}>{item}</option>
@@ -1639,7 +1715,7 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
             </select>
           </label>
           <label>
-            2. Subject
+            Subject
             <select
               onChange={(event) => {
                 const nextSubject = event.target.value;
@@ -1657,7 +1733,7 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
             </select>
           </label>
           <label>
-            3. Topic
+            Topic
             <input
               maxLength={90}
               onChange={(event) => setTopic(event.target.value)}
@@ -1667,7 +1743,7 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
             />
           </label>
           <div className="topic-suggestions" aria-label="Topic suggestions">
-            {topicSuggestions.slice(0, 4).map((item) => (
+            {topicSuggestions.slice(0, 8).map((item) => (
               <button
                 className={topic === item ? "selected" : ""}
                 key={item}
@@ -1679,51 +1755,77 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
             ))}
           </div>
           <label>
-            4. Lesson type
-            <select onChange={(event) => setMode(event.target.value)} value={mode}>
-              {modes.map((item) => (
+            Student level
+            <select onChange={(event) => setLevel(event.target.value)} value={level}>
+              {levels.map((item) => (
                 <option key={item}>{item}</option>
               ))}
             </select>
           </label>
-          <details className="generator-options">
-            <summary>Personalize lesson <span>Optional</span></summary>
-            <div className="generator-options-grid">
-              <label>
-                Student level
-                <select onChange={(event) => setLevel(event.target.value)} value={level}>
-                  {levels.map((item) => (
-                    <option key={item}>{item}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Learning goal
-                <select onChange={(event) => setGoal(event.target.value)} value={goal}>
-                  {goals.map((item) => (
-                    <option key={item}>{item}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Lesson length
-                <select onChange={(event) => setDuration(event.target.value)} value={duration}>
-                  {durations.map((item) => (
-                    <option key={item}>{item}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Student question or learning need
-                <textarea
-                  maxLength={900}
-                  onChange={(event) => setStudentQuestion(event.target.value)}
-                  placeholder="What is confusing or important?"
-                  value={studentQuestion}
-                />
-              </label>
+          <label>
+            Goal
+            <select onChange={(event) => setGoal(event.target.value)} value={goal}>
+              {goals.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Lesson length
+            <select onChange={(event) => setDuration(event.target.value)} value={duration}>
+              {durations.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Teaching style
+            <select onChange={(event) => setTeachingStyle(event.target.value)} value={teachingStyle}>
+              {teachingStyles.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Difficulty
+            <select onChange={(event) => setDifficulty(event.target.value)} value={difficulty}>
+              {difficulties.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Language
+            <select onChange={(event) => setLessonLanguage(event.target.value)} value={lessonLanguage}>
+              {languages.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+          <fieldset className="lesson-include-field">
+            <legend>Include in lesson</legend>
+            <div>
+              {lessonIncludes.map((item) => (
+                <label key={item}>
+                  <input
+                    checked={includeInLesson.includes(item)}
+                    onChange={() => toggleIncludedLessonItem(item)}
+                    type="checkbox"
+                  />
+                  <span>{item}</span>
+                </label>
+              ))}
             </div>
-          </details>
+          </fieldset>
+          <label>
+            Student question or learning need
+            <textarea
+              maxLength={900}
+              onChange={(event) => setStudentQuestion(event.target.value)}
+              placeholder="Example: I understand the formula but get confused when the word problem changes."
+              value={studentQuestion}
+            />
+          </label>
           <button className="button primary full" disabled={isGenerating || topic.trim().length < 3} type="submit">
             {isGenerating ? "Creating your lesson..." : "Create My Lesson"}
             <ArrowRight aria-hidden="true" size={18} />
@@ -1740,7 +1842,8 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
             Use a different access code
           </button>
           <p className="generator-note">
-            Creation can take a few minutes. Do not enter sensitive student information.
+            Full lessons can take 3-5 minutes and continue in the background. Keep this page open,
+            and do not enter sensitive student information.
           </p>
           {notice ? <p className="generator-note">{notice}</p> : null}
           {error ? <p className="form-error">{error}</p> : null}

@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
+import { extractAiLessonOutputText, parseAiLessonJson } from "../../lib/aiLessonResponse";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const openAiLessonTimeoutMs = Math.min(
-  28000,
-  Math.max(15000, Number(process.env.OPENAI_LESSON_TIMEOUT_MS ?? 24000))
+const openAiStartTimeoutMs = Math.min(
+  20000,
+  Math.max(8000, Number(process.env.OPENAI_LESSON_START_TIMEOUT_MS ?? 12000))
 );
 const openAiLessonModel = process.env.OPENAI_MODEL?.trim() || "gpt-4.1-mini";
 
@@ -234,45 +235,6 @@ const lessonJsonSchema = {
 
 function cleanText(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
-}
-
-function extractOutputText(payload: unknown) {
-  if (!payload || typeof payload !== "object") {
-    return "";
-  }
-
-  const maybeOutputText = (payload as { output_text?: unknown }).output_text;
-  if (typeof maybeOutputText === "string") {
-    return maybeOutputText;
-  }
-
-  const output = (payload as { output?: Array<{ content?: Array<{ text?: string }> }> }).output;
-  return (
-    output
-      ?.flatMap((item) => item.content ?? [])
-      .map((content) => content.text)
-      .filter(Boolean)
-      .join("\n") ?? ""
-  );
-}
-
-function parseLessonJson(outputText: string) {
-  const trimmed = outputText.trim();
-
-  const markdownMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-  const unwrappedText = markdownMatch?.[1]?.trim() ?? trimmed;
-  const firstBrace = unwrappedText.indexOf("{");
-  const lastBrace = unwrappedText.lastIndexOf("}");
-
-  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(unwrappedText.slice(firstBrace, lastBrace + 1));
-  } catch {
-    return null;
-  }
 }
 
 function fallbackLesson({
@@ -793,10 +755,11 @@ async function requestOpenAiLesson({
   prompt: string;
 }) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), openAiLessonTimeoutMs);
+  const timeout = setTimeout(() => controller.abort(), openAiStartTimeoutMs);
   const body = {
+    background: true,
     input: prompt,
-    max_output_tokens: 3400,
+    max_output_tokens: 6000,
     model: openAiLessonModel,
     text: {
       format: {
@@ -938,23 +901,38 @@ Keep claims cautious. Do not promise grades, test scores, admissions results, di
       );
     }
 
-    const outputText = extractOutputText(payload);
-    const lesson = parseLessonJson(outputText);
+    const responsePayload = payload as { id?: unknown; status?: unknown } | null;
+    const responseId = typeof responsePayload?.id === "string" ? responsePayload.id : "";
+    const generationStatus = typeof responsePayload?.status === "string" ? responsePayload.status : "";
 
-    if (!lesson) {
+    if (generationStatus === "completed") {
+      const lesson = parseAiLessonJson(extractAiLessonOutputText(payload));
+      if (!lesson) {
+        return NextResponse.json(
+          { error: "The live AI response was incomplete. Please try generating the lesson again." },
+          { status: 422 }
+        );
+      }
+      return NextResponse.json({ lesson, status: "completed" });
+    }
+
+    if (responseId && ["queued", "in_progress"].includes(generationStatus)) {
       return NextResponse.json(
-        { error: "The live AI response was incomplete. Please try generating the lesson again." },
-        { status: 422 }
+        { responseId, status: generationStatus },
+        { status: 202 }
       );
     }
 
-    return NextResponse.json({ lesson });
+    return NextResponse.json(
+      { error: "OpenAI did not start the background lesson. Please try again." },
+      { status: 502 }
+    );
   } catch (error) {
     const timedOut = error instanceof Error && error.name === "AbortError";
     return NextResponse.json(
       {
         error: timedOut
-          ? "The live AI lesson took longer than expected. Please try again, or choose a shorter lesson length."
+          ? "The AI lesson could not be started in time. Please try again."
           : error instanceof Error
             ? `Could not reach the live AI lesson service: ${error.message}.`
             : "Could not reach the live AI lesson service."
