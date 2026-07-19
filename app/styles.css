@@ -1243,13 +1243,18 @@ h3 {
 }
 
 .deck-stage,
-.pdf-page-count {
+.pdf-lesson-note {
   align-items: center;
   color: var(--muted);
   display: inline-flex;
   font-size: 0.9rem;
   font-weight: 800;
   margin: 0;
+}
+
+.pdf-lesson-note {
+  flex: 1 1 220px;
+  line-height: 1.35;
 }
 
 .pdf-timer-pill {

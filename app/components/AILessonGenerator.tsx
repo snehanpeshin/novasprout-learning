@@ -744,7 +744,7 @@ function StudentSlideDeck({
   const [, setIsGeneratingImages] = useState(false);
   const [, setIsPlanningAssets] = useState(false);
   const [pdfPage, setPdfPage] = useState(1);
-  const [pdfZoom, setPdfZoom] = useState(100);
+  const [quizLaunchCount, setQuizLaunchCount] = useState(0);
   const hasStartedBuild = useRef(false);
   const theme = useMemo(() => getSubjectTheme(context.subject), [context.subject]);
 
@@ -777,16 +777,27 @@ function StudentSlideDeck({
   const pdfFilename = texFilename.replace(/\.tex$/, ".pdf");
   const compiledPdfHref = compiledDeck?.pdfUrl ?? compiledDeck?.pdfDataUrl ?? "";
   const compiledPageCount = compiledDeck?.pageCount ?? slides.length;
-  const pdfViewerSrc = compiledPdfHref ? `${compiledPdfHref}#toolbar=0&navpanes=0&page=${pdfPage}&zoom=${pdfZoom}` : "";
-  const pdfViewerKey = `${compiledDeck?.pdfUrl ?? compiledDeck?.pdfSize ?? "compiled-pdf"}-${compiledPageCount}-${pdfPage}-${pdfZoom}`;
-  const currentTimedSlide = slides[Math.min(pdfPage - 1, slides.length - 1)];
-  const currentPageMinutes = currentTimedSlide?.minutes ?? 4;
-  const [remainingSeconds, setRemainingSeconds] = useState(currentPageMinutes * 60);
+  const pdfViewerSrc = compiledPdfHref ? `${compiledPdfHref}#page=${pdfPage}` : "";
+  const pdfViewerKey = `${compiledDeck?.pdfUrl ?? compiledDeck?.pdfSize ?? "compiled-pdf"}-${compiledPageCount}-${pdfPage}-${quizLaunchCount}`;
+  const totalLessonMinutes = Math.max(
+    1,
+    slides
+      .filter((slide) => slide.title.toLowerCase() !== "exit quiz")
+      .reduce((total, slide) => total + slide.minutes, 0)
+  );
+  const totalLessonSeconds = totalLessonMinutes * 60;
+  const [remainingSeconds, setRemainingSeconds] = useState(totalLessonSeconds);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const elapsedSeconds = Math.max(0, totalLessonSeconds - remainingSeconds);
+  const quizUnlockSeconds = Math.ceil(totalLessonSeconds / 2);
+  const quizUnlocked = elapsedSeconds >= quizUnlockSeconds || remainingSeconds === 0;
+  const unlockRemainingSeconds = Math.max(0, quizUnlockSeconds - elapsedSeconds);
   const timerMinutes = Math.floor(remainingSeconds / 60);
   const timerSeconds = remainingSeconds % 60;
+  const unlockMinutes = Math.floor(unlockRemainingSeconds / 60);
+  const unlockSeconds = unlockRemainingSeconds % 60;
   const progress = compiledPdfHref
-    ? Math.round(((pdfPage - 1) / Math.max(1, compiledPageCount - 1)) * 100)
+    ? Math.round((elapsedSeconds / Math.max(1, totalLessonSeconds)) * 100)
     : slides.length > 1 ? Math.round((activeSlideIndex / (slides.length - 1)) * 100) : 100;
   const buildStages = ["Generating LaTeX", "Planning visuals", "Generating images", "Compiling PDF", "Checking quality", "Ready"];
   const stageAliases: Record<string, string> = {
@@ -968,9 +979,9 @@ function StudentSlideDeck({
   }, []);
 
   useEffect(() => {
-    setRemainingSeconds(currentPageMinutes * 60);
+    setRemainingSeconds(totalLessonSeconds);
     setIsTimerRunning(Boolean(compiledPdfHref));
-  }, [compiledPdfHref, currentPageMinutes, pdfPage]);
+  }, [compiledPdfHref, totalLessonSeconds]);
 
   useEffect(() => {
     if (!compiledPdfHref || !isTimerRunning || remainingSeconds <= 0) {
@@ -993,7 +1004,7 @@ function StudentSlideDeck({
             <h2 id="student-deck-title">{lesson.title}</h2>
             <p>
               {compiledPdfHref
-                ? `PDF page ${pdfPage} of ${compiledPageCount} · ${currentPageMinutes} min suggested`
+                ? `Compiled PDF deck · ${totalLessonMinutes} min lesson timer`
                 : `Slide ${activeSlideIndex + 1} of ${slides.length} · ${activeSlide?.minutes} min suggested`}
             </p>
           </div>
@@ -1101,48 +1112,42 @@ function StudentSlideDeck({
                 <strong>
                   {timerMinutes}:{timerSeconds.toString().padStart(2, "0")}
                 </strong>
-                <span>{currentPageMinutes} min page</span>
+                <span>Total lesson timer</span>
               </span>
               <button className="button secondary" onClick={() => setIsTimerRunning((running) => !running)} type="button">
                 {isTimerRunning ? "Pause" : "Start"}
               </button>
-              <button className="button secondary" onClick={() => setRemainingSeconds(currentPageMinutes * 60)} type="button">
+              <button
+                className="button secondary"
+                onClick={() => {
+                  setRemainingSeconds(totalLessonSeconds);
+                  setPdfPage(1);
+                  setQuizLaunchCount((count) => count + 1);
+                  setIsTimerRunning(true);
+                }}
+                type="button"
+              >
                 <TimerReset aria-hidden="true" size={18} />
                 Reset
               </button>
               <button
-                className="button secondary"
-                disabled={pdfPage <= 1}
+                className="button primary"
+                disabled={!quizUnlocked}
                 onClick={() => {
-                  setPdfPage((page) => Math.max(1, page - 1));
-                  setActiveSlideIndex((index) => Math.max(0, index - 1));
+                  setPdfPage(Math.max(1, compiledPageCount - 1));
+                  setQuizLaunchCount((count) => count + 1);
+                  setIsTimerRunning(false);
                 }}
                 type="button"
               >
-                <ArrowLeft aria-hidden="true" size={18} />
-                Page
+                <Trophy aria-hidden="true" size={18} />
+                Start Quiz
               </button>
-              <span className="pdf-page-count">
-                {pdfPage} / {compiledPageCount}
+              <span className="pdf-lesson-note">
+                {quizUnlocked
+                  ? "Quiz is unlocked. Use the PDF viewer controls for pages and zoom."
+                  : `Quiz unlocks after 50% of lesson time, in ${unlockMinutes}:${unlockSeconds.toString().padStart(2, "0")}.`}
               </span>
-              <button
-                className="button secondary"
-                disabled={pdfPage >= compiledPageCount}
-                onClick={() => {
-                  setPdfPage((page) => Math.min(compiledPageCount, page + 1));
-                  setActiveSlideIndex((index) => Math.min(slides.length - 1, index + 1));
-                }}
-                type="button"
-              >
-                Page
-                <ArrowRight aria-hidden="true" size={18} />
-              </button>
-              <button className="button secondary" onClick={() => setPdfZoom((zoom) => Math.max(75, zoom - 25))} type="button">
-                Zoom -
-              </button>
-              <button className="button secondary" onClick={() => setPdfZoom((zoom) => Math.min(175, zoom + 25))} type="button">
-                Zoom +
-              </button>
               <button
                 className="button secondary"
                 onClick={() => document.getElementById("compiled-pdf-viewer")?.requestFullscreen?.()}
