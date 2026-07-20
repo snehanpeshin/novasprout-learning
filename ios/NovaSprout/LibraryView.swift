@@ -21,7 +21,8 @@ struct LibraryView: View {
                                     context: saved.context,
                                     lesson: saved.lesson,
                                     pdfData: history.pdfData(for: saved),
-                                    savedLessonID: saved.id
+                                    savedLessonID: saved.id,
+                                    deckSummary: saved.deckSummary
                                 )
                             } label: {
                                 HStack(spacing: 13) {
@@ -38,6 +39,11 @@ struct LibraryView: View {
                                             Text("Latest quiz: \(score)%")
                                                 .font(.caption.weight(.semibold))
                                                 .foregroundStyle(NovaPalette.teal)
+                                        }
+                                        if let pageCount = saved.deckSummary?.pageCount, pageCount > 0 {
+                                            Label("\(pageCount) visual slides", systemImage: "rectangle.stack")
+                                                .font(.caption)
+                                                .foregroundStyle(NovaPalette.muted)
                                         }
                                     }
                                     Spacer()

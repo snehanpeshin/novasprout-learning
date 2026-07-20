@@ -54,12 +54,19 @@ final class LessonGeneratorViewModel: ObservableObject {
             ) { [self] nextStage in
                 await updateStage(nextStage)
             }
-            let saved = history.save(context: context, lesson: lesson, pdfData: result.pdfData)
+            let summary = result.deck.summary
+            let saved = history.save(
+                context: context,
+                lesson: lesson,
+                pdfData: result.pdfData,
+                deckSummary: summary
+            )
             playerConfiguration = LessonPlayerConfiguration(
                 context: context,
                 lesson: lesson,
                 pdfData: result.pdfData,
-                savedLessonID: saved.id
+                savedLessonID: saved.id,
+                deckSummary: summary
             )
         } catch {
             errorMessage = error.localizedDescription
@@ -72,7 +79,8 @@ final class LessonGeneratorViewModel: ObservableObject {
             context: SampleData.context,
             lesson: SampleData.lesson,
             pdfData: nil,
-            savedLessonID: nil
+            savedLessonID: nil,
+            deckSummary: nil
         )
     }
 
@@ -96,4 +104,5 @@ struct LessonPlayerConfiguration: Identifiable {
     let lesson: GeneratedLesson
     let pdfData: Data?
     let savedLessonID: UUID?
+    let deckSummary: DeckSummary?
 }

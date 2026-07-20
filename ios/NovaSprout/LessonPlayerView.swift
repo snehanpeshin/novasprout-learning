@@ -17,6 +17,8 @@ struct LessonPlayerView: View {
     @State private var showQuiz = false
     @State private var shareURL: URL?
     @State private var samplePage = 0
+    @State private var currentPDFPage = 1
+    @State private var pdfPageCount = 0
 
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -33,7 +35,11 @@ struct LessonPlayerView: View {
                     .tint(quizUnlocked ? NovaPalette.teal : NovaPalette.blue)
 
                 if let pdfData = configuration.pdfData {
-                    PDFKitView(data: pdfData)
+                    PDFKitView(
+                        data: pdfData,
+                        currentPage: $currentPDFPage,
+                        pageCount: $pdfPageCount
+                    )
                         .background(NovaPalette.navy)
                 } else {
                     sampleDeck
@@ -91,10 +97,21 @@ struct LessonPlayerView: View {
     private var controls: some View {
         VStack(spacing: 9) {
             HStack {
+                if configuration.pdfData != nil, pdfPageCount > 0 {
+                    Label("Slide \(currentPDFPage) of \(pdfPageCount)", systemImage: "rectangle.stack")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(NovaPalette.muted)
+                }
+                Spacer()
                 Label(formattedTime(remainingSeconds), systemImage: "timer")
                     .font(.subheadline.monospacedDigit().weight(.semibold))
                     .foregroundStyle(NovaPalette.navy)
-                Spacer()
+            }
+            HStack(alignment: .center, spacing: 12) {
+                Text(playerStatusText)
+                    .font(.caption)
+                    .foregroundStyle(NovaPalette.muted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Button {
                     showQuiz = true
                 } label: {
@@ -103,14 +120,20 @@ struct LessonPlayerView: View {
                 .buttonStyle(.borderedProminent)
                 .disabled(!quizUnlocked)
             }
-            Text(quizUnlocked ? "Quiz ready. Complete it when you are ready." : "The quiz unlocks halfway through this \(configuration.lesson.lessonMinutes)-minute lesson.")
-                .font(.caption)
-                .foregroundStyle(NovaPalette.muted)
-                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(.regularMaterial)
+    }
+
+    private var playerStatusText: String {
+        if quizUnlocked {
+            return "Quiz ready. Complete it when you are ready."
+        }
+        if let summary = configuration.deckSummary, summary.pageCount > 0 {
+            return "Swipe through \(summary.pageCount) visual slides. Quiz unlocks halfway through the lesson."
+        }
+        return "The quiz unlocks halfway through this \(configuration.lesson.lessonMinutes)-minute lesson."
     }
 
     private var sampleDeck: some View {

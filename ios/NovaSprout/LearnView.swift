@@ -61,7 +61,7 @@ struct LearnView: View {
                 Text("Learn it your way")
                     .font(.title2.weight(.bold))
                     .foregroundStyle(NovaPalette.navy)
-                Text("Create a focused lesson, study privately, then take a scored quiz.")
+                Text("Create a focused visual lesson, study privately, then take a scored quiz.")
                     .font(.subheadline)
                     .foregroundStyle(NovaPalette.muted)
             }
@@ -164,7 +164,7 @@ struct LearnView: View {
                 .frame(maxWidth: .infinity)
             }
 
-            Label("Lesson creation may take a few minutes. Do not include sensitive student information.", systemImage: "lock.shield")
+            Label("Visual lesson creation may take a few minutes. Do not include sensitive student information.", systemImage: "lock.shield")
                 .font(.caption)
                 .foregroundStyle(NovaPalette.muted)
         }

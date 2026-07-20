@@ -17,7 +17,12 @@ final class LessonHistoryStore: ObservableObject {
     }
 
     @discardableResult
-    func save(context: LessonContext, lesson: GeneratedLesson, pdfData: Data?) -> SavedLesson {
+    func save(
+        context: LessonContext,
+        lesson: GeneratedLesson,
+        pdfData: Data?,
+        deckSummary: DeckSummary? = nil
+    ) -> SavedLesson {
         let id = UUID()
         let fileName = pdfData == nil ? nil : "\(id.uuidString).pdf"
         if let pdfData, let fileName {
@@ -29,7 +34,8 @@ final class LessonHistoryStore: ObservableObject {
             createdAt: Date(),
             lesson: lesson,
             lastScore: nil,
-            pdfFileName: fileName
+            pdfFileName: fileName,
+            deckSummary: deckSummary
         )
         lessons.insert(saved, at: 0)
         persist()

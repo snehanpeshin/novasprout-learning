@@ -9,7 +9,9 @@ Native SwiftUI app for iPhone and iPad. It uses the existing NovaSprout API for 
 3. Press Run.
 4. Open the free sample lesson, or add a beta AI access code in Settings.
 
-The production API base URL is set in `APIClient.swift`. Generated PDFs, lesson metadata, and quiz scores are stored locally on the device. The beta access code is stored in Keychain.
+The production API base URL is set in `APIClient.swift`. Generated visual PDFs, lesson metadata, deck quality summaries, and quiz scores are stored locally on the device. The beta access code is stored in Keychain.
+
+Version 1.1 uses the same structured visual lesson pipeline as the website. Compiled decks open as swipeable, single-slide pages with the lesson timer and scored quiz kept in the native player.
 
 ## App Store preparation
 

@@ -137,6 +137,27 @@ struct CompiledDeck: Codable {
     let qualityChecks: [String]?
     let qualityWarnings: [String]?
     let validationErrors: [String]?
+
+    var summary: DeckSummary {
+        DeckSummary(
+            pageCount: pageCount ?? 0,
+            generatedImageCount: assetManifest?.filter { $0.type == "image" }.count ?? 0,
+            qualityWarnings: qualityWarnings ?? []
+        )
+    }
+}
+
+struct DeckSummary: Codable, Hashable {
+    let pageCount: Int
+    let generatedImageCount: Int
+    let qualityWarnings: [String]
+
+    var visualDescription: String {
+        if generatedImageCount > 0 {
+            return "\(pageCount) visual slides with topic diagrams and an AI-generated teaching image."
+        }
+        return "\(pageCount) visual slides with topic-specific diagrams and models."
+    }
 }
 
 struct SavedLesson: Codable, Hashable, Identifiable {
@@ -146,6 +167,7 @@ struct SavedLesson: Codable, Hashable, Identifiable {
     let lesson: GeneratedLesson
     var lastScore: Int?
     let pdfFileName: String?
+    let deckSummary: DeckSummary?
 }
 
 enum GenerationStage: String, CaseIterable, Identifiable {
@@ -157,6 +179,23 @@ enum GenerationStage: String, CaseIterable, Identifiable {
     case ready = "Ready"
 
     var id: String { rawValue }
+
+    var detail: String {
+        switch self {
+        case .lesson:
+            "Building a detailed lesson around the student's topic and goal."
+        case .visualPlan:
+            "Choosing the clearest diagrams, models, and visual examples."
+        case .images:
+            "Creating a topic-specific instructional image where it adds value."
+        case .compilation:
+            "Laying out the lesson as a polished, swipeable slide deck."
+        case .quality:
+            "Checking the PDF, slide count, and visual coverage."
+        case .ready:
+            "The private lesson is ready to study."
+        }
+    }
 }
 
 enum LessonOptions {
