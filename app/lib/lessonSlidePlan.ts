@@ -249,7 +249,7 @@ function makeSlide(
 
 const topicVocabulary = [
   {
-    pattern: /\b(digest|stomach|intestine|enzyme|bile|food)\b/i,
+    pattern: /\b(digest\w*|stomachs?|intestines?|enzymes?|bile|food)\b/i,
     terms: ["mouth", "esophagus", "stomach", "small intestine", "large intestine", "enzyme", "bile", "absorption", "villi", "waste"]
   },
   {
@@ -269,11 +269,11 @@ const topicVocabulary = [
     terms: ["ecosystem", "habitat", "population", "community", "producer", "consumer", "decomposer", "food chain", "energy flow"]
   },
   {
-    pattern: /\b(ratio|proportion|unit rate|scale factor)\b/i,
+    pattern: /\b(ratios?|proportions?|unit rates?|scale factors?)\b/i,
     terms: ["ratio", "unit rate", "equivalent ratio", "proportion", "scale factor", "constant of proportionality", "table", "graph"]
   },
   {
-    pattern: /\b(fraction|decimal|percent|numerator|denominator)\b/i,
+    pattern: /\b(fractions?|decimals?|percent(?:age)?s?|numerators?|denominators?)\b/i,
     terms: ["fraction", "numerator", "denominator", "equivalent fraction", "decimal", "percent", "benchmark", "simplify"]
   },
   {
@@ -312,7 +312,9 @@ function vocabularyFor(subjectKey: SubjectKey, topic: string, lesson?: LegacyLes
     ...(lesson?.learningObjectives ?? []),
     ...(lesson?.practiceQuestions ?? [])
   ].filter(Boolean).join(" "), 5000);
-  const dictionaryMatch = topicVocabulary.find((entry) => entry.pattern.test(`${lowerTopic} ${lessonText}`));
+  const dictionaryMatch =
+    topicVocabulary.find((entry) => entry.pattern.test(lowerTopic)) ??
+    topicVocabulary.find((entry) => entry.pattern.test(lessonText));
   if (dictionaryMatch) {
     return dictionaryMatch.terms.slice(0, 8);
   }
@@ -329,6 +331,126 @@ function vocabularyFor(subjectKey: SubjectKey, topic: string, lesson?: LegacyLes
     return ["model", "operation", "variable", "relationship", "strategy", "estimate", "solution", "check"];
   }
   return ["main idea", "model", "example", "evidence", "practice", "strategy", "check", "next step"];
+}
+
+const visualStopWords = new Set([
+  "about", "after", "again", "also", "because", "before", "between", "could", "does", "each", "from", "have",
+  "into", "lesson", "make", "more", "most", "only", "other", "same", "see", "should", "show", "student", "than",
+  "that", "the", "their", "these", "they", "think", "this", "through", "understand", "use", "using", "want",
+  "wants", "what", "when", "where", "which", "with", "work", "would"
+]);
+
+function visualKeywords(value: string, fallback: string[], maxItems = 5) {
+  const words = normalizePlainText(value, 1800)
+    .match(/[A-Za-z][A-Za-z-]{2,}/g)
+    ?.map((word) => word.toLowerCase()) ?? [];
+  const unique = words.filter((word, index) => !visualStopWords.has(word) && words.indexOf(word) === index);
+  const selected = [...unique, ...fallback.map((word) => normalizePlainText(word, 32).toLowerCase())]
+    .filter((word, index, all) => word && all.indexOf(word) === index)
+    .slice(0, maxItems);
+
+  return selected.map((word) => word.replace(/\b\w/g, (letter) => letter.toUpperCase()));
+}
+
+function questionVisual(subjectKey: SubjectKey, topic: string, question: string, id: string): VisualSpec {
+  const labels = visualKeywords(question, [topic, "given", "find", "check"], 5);
+  if (subjectKey === "math" && /\b(fraction)\b/i.test(`${topic} ${question}`)) {
+    const fractions = [...new Set(question.match(/\d+\s*\/\s*(?:\d+|\?)/g) ?? [])].slice(0, 2);
+    return {
+      accessibilityLabel: `A fraction tape model to organize the information in ${question}.`,
+      id,
+      labels: [fractions[0] ?? "1/2", fractions[1] ?? "2/4", "Same whole", "Same value"],
+      rows: [["1", "2"], ["1", "2", "3", "4"]],
+      title: "Compare equal amounts",
+      type: "tape_diagram"
+    };
+  }
+  if (subjectKey === "math" && /\b(ratio|proportion|percent)\b/i.test(`${topic} ${question}`)) {
+    return {
+      accessibilityLabel: `A quantity model to organize the information in ${question}.`,
+      id,
+      labels,
+      rows: [labels.slice(0, 3), labels.slice(2, 5)],
+      title: "Model the quantities",
+      type: "tape_diagram"
+    };
+  }
+
+  return {
+    accessibilityLabel: `A question model connecting the important ideas in ${question}.`,
+    id,
+    labels,
+    title: "What connects?",
+    type: "concept_map"
+  };
+}
+
+function topicVisual(subjectKey: SubjectKey, topic: string, text: string, id: string): VisualSpec {
+  const combined = `${topic} ${text}`;
+  if (subjectKey === "math" && /\bfraction/i.test(combined)) {
+    return {
+      accessibilityLabel: "Equivalent fraction tape model comparing equal amounts.",
+      id,
+      labels: ["1/2", "2/4", "Same whole", "Same amount"],
+      rows: [["1", "2"], ["1", "2", "3", "4"]],
+      title: "Equivalent amounts",
+      type: "tape_diagram"
+    };
+  }
+  if (subjectKey === "math" && /\b(ratio|proportion|unit rate)/i.test(combined)) {
+    return {
+      accessibilityLabel: "Aligned number lines showing two quantities changing with a constant scale factor.",
+      id,
+      rows: [["A", "0", "2", "4", "6", "8"], ["B", "0", "3", "6", "9", "12"]],
+      title: "Quantities grow together",
+      type: "double_number_line"
+    };
+  }
+  if (subjectKey === "science" && /\bdigest|stomach|intestine|absorb|villi/i.test(combined)) {
+    return /\bvilli|absorb|surface area/i.test(text)
+      ? {
+          accessibilityLabel: "Magnified villus showing a thin surface and nearby blood vessels for nutrient absorption.",
+          columns: [
+            { items: ["Finger-like fold", "Thin surface", "Large surface area"], title: "Villus structure" },
+            { items: ["Nutrients cross", "Capillaries collect", "Blood transports"], title: "Absorption" }
+          ],
+          id,
+          title: "Villi increase absorption",
+          type: "structure_function"
+        }
+      : {
+          accessibilityLabel: "Simplified digestive system map tracing food through the main organs.",
+          id,
+          labels: ["Mouth", "Esophagus", "Stomach", "Small intestine", "Large intestine", "Liver", "Pancreas"],
+          title: "Digestive system",
+          type: "labeled_system"
+        };
+  }
+
+  return {
+    accessibilityLabel: `Visual relationship map for ${topic}.`,
+    id,
+    labels: visualKeywords(`${topic} ${text}`, [topic, "model", "example", "check"], 5),
+    title: topic,
+    type: "concept_map"
+  };
+}
+
+function fractionEquationSteps(value: string) {
+  const fractions = [...new Set(value.match(/\d+\s*\/\s*\d+/g) ?? [])].slice(0, 2);
+  if (fractions.length < 2) {
+    return [];
+  }
+
+  const [leftNumerator, leftDenominator] = fractions[0].split("/").map((part) => Number(part.trim()));
+  const [rightNumerator, rightDenominator] = fractions[1].split("/").map((part) => Number(part.trim()));
+  const numeratorFactor = rightNumerator / leftNumerator;
+  const denominatorFactor = rightDenominator / leftDenominator;
+  if (Number.isInteger(numeratorFactor) && numeratorFactor > 0 && numeratorFactor === denominatorFactor) {
+    return [fractions[0], `(${leftNumerator} \\times ${numeratorFactor})/(${leftDenominator} \\times ${numeratorFactor})`, fractions[1]];
+  }
+
+  return [`${fractions[0]} = ${fractions[1]}`, "Compare the same point", "Check with a visual model"];
 }
 
 function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanSlide[] {
@@ -527,6 +649,135 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
     ];
   }
 
+  if (subjectKey === "science" && /\b(cell|cells|organelle|nucleus|membrane|cytoplasm)\b/.test(lowerTopic)) {
+    return [
+      makeSlide(
+        "cell-map",
+        "labeled_diagram",
+        "Inside A Cell",
+        4,
+        {
+          bullets: [
+            "The cell membrane controls what enters and leaves.",
+            "The nucleus stores genetic instructions.",
+            "Mitochondria release usable energy from food."
+          ],
+          keyIdea: "A cell is a coordinated system of structures with different jobs."
+        },
+        [
+          {
+            accessibilityLabel: "Simplified animal cell with membrane, cytoplasm, nucleus, mitochondrion, and vacuole labeled.",
+            id: "cell-labeled-system",
+            labels: ["Cell membrane", "Cytoplasm", "Nucleus", "Mitochondrion", "Vacuole"],
+            title: "Animal cell",
+            type: "labeled_system"
+          }
+        ]
+      ),
+      makeSlide(
+        "cell-structure-function",
+        "comparison",
+        "Structure Matches Function",
+        4,
+        {
+          bullets: ["Shape and location help each organelle do its job.", "Organelles exchange matter and energy."],
+          keyIdea: "A structure makes sense when you connect its features to its job."
+        },
+        [
+          {
+            accessibilityLabel: "Structure and function comparison for three organelles.",
+            columns: [
+              { items: ["Thin flexible boundary", "Contains DNA", "Folded inner membrane"], title: "Structure" },
+              { items: ["Controls movement", "Directs activity", "Releases energy"], title: "Function" }
+            ],
+            id: "cell-structure-function-table",
+            title: "Feature to job",
+            type: "structure_function"
+          }
+        ]
+      ),
+      makeSlide(
+        "cell-organization",
+        "process",
+        "From Cells To Organ Systems",
+        4,
+        {
+          keyIdea: "Specialized cells work together at larger levels of organization."
+        },
+        [
+          {
+            accessibilityLabel: "Sequence from cell to tissue to organ to organ system.",
+            id: "cell-organization-sequence",
+            steps: ["Cell", "Tissue", "Organ", "Organ system"],
+            type: "process_sequence"
+          }
+        ]
+      )
+    ];
+  }
+
+  if (subjectKey === "science" && /\b(force|motion|speed|velocity|acceleration|friction|gravity)\b/.test(lowerTopic)) {
+    return [
+      makeSlide(
+        "force-cause-effect",
+        "process",
+        "How A Force Changes Motion",
+        4,
+        {
+          bullets: ["A net force can change speed or direction.", "Balanced forces do not change motion."],
+          keyIdea: "Compare force direction and size before predicting motion."
+        },
+        [
+          {
+            accessibilityLabel: "Cause and effect pathway from net force to acceleration to changed motion.",
+            id: "force-motion-sequence",
+            steps: ["Forces act", "Find net force", "Acceleration occurs", "Motion changes"],
+            type: "process_sequence"
+          }
+        ]
+      ),
+      makeSlide(
+        "balanced-forces",
+        "comparison",
+        "Balanced vs Unbalanced Forces",
+        4,
+        {
+          keyIdea: "Equal opposite forces balance; unequal forces produce a net force."
+        },
+        [
+          {
+            accessibilityLabel: "Comparison of equal opposite forces and unequal opposite forces.",
+            columns: [
+              { items: ["Equal size", "Opposite direction", "No acceleration"], title: "Balanced" },
+              { items: ["Unequal size", "Net direction", "Acceleration"], title: "Unbalanced" }
+            ],
+            id: "balanced-unbalanced-compare",
+            type: "comparison_table"
+          }
+        ]
+      ),
+      makeSlide(
+        "motion-graph",
+        "data_display",
+        "Read Motion On A Graph",
+        4,
+        {
+          bullets: ["Steeper lines show a faster rate of change.", "A flat section means the measured position is unchanged."],
+          keyIdea: "The shape of a graph tells a motion story."
+        },
+        [
+          {
+            accessibilityLabel: "Coordinate graph showing position increasing over time.",
+            id: "motion-coordinate-graph",
+            points: [{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 2 }, { x: 3, y: 4 }, { x: 4, y: 6 }],
+            title: "Position over time",
+            type: "coordinate_graph"
+          }
+        ]
+      )
+    ];
+  }
+
   if (subjectKey === "math" && (lowerTopic.includes("ratio") || lowerTopic.includes("proportion"))) {
     return [
       makeSlide(
@@ -619,6 +870,172 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
     ];
   }
 
+  if (subjectKey === "math" && /\b(fraction|fractions|numerator|denominator)\b/.test(lowerTopic)) {
+    return [
+      makeSlide(
+        "fraction-area-model",
+        "concept",
+        "See The Same Amount",
+        4,
+        {
+          bullets: ["Equal-sized wholes must be compared.", "Different partitions can cover the same total area."],
+          keyIdea: "Equivalent fractions use different names for the same amount."
+        },
+        [
+          {
+            accessibilityLabel: "Two tape diagrams partitioned into halves and fourths to show one half equals two fourths.",
+            id: "equivalent-fraction-tapes",
+            labels: ["1/2", "2/4", "Same whole", "Same shaded amount"],
+            rows: [["1", "2"], ["1", "2", "3", "4"]],
+            title: "1/2 = 2/4",
+            type: "tape_diagram"
+          }
+        ]
+      ),
+      makeSlide(
+        "fraction-number-line",
+        "data_display",
+        "Equivalent Points On A Number Line",
+        4,
+        {
+          keyIdea: "Equivalent fractions land at the same point, even when the labels differ."
+        },
+        [
+          {
+            accessibilityLabel: "Aligned number lines showing one half and two fourths at the same location.",
+            id: "fraction-double-number-line",
+            rows: [["Halves", "0", "1/2", "1"], ["Fourths", "0", "2/4", "4/4"]],
+            type: "double_number_line"
+          }
+        ]
+      ),
+      makeSlide(
+        "fraction-equation",
+        "worked_example",
+        "Generate An Equivalent Fraction",
+        4,
+        {
+          keyIdea: "Multiply the numerator and denominator by the same nonzero number."
+        },
+        [
+          {
+            accessibilityLabel: "Equation steps showing three fifths multiplied by two over two to equal six tenths.",
+            id: "fraction-equation-steps",
+            steps: ["3/5", "(3 x 2)/(5 x 2)", "6/10"],
+            type: "equation_steps"
+          }
+        ]
+      )
+    ];
+  }
+
+  if (subjectKey === "ela") {
+    return [
+      makeSlide(
+        "evidence-map",
+        "process",
+        "From Text To Explanation",
+        4,
+        { keyIdea: "A strong response connects a claim to specific evidence and explains the connection." },
+        [
+          {
+            accessibilityLabel: "Pathway from reading the question to making a claim, selecting evidence, and explaining reasoning.",
+            id: "claim-evidence-reasoning",
+            steps: ["Read the question", "Make a claim", "Choose evidence", "Explain the link"],
+            type: "process_sequence"
+          }
+        ]
+      ),
+      makeSlide(
+        "main-detail-map",
+        "concept",
+        "Main Idea And Details",
+        4,
+        { keyIdea: "The main idea unifies the details; each strong detail adds evidence or explanation." },
+        [
+          {
+            accessibilityLabel: "Concept map connecting the main idea to supporting details and evidence.",
+            id: "main-idea-concept-map",
+            labels: ["Key detail", "Evidence", "Example", "Author's purpose"],
+            title: "Main idea",
+            type: "concept_map"
+          }
+        ]
+      ),
+      makeSlide(
+        "inference-compare",
+        "comparison",
+        "Observation vs Inference",
+        4,
+        { keyIdea: "An observation comes directly from the text; an inference combines evidence with reasoning." },
+        [
+          {
+            accessibilityLabel: "Side-by-side comparison of an observation and an inference.",
+            columns: [
+              { items: ["Directly stated", "Can be quoted", "Visible detail"], title: "Observation" },
+              { items: ["Evidence plus reasoning", "Not directly stated", "Must be supported"], title: "Inference" }
+            ],
+            id: "observation-inference-table",
+            type: "comparison_table"
+          }
+        ]
+      )
+    ];
+  }
+
+  if (subjectKey === "coding") {
+    return [
+      makeSlide(
+        "input-process-output",
+        "process",
+        "Input, Process, Output",
+        4,
+        { keyIdea: "Programs receive data, follow instructions, and produce a result." },
+        [
+          {
+            accessibilityLabel: "Flow from program input through a rule to output and a test.",
+            id: "ipo-flow",
+            steps: ["Input", "Process", "Output", "Test"],
+            type: "process_sequence"
+          }
+        ]
+      ),
+      makeSlide(
+        "decision-flow",
+        "process",
+        "How A Program Makes A Decision",
+        4,
+        { keyIdea: "A condition chooses which instruction runs next." },
+        [
+          {
+            accessibilityLabel: "Decision sequence from condition to true or false branch and result.",
+            id: "condition-flow",
+            steps: ["Check condition", "True path", "False path", "Continue"],
+            type: "flowchart"
+          }
+        ]
+      ),
+      makeSlide(
+        "debugging-compare",
+        "comparison",
+        "Predict, Test, Debug",
+        4,
+        { keyIdea: "Debug one assumption at a time and compare expected output with actual output." },
+        [
+          {
+            accessibilityLabel: "Comparison between expected program behavior and actual behavior.",
+            columns: [
+              { items: ["Expected input", "Expected rule", "Expected output"], title: "Prediction" },
+              { items: ["Actual input", "Actual rule", "Actual output"], title: "Test result" }
+            ],
+            id: "debug-comparison",
+            type: "comparison_table"
+          }
+        ]
+      )
+    ];
+  }
+
   return [
     makeSlide(
       "visual-model",
@@ -661,9 +1078,10 @@ export function legacyLessonToSlidePlan({
       keyIdea: normalizePlainText(lesson?.studentFit || `A clear NovaSprout lesson on ${topic}.`, 240)
     }, [
       {
-        accessibilityLabel: "Roadmap with see, explain, practice, and check stages.",
+        accessibilityLabel: `Visual preview of the important ideas in ${topic}.`,
         id: "lesson-roadmap",
-        labels: ["See", "Explain", "Practice", "Check"],
+        labels: [topic, ...vocabulary.slice(0, 4)],
+        title: topic,
         type: "icon_grid"
       }
     ]),
@@ -672,9 +1090,10 @@ export function legacyLessonToSlidePlan({
       keyIdea: normalizePlainText(lesson?.conceptExplanation, 220) || `This lesson helps you understand ${topic} with examples and practice.`
     }, [
       {
-        accessibilityLabel: "Core lesson ideas connected to examples and practice.",
+        accessibilityLabel: `Core ideas that connect to ${topic}.`,
         id: "big-idea-map",
-        labels: ["Idea", "Visual", "Example", "Practice"],
+        labels: visualKeywords(`${topic} ${objectives.join(" ")}`, vocabulary, 5),
+        title: topic,
         type: "concept_map"
       }
     ]),
@@ -696,7 +1115,15 @@ export function legacyLessonToSlidePlan({
       makeSlide("prior-knowledge", "prior_knowledge", "Before We Start", 3, {
         bullets: lesson.prerequisiteCheck.map((item) => stripDuplicateNumbering(item)).filter(Boolean).slice(0, 4),
         keyIdea: "Check the foundations first."
-      })
+      }, [
+        {
+          accessibilityLabel: `Prior knowledge ideas needed for ${topic}.`,
+          id: "prior-knowledge-map",
+          labels: visualKeywords(lesson.prerequisiteCheck.join(" "), vocabulary, 5),
+          title: "What you already know",
+          type: "concept_map"
+        }
+      ])
     );
   }
 
@@ -707,10 +1134,11 @@ export function legacyLessonToSlidePlan({
         hint: "Try one small step first, then explain your thinking."
       }, [
         {
-          accessibilityLabel: "Warm-up prompt card.",
+          accessibilityLabel: `Warm-up visual cues for ${topic}.`,
           id: "warm-up-card",
-          labels: ["Think", "Try", "Explain"],
-          type: "callout"
+          labels: visualKeywords(lesson.warmUp, [topic, ...vocabulary], 5),
+          title: "Look for these clues",
+          type: "concept_map"
         }
       ])
     );
@@ -722,12 +1150,7 @@ export function legacyLessonToSlidePlan({
         explanation: chunk,
         keyIdea: index === 0 ? "Understand the idea before memorizing details." : undefined
       }, [
-        {
-          accessibilityLabel: "Concept card that connects the idea to a simple example.",
-          id: `concept-card-${index + 1}`,
-          labels: ["Meaning", "Model", "Use"],
-          type: "concept_map"
-        }
+        topicVisual(subjectKey, topic, chunk, `concept-card-${index + 1}`)
       ], "medium")
     );
   });
@@ -736,14 +1159,17 @@ export function legacyLessonToSlidePlan({
 
   chunkText(removeTutorInstructionLanguage(lesson?.guidedExample, 3200), 220, 6).forEach((chunk, index) => {
     const exampleSteps = chunk.split(/(?:Step\s*\d+:|;\s*)/i).map((item) => normalizePlainText(item, 120)).filter(Boolean).slice(0, 4);
-    const exampleVisual: VisualSpec = subjectKey === "math"
+    const equationSteps = subjectKey === "math" ? fractionEquationSteps(chunk) : [];
+    const exampleVisual: VisualSpec = equationSteps.length
       ? {
           accessibilityLabel: "Worked example steps.",
           id: `worked-example-steps-${index + 1}`,
-          steps: exampleSteps,
+          steps: equationSteps,
           type: "equation_steps"
         }
-      : {
+      : subjectKey === "math" || subjectKey === "science"
+        ? topicVisual(subjectKey, topic, chunk, `worked-example-model-${index + 1}`)
+        : {
           accessibilityLabel: "Worked example learning steps.",
           id: `worked-example-process-${index + 1}`,
           steps: exampleSteps.length > 1 ? exampleSteps : ["Notice the situation", "Apply the idea", "Check the result"],
@@ -752,7 +1178,7 @@ export function legacyLessonToSlidePlan({
     slides.push(
       makeSlide(`worked-example-${index + 1}`, "worked_example", subjectKey === "math" ? slideTitle("Example", chunk, `Worked Example ${index + 1}`) : `Worked Example ${index + 1}`, 4, {
         explanation: chunk,
-        steps: exampleSteps
+        steps: exampleSteps.length > 1 ? exampleSteps : undefined
       }, [exampleVisual], "medium")
     );
   });
@@ -768,12 +1194,7 @@ export function legacyLessonToSlidePlan({
         explanation: activity,
         keyIdea: segmentTitle
       }, [
-        {
-          accessibilityLabel: `Student-facing content card for ${segmentTitle}.`,
-          id: `content-card-${index + 1}`,
-          labels: ["Read", "Notice", "Try"],
-          type: "callout"
-        }
+        topicVisual(subjectKey, topic, `${segmentTitle} ${activity}`, `content-card-${index + 1}`)
       ])
     );
   });
@@ -784,7 +1205,7 @@ export function legacyLessonToSlidePlan({
         answer: item.answer || item.why,
         hint: item.hint || "Use the model from the previous slide.",
         question: item.question
-      })
+      }, [questionVisual(subjectKey, topic, item.question, `practice-model-${index + 1}`)], "high")
     );
   });
 
@@ -793,11 +1214,39 @@ export function legacyLessonToSlidePlan({
       bullets:
         subjectKey === "science" && topic.toLowerCase().includes("digest")
           ? ["Do not confuse where food travels with helper organs that add chemicals.", "Food does not pass through the liver or pancreas."]
+          : subjectKey === "math" && /fraction/i.test(topic)
+            ? ["Do not change only the numerator or only the denominator.", "Equivalent fractions use the same nonzero factor on both parts."]
           : subjectKey === "math"
             ? ["Do not multiply only one quantity in a ratio.", "Equivalent ratios need the same scale factor on both quantities."]
             : ["Check the exact question before answering.", "Use evidence or steps, not only a guess."],
       keyIdea: "Mistakes become easier to catch when you know what to look for."
-    })
+    }, [
+      {
+        accessibilityLabel: `Side-by-side correction of a common misconception about ${topic}.`,
+        columns: subjectKey === "science" && topic.toLowerCase().includes("digest")
+          ? [
+              { title: "Incorrect model", items: ["Food passes through liver", "All organs have the same role"] },
+              { title: "Accurate model", items: ["Food stays in the digestive tract", "Helper organs add chemicals"] }
+            ]
+          : subjectKey === "math" && /fraction/i.test(topic)
+            ? [
+                { title: "Incorrect move", items: ["Change one number", "The value changes"] },
+                { title: "Accurate move", items: ["Use one factor", "Multiply both parts"] }
+              ]
+          : subjectKey === "math"
+            ? [
+                { title: "Incorrect move", items: ["Change one quantity only", "Use different scale factors"] },
+                { title: "Accurate move", items: ["Change both quantities", "Use one scale factor"] }
+              ]
+            : [
+                { title: "Weak reasoning", items: ["Guess", "Skip evidence"] },
+                { title: "Strong reasoning", items: ["Show a step", "Connect evidence"] }
+              ],
+        id: "misconception-correction",
+        title: "Incorrect versus accurate",
+        type: "comparison_table"
+      }
+    ], "high")
   );
 
   (lesson?.quickAssessment ?? []).map(splitQuestionParts).filter((item) => item.question).slice(0, 4).forEach((item, index) => {
@@ -806,7 +1255,7 @@ export function legacyLessonToSlidePlan({
         answer: item.answer || item.why,
         hint: item.hint,
         question: item.question
-      })
+      }, [questionVisual(subjectKey, topic, item.question, `check-model-${index + 1}`)], "high")
     );
   });
 
@@ -816,10 +1265,11 @@ export function legacyLessonToSlidePlan({
       keyIdea: "A strong finish means you can explain the idea in your own words."
     }, [
       {
-        accessibilityLabel: "Summary checklist.",
+        accessibilityLabel: `Visual summary of the connected ideas in ${topic}.`,
         id: "summary-checklist",
-        labels: ["Idea", "Example", "Practice", "Next"],
-        type: "icon_grid"
+        labels: visualKeywords(`${topic} ${objectives.join(" ")}`, vocabulary, 6),
+        title: topic,
+        type: "concept_map"
       }
     ])
   );
@@ -829,7 +1279,15 @@ export function legacyLessonToSlidePlan({
       makeSlide("next-session", "exit_ticket", "Recommended Next Session", 2, {
         keyIdea: normalizePlainText(lesson.recommendedNextSession, 300),
         question: "What should we practice next?"
-      })
+      }, [
+        {
+          accessibilityLabel: `Visual bridge from ${topic} to the next learning step.`,
+          id: "next-session-bridge",
+          labels: visualKeywords(`${topic} ${lesson.recommendedNextSession}`, vocabulary, 5),
+          title: "Build on today's idea",
+          type: "process_sequence"
+        }
+      ])
     );
   }
 

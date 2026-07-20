@@ -87,6 +87,10 @@ export async function POST(request: Request) {
     const images = await Promise.all(
       imageAssets.map(async (asset) => {
         const imageModel = process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-1";
+        const configuredQuality = process.env.OPENAI_IMAGE_QUALITY?.trim().toLowerCase();
+        const imageQuality = ["low", "medium", "high"].includes(configuredQuality ?? "")
+          ? configuredQuality
+          : "medium";
         const response = await fetch("https://api.openai.com/v1/images/generations", {
           method: "POST",
           headers: {
@@ -96,8 +100,8 @@ export async function POST(request: Request) {
           body: JSON.stringify({
             model: imageModel,
             n: 1,
-            prompt: `${asset.prompt}. Friendly clean tutoring slide illustration. No embedded words or labels.`,
-            quality: imageModel === "dall-e-3" ? "standard" : "low",
+            prompt: `${asset.prompt}. This is the dominant instructional visual on a NovaSprout lesson slide. Prioritize subject accuracy, clear spatial relationships, one obvious focal point, accessible contrast, clean edges, and generous negative space. Do not add embedded words, letters, labels, watermarks, frames, or decorative classroom objects.`,
+            quality: imageModel === "dall-e-3" ? "standard" : imageQuality,
             size: "1024x1024"
           })
         });

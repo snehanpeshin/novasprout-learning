@@ -13,7 +13,7 @@ export const maxDuration = 300;
 const execFileAsync = promisify(execFile);
 const remoteCompilerTimeoutMs = 285000;
 const maxEmbeddedImageAssets = 4;
-const maxEmbeddedImageBytes = 1_100_000;
+const maxEmbeddedImageBytes = 2_800_000;
 const maxRemoteAssetPayloadBytes = 3_600_000;
 
 type DeckAsset = {
@@ -72,22 +72,22 @@ const positions: Record<(typeof validPlacementPositions)[number], { anchor: stri
 const subjectTemplates = {
   coding: {
     accent: "Code",
-    color: "7C3AED",
+    color: "123047",
     icon: "\\texttt{</>}"
   },
   ela: {
     accent: "Read",
-    color: "D95D39",
+    color: "EF6F61",
     icon: "\\Large\\textbf{Aa}"
   },
   math: {
     accent: "Solve",
-    color: "1976D2",
+    color: "4A90E2",
     icon: "$\\Sigma$"
   },
   science: {
     accent: "Explore",
-    color: "0F9B78",
+    color: "18A67A",
     icon: "$\\Delta$"
   }
 };
@@ -270,12 +270,12 @@ function compilerImageAssets(assets: DeckAsset[]) {
 }
 
 function frameBody(title: string, body: string, assets: DeckAsset[], slideNumber: number) {
-  const assetTex = assets
+  const slideAssets = assets.filter((asset) => assetSlideNumber(asset.placement) === slideNumber);
+  const primaryImage = slideAssets.find(
+    (asset) => asset.type === "image" && asset.dataUrl?.startsWith("data:image/png;base64,") && asset.filename
+  );
+  const assetTex = (primaryImage ? [] : slideAssets)
     .map((asset, index) => {
-      if (assetSlideNumber(asset.placement) !== slideNumber) {
-        return "";
-      }
-
       const assetPos = assetPosition(asset.placement);
       if (!assetPos) {
         return "";
@@ -308,8 +308,24 @@ ${position.anchor}
     .filter(Boolean)
     .join("\n");
 
-  return String.raw`\begin{frame}{${escapeLatex(frameTitle(title))}}
+  const slideBody = primaryImage
+    ? String.raw`\begin{columns}[T,onlytextwidth]
+\begin{column}{0.38\textwidth}
 ${body}
+\end{column}
+\begin{column}{0.59\textwidth}
+\vspace{0.08cm}
+\begin{center}
+\setlength{\fboxsep}{3pt}
+\fcolorbox{NovaSky!35}{white}{\includegraphics[width=0.96\linewidth,height=5.25cm,keepaspectratio]{${primaryImage.filename}}}
+${primaryImage.caption ? `\\[0.12cm]{\\scriptsize\\color{NovaInk!75}${escapeLatex(primaryImage.caption)}}` : ""}
+\end{center}
+\end{column}
+\end{columns}`
+    : body;
+
+  return String.raw`\begin{frame}{${escapeLatex(frameTitle(title))}}
+${slideBody}
 ${assetTex}
 \end{frame}`;
 }
@@ -647,45 +663,162 @@ function renderDigestiveSystemVisual(visual: VisualSpec) {
   const [mouth, esophagus, stomach, smallIntestine, largeIntestine, liver, pancreas] = labels;
 
   return String.raw`\begin{center}
-\begin{tikzpicture}[scale=0.58, every node/.style={font=\tiny}]
-\node[draw, rounded corners, thick, fill=SubjectAccent!14, minimum width=2.15cm, minimum height=0.5cm] (mouth) at (0,4.8) {${escapeLatex(mouth)}};
-\node[draw, rounded corners, thick, fill=SubjectAccent!10, minimum width=2.15cm, minimum height=0.5cm] (eso) at (0,4.05) {${escapeLatex(esophagus)}};
-\node[draw, rounded corners, thick, fill=SubjectAccent!22, minimum width=2.15cm, minimum height=0.62cm] (stomach) at (0,3.15) {${escapeLatex(stomach)}};
-\node[draw, rounded corners, thick, fill=NovaMint!18, minimum width=2.5cm, minimum height=0.62cm] (small) at (0,2.15) {${escapeLatex(smallIntestine)}};
-\node[draw, rounded corners, thick, fill=NovaMint!10, minimum width=2.5cm, minimum height=0.62cm] (large) at (0,1.15) {${escapeLatex(largeIntestine)}};
-\node[draw, rounded corners, thick, fill=SubjectAccent!10, minimum width=1.55cm, minimum height=0.45cm] (liver) at (3.4,3.45) {${escapeLatex(liver)}};
-\node[draw, rounded corners, thick, fill=SubjectAccent!10, minimum width=1.75cm, minimum height=0.45cm] (pancreas) at (3.55,2.45) {${escapeLatex(pancreas)}};
-\draw[->, very thick, SubjectAccent] (mouth.south) -- (eso.north);
-\draw[->, very thick, SubjectAccent] (eso.south) -- (stomach.north);
-\draw[->, very thick, SubjectAccent] (stomach.south) -- (small.north);
-\draw[->, very thick, SubjectAccent] (small.south) -- (large.north);
-\draw[->, thick, NovaMint] (liver.west) to[bend right=12] node[above, sloped]{\tiny bile} (small.east);
-\draw[->, thick, NovaMint] (pancreas.west) to[bend left=10] node[below, sloped]{\tiny enzymes} (small.east);
-\node[align=center, font=\tiny] at (1.55,0.25) {Food path is vertical.\\Helper organs add chemicals.};
+\begin{tikzpicture}[scale=0.82, every node/.style={font=\scriptsize}]
+% Simplified anatomical map: physical position is meaningful, labels sit outside the body.
+\draw[gray!38, line width=0.8pt] (0,5.45) circle (0.42);
+\draw[gray!32, line width=0.8pt, rounded corners=14pt] (-0.22,5.02) -- (-1.12,4.55) -- (-0.92,1.02) -- (0.92,1.02) -- (1.12,4.55) -- (0.22,5.02);
+\fill[NovaCoral] (0,5.34) circle (0.075);
+\draw[NovaCoral, line width=2.2pt] (0,5.27) -- (0,3.75);
+\path[draw=NovaCoral, fill=NovaCoral!28, line width=1pt]
+  (0,3.76) .. controls (1.02,3.72) and (1.14,2.92) .. (0.46,2.66)
+  .. controls (-0.06,2.47) and (-0.28,3.15) .. (0,3.76) -- cycle;
+\path[draw=NovaYellow!75!black, fill=NovaYellow!58, line width=0.9pt]
+  (-1.04,3.86) .. controls (-0.28,4.12) and (0.46,3.86) .. (0.55,3.36)
+  .. controls (-0.15,3.18) and (-0.78,3.22) .. (-1.04,3.86) -- cycle;
+\draw[NovaCoral!80!black, fill=NovaCoral!35, line width=0.8pt] (0.32,2.48) ellipse (0.72 and 0.13);
+\draw[NovaGrowth, line width=2.6pt, rounded corners=8pt] (-0.76,2.46) rectangle (0.78,1.16);
+\draw[NovaSky, line width=1.05pt]
+  (-0.55,2.24) .. controls (0.55,2.23) and (0.55,1.96) .. (-0.5,1.94)
+  .. controls (-0.82,1.76) and (0.72,1.74) .. (0.46,1.52)
+  .. controls (0.12,1.34) and (-0.45,1.35) .. (-0.48,1.25);
+\draw[->, NovaCoral, line width=1.1pt] (0.12,4.55) -- (0.12,4.06);
+\draw[->, NovaCoral, line width=1.1pt] (0.57,2.55) -- (0.52,2.18);
+\draw[->, NovaGrowth, line width=1.1pt] (0.82,1.45) -- (0.82,1.08);
+
+\coordinate (mouthPoint) at (0,5.34);
+\coordinate (esoPoint) at (0,4.5);
+\coordinate (stomachPoint) at (0.62,3.05);
+\coordinate (smallPoint) at (0.05,1.75);
+\coordinate (largePoint) at (-0.76,1.65);
+\coordinate (liverPoint) at (-0.66,3.58);
+\coordinate (pancreasPoint) at (0.45,2.48);
+\draw[gray!65] (mouthPoint) -- (-1.55,5.34) node[left]{${escapeLatex(mouth)}};
+\draw[gray!65] (esoPoint) -- (-1.55,4.68) node[left]{${escapeLatex(esophagus)}};
+\draw[gray!65] (liverPoint) -- (-1.55,3.72) node[left]{${escapeLatex(liver)}};
+\draw[gray!65] (stomachPoint) -- (1.58,3.28) node[right]{${escapeLatex(stomach)}};
+\draw[gray!65] (pancreasPoint) -- (1.58,2.58) node[right]{${escapeLatex(pancreas)}};
+\draw[gray!65] (smallPoint) -- (1.58,1.85) node[right,align=left]{${escapeLatex(smallIntestine)}};
+\draw[gray!65] (largePoint) -- (-1.55,1.45) node[left,align=right]{${escapeLatex(largeIntestine)}};
+\node[font=\scriptsize\bfseries, text=NovaGrowth, align=center] at (0,0.55) {Main tract: food passes through it\\Helper organs: add digestive chemicals};
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderCircuitVisual(visual: VisualSpec) {
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.92, every node/.style={font=\scriptsize}]
+\draw[line width=1.4pt, NovaInk] (-2.8,-1.35) -- (-2.8,1.35) -- (2.8,1.35) -- (2.8,-1.35) -- (-2.8,-1.35);
+\draw[line width=1.2pt] (-3.08,-0.35) -- (-2.52,-0.35);
+\draw[line width=2.2pt] (-2.95,0.28) -- (-2.65,0.28);
+\node[left, text=NovaInk] at (-3.1,-0.03) {Battery};
+\draw[line width=1.2pt] (-0.85,1.35) -- (-0.2,1.35);
+\draw[line width=1.2pt] (0.2,1.35) -- (0.85,1.35);
+\draw[line width=1.2pt, NovaCoral] (-0.2,1.35) -- (0.46,1.78);
+\fill[NovaInk] (-0.2,1.35) circle (0.055);
+\fill[NovaInk] (0.2,1.35) circle (0.055);
+\node[above] at (0,1.86) {Switch};
+\draw[line width=1.2pt, NovaYellow!70!black, fill=NovaYellow!35] (1.32,-1.35) circle (0.42);
+\draw[NovaYellow!70!black, line width=1pt] (1.03,-1.64) -- (1.61,-1.06) (1.03,-1.06) -- (1.61,-1.64);
+\foreach \a in {0,45,...,315} {\draw[NovaYellow!70!black] (1.32,-1.35) ++(\a:0.52) -- ++(\a:0.18);}
+\node[below] at (1.32,-2.02) {Bulb: energy output};
+\draw[-{Stealth[length=3mm]}, line width=1.2pt, NovaSky] (-1.75,1.35) -- (-1.05,1.35);
+\draw[-{Stealth[length=3mm]}, line width=1.2pt, NovaSky] (2.8,0.55) -- (2.8,-0.2);
+\draw[-{Stealth[length=3mm]}, line width=1.2pt, NovaSky] (0.25,-1.35) -- (-0.5,-1.35);
+\node[fill=NovaSky!12, draw=NovaSky, rounded corners=3pt, align=center] at (0,0) {Closed path\\current can flow};
+\node[font=\scriptsize\bfseries, text=NovaCoral] at (0,-2.45) {Opening the switch breaks the path, so the bulb turns off.};
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderCellVisual(visual: VisualSpec) {
+  const labels = visualLabels(visual, ["Cell membrane", "Cytoplasm", "Nucleus", "Mitochondrion", "Vacuole"]);
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.92, every node/.style={font=\scriptsize}]
+\path[draw=NovaGrowth, fill=NovaGrowth!8, line width=1.3pt]
+  (0,0) ellipse (2.65 and 1.75);
+\path[draw=NovaSky, fill=NovaSky!22, line width=1pt] (-0.45,0.18) circle (0.62);
+\fill[NovaInk!70] (-0.28,0.3) circle (0.12);
+\path[draw=NovaCoral, fill=NovaCoral!18, line width=0.9pt]
+  (1.1,0.72) .. controls (1.75,1.05) and (1.83,0.28) .. (1.18,0.18)
+  .. controls (0.72,0.1) and (0.63,0.55) .. (1.1,0.72) -- cycle;
+\path[draw=NovaCoral, fill=NovaCoral!18, line width=0.9pt]
+  (-1.45,-0.72) .. controls (-0.83,-0.4) and (-0.75,-1.12) .. (-1.38,-1.2)
+  .. controls (-1.84,-1.25) and (-1.92,-0.85) .. (-1.45,-0.72) -- cycle;
+\path[draw=NovaYellow!70!black, fill=NovaYellow!22, line width=0.9pt] (1.15,-0.62) ellipse (0.72 and 0.42);
+\fill[NovaInk!24] (0.38,1.08) circle (0.07) (-0.8,1.02) circle (0.07) (0.12,-1.08) circle (0.07);
+\draw[gray!65] (-2.38,1.15) -- (-3.15,1.55) node[left]{${escapeLatex(labels[0])}};
+\draw[gray!65] (-0.88,1.05) -- (-2.85,0.65) node[left]{${escapeLatex(labels[1])}};
+\draw[gray!65] (-0.45,0.18) -- (-2.85,-0.05) node[left]{${escapeLatex(labels[2])}};
+\draw[gray!65] (1.38,0.58) -- (3.05,1.1) node[right]{${escapeLatex(labels[3])}};
+\draw[gray!65] (1.35,-0.62) -- (3.05,-0.72) node[right]{${escapeLatex(labels[4])}};
+\node[font=\scriptsize\bfseries, text=NovaGrowth] at (0,-2.18) {Structure supports each organelle's function.};
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderVilliVisual() {
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.88, every node/.style={font=\scriptsize}]
+% One enlarged villus: its shape, thin wall, capillaries, and transport direction all carry meaning.
+\path[draw=NovaGrowth, fill=NovaGrowth!9, line width=1.2pt]
+  (-1.0,-1.7) .. controls (-1.15,-0.55) and (-0.92,1.72) .. (0,2.15)
+  .. controls (0.92,1.72) and (1.15,-0.55) .. (1.0,-1.7) -- cycle;
+\path[draw=NovaCoral, line width=1.35pt]
+  (-0.45,-1.55) .. controls (-0.55,-0.2) and (-0.35,1.25) .. (0,1.55)
+  .. controls (0.35,1.25) and (0.55,-0.2) .. (0.45,-1.55);
+\draw[NovaSky, line width=1.15pt] (0,-1.5) -- (0,1.25);
+\foreach \y in {-1.05,-0.45,0.15,0.75} {
+  \draw[-{Stealth[length=2mm]}, NovaYellow!70!black, line width=1.05pt] (-1.62,\y) -- (-0.62,\y);
+}
+\node[draw=NovaYellow!75!black, fill=NovaYellow!24, rounded corners=3pt, align=center] at (-2.25,0.15) {Digested\\nutrients};
+\draw[NovaInk!72] (0.88,1.1) -- (2.15,1.55) node[right,align=left,text=NovaInk!82]{Thin surface\\one cell thick};
+\draw[NovaInk!72] (0.38,0.25) -- (2.15,0.48) node[right,align=left,text=NovaInk!82]{Capillary network\\collects nutrients};
+\draw[NovaInk!72] (0,-0.65) -- (2.15,-0.58) node[right,align=left,text=NovaInk!82]{Blood carries\\nutrients away};
+\draw[decorate, decoration={brace, amplitude=5pt}, thick, NovaGrowth] (-1.15,-1.95) -- (1.15,-1.95);
+\node[below, align=center, font=\scriptsize\bfseries, text=NovaGrowth!75!black] at (0,-2.12) {Finger-like shape creates more surface area};
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderAnnotatedSystemVisual(visual: VisualSpec) {
+  const labels = visualLabels(visual, ["Part 1", "Part 2", "Part 3", "Part 4", "Part 5"]).slice(0, 5);
+  const title = cleanText(visual.title, 48) || "System";
+  const nodes = labels.map((label, index) => {
+    const angle = 90 - index * (360 / labels.length);
+    const x = (Math.cos((angle * Math.PI) / 180) * 3).toFixed(2);
+    const y = (Math.sin((angle * Math.PI) / 180) * 1.75).toFixed(2);
+    return `\\node[draw, rounded corners=3pt, fill=${index % 2 ? "NovaGrowth" : "NovaSky"}!12, minimum width=1.65cm, align=center] (p${index}) at (${x},${y}) {\\scriptsize ${escapeLatex(label)}};\\draw[-{Stealth[length=2mm]}, gray!65] (p${index}) -- (core);`;
+  }).join("\n");
+
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.92]
+\node[draw=NovaInk, fill=NovaYellow!24, very thick, rounded corners=8pt, minimum width=2.2cm, minimum height=1.0cm, align=center] (core) at (0,0) {\bfseries ${escapeLatex(title)}};
+${nodes}
 \end{tikzpicture}
 \end{center}`;
 }
 
 function renderProcessVisual(visual: VisualSpec) {
-  const steps = (visual.steps?.length ? visual.steps : visualLabels(visual, ["Notice", "Explain", "Practice", "Check"]))
-    .map((step) => cleanText(step, 48))
+  const steps = (visual.steps?.length ? visual.steps : visualLabels(visual, ["Observe", "Model", "Explain", "Apply"]))
+    .map((step) => cleanText(step, 52))
     .filter(Boolean)
-    .slice(0, 5);
+    .slice(0, 4);
   const nodes = steps
     .map(
       (step, index) =>
-        `\\node[draw, rounded corners, thick, fill=${index % 2 ? "NovaMint" : "SubjectAccent"}!12, minimum width=3.45cm, minimum height=0.52cm, align=center] (n${index}) at (0,${-index * 0.72}) {\\tiny ${escapeLatex(step)}};`
+        `\\node[draw, rounded corners=5pt, thick, fill=${index % 2 ? "NovaGrowth" : "SubjectAccent"}!12, text width=1.75cm, minimum height=1.05cm, align=center] (n${index}) at (${index * 2.25},0) {\\scriptsize\\bfseries ${index + 1}\\par\\scriptsize ${escapeLatex(step)}};`
     )
     .join("\n");
   const arrows = steps
     .slice(0, -1)
-    .map((_, index) => `\\draw[->, thick, SubjectAccent] (n${index}.south) -- (n${index + 1}.north);`)
+    .map((_, index) => `\\draw[-{Stealth[length=2.6mm]}, line width=1.1pt, SubjectAccent] (n${index}.east) -- (n${index + 1}.west);`)
     .join("\n");
 
   return String.raw`\begin{center}
-\begin{tikzpicture}[scale=0.9]
+\begin{tikzpicture}[scale=0.87]
 ${nodes}
 ${arrows}
+\node[font=\scriptsize, text=NovaInk!70] at (${Math.max(0, steps.length - 1) * 1.125},-1.05) {Trace the sequence from left to right.};
 \end{tikzpicture}
 \end{center}`;
 }
@@ -698,19 +831,25 @@ function renderComparisonVisual(visual: VisualSpec) {
           { title: "Side A", items: ["Key detail", "Example"] },
           { title: "Side B", items: ["Key detail", "Example"] }
         ];
+  const renderPanelText = (column: { items: string[]; title: string }) =>
+    [
+      String.raw`\textbf{${escapeLatex(cleanText(column.title, 44))}}`,
+      ...column.items
+        .slice(0, 4)
+        .map((item) => String.raw`\(\bullet\) ${escapeLatex(cleanText(item, 58))}`)
+    ].join(String.raw`\\[0.13cm]`);
 
-  return String.raw`\begin{columns}[T]
-\begin{column}{0.49\textwidth}
-\begin{block}{${escapeLatex(columns[0].title)}}
-${latexBullets(columns[0].items, 4)}
-\end{block}
-\end{column}
-\begin{column}{0.49\textwidth}
-\begin{block}{${escapeLatex(columns[1].title)}}
-${latexBullets(columns[1].items, 4)}
-\end{block}
-\end{column}
-\end{columns}`;
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.82]
+\node[draw=NovaSky, fill=NovaSky!10, very thick, rounded corners=8pt, text width=2.2cm, minimum height=3.0cm, align=left, inner sep=0.22cm] (left) at (-1.65,0) {\scriptsize ${renderPanelText(columns[0])}};
+\node[draw=NovaGrowth, fill=NovaGrowth!10, very thick, rounded corners=8pt, text width=2.2cm, minimum height=3.0cm, align=left, inner sep=0.22cm] (right) at (1.65,0) {\scriptsize ${renderPanelText(columns[1])}};
+\node[circle, draw=NovaCoral, fill=NovaCoral!12, text=NovaCoral, font=\scriptsize\bfseries, inner sep=2.5pt] (compare) at (0,0) {VS};
+\draw[-{Stealth[length=2mm]}, line width=0.9pt, NovaCoral] (compare) -- (left.east);
+\draw[-{Stealth[length=2mm]}, line width=0.9pt, NovaCoral] (compare) -- (right.west);
+\node[below=0.18cm of left, text width=2.55cm, align=center, font=\tiny, text=NovaSky!75!black] {defining features};
+\node[below=0.18cm of right, text width=2.55cm, align=center, font=\tiny, text=NovaGrowth!75!black] {example and effect};
+\end{tikzpicture}
+\end{center}`;
 }
 
 function renderRatioTable(visual: VisualSpec) {
@@ -746,21 +885,27 @@ function renderDoubleNumberLine(visual: VisualSpec) {
   const top = rows[0] ?? [];
   const bottom = rows[1] ?? [];
   const values = top.slice(1, 6);
+  const span = 5.2;
+  const spacing = values.length > 1 ? span / (values.length - 1) : span;
   const ticks = values
     .map((value, index) => {
-      const x = index * 1.4;
+      const x = index * spacing;
       return String.raw`\draw (${x},0.08) -- (${x},-0.08);
 \draw (${x},-0.92) -- (${x},-1.08);
 \node[above] at (${x},0.1) {\scriptsize ${escapeLatex(value)}};
 \node[below] at (${x},-1.1) {\scriptsize ${escapeLatex(bottom[index + 1] ?? "")}};`;
     })
     .join("\n");
+  const matchIndex = Math.max(1, Math.floor((values.length - 1) / 2));
+  const matchX = matchIndex * spacing;
 
   return String.raw`\begin{center}
 \begin{tikzpicture}[scale=0.88]
-\draw[very thick, SubjectAccent] (0,0) -- (${Math.max(1, values.length - 1) * 1.4},0);
-\draw[very thick, NovaMint] (0,-1) -- (${Math.max(1, values.length - 1) * 1.4},-1);
+\draw[very thick, SubjectAccent] (0,0) -- (${span},0);
+\draw[very thick, NovaMint] (0,-1) -- (${span},-1);
 ${ticks}
+\draw[dashed, line width=1pt, NovaCoral] (${matchX},0.42) -- (${matchX},-1.42);
+\node[draw=NovaCoral, fill=NovaCoral!10, rounded corners=3pt, font=\tiny] at (${matchX + 0.82},-0.5) {same location};
 \node[left] at (-0.25,0) {\scriptsize ${escapeLatex(top[0] ?? "A")}};
 \node[left] at (-0.25,-1) {\scriptsize ${escapeLatex(bottom[0] ?? "B")}};
 \end{tikzpicture}
@@ -771,6 +916,11 @@ function renderCoordinateGraph(visual: VisualSpec) {
   const points = visual.points?.length ? visual.points.slice(0, 6) : [{ x: 0, y: 0 }, { x: 1, y: 2 }, { x: 2, y: 4 }, { x: 3, y: 6 }];
   const maxX = Math.max(4, ...points.map((point) => point.x));
   const maxY = Math.max(6, ...points.map((point) => point.y));
+  const caption =
+    cleanText(visual.caption, 90) ||
+    (/proportion|ratio/i.test(`${visual.title ?? ""} ${visual.accessibilityLabel}`)
+      ? "A straight line through the origin shows a constant ratio."
+      : "Read the line from left to right and describe how the rate changes.");
   const scaledPoints = points.map((point) => `(${(point.x / maxX) * 5.2},${(point.y / maxY) * 3.4})`).join(" -- ");
   const dots = points
     .map((point) => `\\fill[SubjectAccent] (${(point.x / maxX) * 5.2},${(point.y / maxY) * 3.4}) circle (0.07);`)
@@ -783,7 +933,7 @@ function renderCoordinateGraph(visual: VisualSpec) {
 \draw[->, thick] (0,0) -- (0,3.75) node[above]{\scriptsize y};
 \draw[very thick, SubjectAccent] ${scaledPoints};
 ${dots}
-\node[below] at (2.6,-0.35) {\scriptsize straight line through origin = proportional};
+\node[below, text width=5.5cm, align=center] at (2.6,-0.35) {\scriptsize ${escapeLatex(caption)}};
 \end{tikzpicture}
 \end{center}`;
 }
@@ -794,20 +944,28 @@ function renderEquationSteps(visual: VisualSpec) {
     return "";
   }
 
-  return String.raw`\begin{block}{Work the steps}
-\Large
-\begin{align*}
-${steps.map((step) => safeInlineLatex(step) || escapeLatex(step)).join(" \\\\\n")}
-\end{align*}
-\end{block}`;
+  const safeSteps = steps.slice(0, 4).map((step) => safeInlineLatex(step) || escapeLatex(step));
+  const nodes = safeSteps
+    .map((step, index) => `\\node[draw, rounded corners=5pt, line width=${index === safeSteps.length - 1 ? "1.4pt" : "0.9pt"}, draw=${index === safeSteps.length - 1 ? "NovaGrowth" : "NovaSky"}, fill=${index === safeSteps.length - 1 ? "NovaGrowth" : "NovaSky"}!10, minimum width=4.7cm, minimum height=0.72cm] (s${index}) at (0,${-index * 1.0}) {\\Large $${step}$};`).join("\n");
+  const arrows = safeSteps.slice(0, -1).map((_, index) => `\\draw[-{Stealth[length=2.5mm]}, thick, NovaInk!60] (s${index}.south) -- (s${index + 1}.north);`).join("\n");
+
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.92]
+${nodes}
+${arrows}
+\end{tikzpicture}
+\end{center}`;
 }
 
 function renderCardsVisual(visual: VisualSpec) {
-  const labels = visualLabels(visual, ["Notice", "Explain", "Practice", "Check"]).slice(0, 6);
+  const labels = visualLabels(visual, ["Key idea", "Example", "Evidence", "Application"]).slice(0, 6);
   const columns = labels
     .map((label, index) => {
-      const color = index % 2 ? "NovaMint" : "SubjectAccent";
-      return `\\node[draw, rounded corners, thick, fill=${color}!12, minimum width=1.55cm, minimum height=0.72cm, align=center] at (${(index % 3) * 2.0},${index < 3 ? 1 : 0}) {\\scriptsize ${escapeLatex(label)}};`;
+      const color = index % 2 ? "NovaGrowth" : "SubjectAccent";
+      const x = (index % 2) * 2.85;
+      const y = 1.2 - Math.floor(index / 2) * 1.05;
+      const fontSize = label.length > 20 ? "\\tiny" : "\\scriptsize";
+      return `\\node[draw, rounded corners=5pt, thick, fill=${color}!12, text width=2.3cm, minimum height=0.78cm, align=center] at (${x},${y}) {${fontSize}\\bfseries ${escapeLatex(label)}};`;
     })
     .join("\n");
 
@@ -818,17 +976,94 @@ ${columns}
 \end{center}`;
 }
 
+function renderConceptMap(visual: VisualSpec) {
+  const labels = visualLabels(visual, ["Definition", "Example", "Evidence", "Connection", "Application"]).slice(0, 5);
+  const center = cleanText(visual.title, 52) || labels.shift() || "Big idea";
+  const nodes = labels.map((label, index) => {
+    const coordinates = [[-2.5, 1.25], [2.5, 1.25], [-2.5, -1.25], [2.5, -1.25], [0, -2.0]][index] ?? [0, -2];
+    return `\\node[draw, rounded corners=5pt, line width=0.9pt, fill=${index % 2 ? "NovaGrowth" : "NovaSky"}!11, text width=1.75cm, minimum height=0.72cm, align=center] (c${index}) at (${coordinates[0]},${coordinates[1]}) {\\scriptsize ${escapeLatex(label)}};\\draw[-{Stealth[length=2mm]}, line width=0.9pt, gray!65] (core) -- (c${index});`;
+  }).join("\n");
+
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.92]
+\node[draw=NovaInk, fill=NovaYellow!25, very thick, rounded corners=8pt, text width=2.05cm, minimum height=1.0cm, align=center] (core) at (0,0) {\bfseries ${escapeLatex(center)}};
+${nodes}
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderTapeDiagram(visual: VisualSpec) {
+  const labels = visualLabels(visual, ["Known quantity", "Matching quantity", "Scale factor", "Unknown"]);
+  const parseFraction = (value?: string) => {
+    const match = value?.match(/(\d+)\s*\/\s*(\d+)/);
+    return match ? { denominator: Number(match[2]), numerator: Number(match[1]) } : null;
+  };
+  const topFraction = parseFraction(labels[0]);
+  const bottomFraction = parseFraction(labels[1]);
+  const topParts = Math.max(2, Math.min(8, topFraction?.denominator || visual.rows?.[0]?.length || 3));
+  const bottomParts = Math.max(2, Math.min(8, bottomFraction?.denominator || visual.rows?.[1]?.length || 4));
+  const topShaded = Math.max(1, Math.min(topParts, topFraction?.numerator || topParts));
+  const bottomShaded = Math.max(1, Math.min(bottomParts, bottomFraction?.numerator || bottomParts));
+  const width = 5.8;
+  const topCells = Array.from({ length: topParts }, (_, index) => {
+    const cellWidth = width / topParts;
+    const fill = index < topShaded ? "NovaSky!35" : "white";
+    return `\\draw[fill=${fill}, draw=NovaSky, thick] (${(index * cellWidth).toFixed(2)},1.0) rectangle (${((index + 1) * cellWidth).toFixed(2)},1.68);`;
+  }).join("\n");
+  const bottomCells = Array.from({ length: bottomParts }, (_, index) => {
+    const cellWidth = width / bottomParts;
+    const fill = index < bottomShaded ? "NovaGrowth!32" : "white";
+    return `\\draw[fill=${fill}, draw=NovaGrowth, thick] (${(index * cellWidth).toFixed(2)},-0.05) rectangle (${((index + 1) * cellWidth).toFixed(2)},0.63);`;
+  }).join("\n");
+
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.9]
+${topCells}
+${bottomCells}
+\node[left, align=right, font=\scriptsize\bfseries] at (-0.15,1.34) {${escapeLatex(labels[0])}};
+\node[left, align=right, font=\scriptsize\bfseries] at (-0.15,0.29) {${escapeLatex(labels[1])}};
+\draw[decorate, decoration={brace, amplitude=5pt}, thick, NovaCoral] (0,-0.32) -- (5.8,-0.32);
+\node[below, font=\scriptsize] at (2.9,-0.56) {${escapeLatex(labels.slice(2, 4).join(" | "))}};
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderIconGrid(visual: VisualSpec) {
+  const labels = visualLabels(visual, ["Idea", "Model", "Example", "Check"]).slice(0, 6);
+  const nodes = labels.map((label, index) => {
+    const x = (index % 3) * 2.05;
+    const y = index < 3 ? 0.95 : -0.45;
+    const color = ["NovaSky", "NovaGrowth", "NovaYellow", "NovaCoral", "NovaSky", "NovaGrowth"][index];
+    return `\\node[fill=${color}!22, draw=${color}!85!black, circle, minimum size=0.72cm, font=\\bfseries] (i${index}) at (${x},${y}) {${index + 1}};\\node[below=0.12cm of i${index}, text width=1.55cm, align=center, font=\\scriptsize] {${escapeLatex(label)}};`;
+  }).join("\n");
+
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.9]
+${nodes}
+\end{tikzpicture}
+\end{center}`;
+}
+
 function renderVisualSpec(visual: VisualSpec) {
   switch (visual.type) {
     case "labeled_system":
     case "annotated_image":
-      if ((visual.labels ?? []).some((label) => label.toLowerCase().includes("stomach"))) {
+      if ((visual.labels ?? []).some((label) => /stomach|esophagus|intestine/i.test(label))) {
         return renderDigestiveSystemVisual(visual);
       }
-      return renderCardsVisual(visual);
+      if ((visual.labels ?? []).some((label) => /battery|switch|bulb|circuit/i.test(label))) {
+        return renderCircuitVisual(visual);
+      }
+      if ((visual.labels ?? []).some((label) => /nucleus|cytoplasm|mitochond|vacuole/i.test(label))) {
+        return renderCellVisual(visual);
+      }
+      return renderAnnotatedSystemVisual(visual);
     case "comparison_table":
-    case "structure_function":
       return renderComparisonVisual(visual);
+    case "structure_function":
+      return /villi|villus|absorp|surface area/i.test(JSON.stringify(visual))
+        ? renderVilliVisual()
+        : renderComparisonVisual(visual);
     case "coordinate_graph":
       return renderCoordinateGraph(visual);
     case "double_number_line":
@@ -842,10 +1077,15 @@ function renderVisualSpec(visual: VisualSpec) {
     case "data_table":
       return renderRatioTable(visual);
     case "callout":
+      return renderConceptMap(visual);
     case "concept_map":
+      return renderConceptMap(visual);
     case "icon_grid":
+      return renderIconGrid(visual);
     case "labeled_cards":
+      return renderCardsVisual(visual);
     case "tape_diagram":
+      return renderTapeDiagram(visual);
     default:
       return renderCardsVisual(visual);
   }
@@ -862,12 +1102,12 @@ function renderPlanSlideBody(slide: LessonPlanSlide, hasImageAsset = false) {
     keyIdea ? String.raw`\begin{alertblock}{Key idea}
 \small ${escapeLatex(keyIdea)}
 \end{alertblock}` : "",
-    content.explanation ? String.raw`\small ${escapeLatex(content.explanation)}` : "",
+    content.explanation ? String.raw`\small ${escapeLatex(normalizeLessonText(content.explanation).slice(0, 300))}` : "",
     content.question ? String.raw`\begin{block}{Question}
 \small ${escapeLatex(content.question)}
 \end{block}` : "",
-    latexBullets(content.bullets, 5),
-    latexSteps(content.steps, 4),
+    latexBullets(content.bullets, 3),
+    latexSteps(content.steps, 3),
     content.hint ? String.raw`\begin{block}{Hint}
 \small ${escapeLatex(content.hint)}
 \end{block}` : "",
@@ -879,10 +1119,10 @@ function renderPlanSlideBody(slide: LessonPlanSlide, hasImageAsset = false) {
 
   if (visualTex && textParts.length) {
     return String.raw`\begin{columns}[T]
-\begin{column}{0.48\textwidth}
+\begin{column}{0.39\textwidth}
 ${textParts.join("\n\n")}
 \end{column}
-\begin{column}{0.48\textwidth}
+\begin{column}{0.57\textwidth}
 ${visualTex}
 \end{column}
 \end{columns}`;
@@ -946,35 +1186,63 @@ function buildBeamerTex(request: LessonDeckRequest) {
     .join("\n\n");
 
   return String.raw`\documentclass[aspectratio=169]{beamer}
-\usetheme{Madrid}
+\usetheme{default}
 \usepackage[absolute,overlay]{textpos}
 \usepackage{amsmath}
+\usepackage{booktabs}
 \usepackage{graphicx}
+\usepackage{tabularx}
 \usepackage{xcolor}
 \usepackage{tikz}
-\usetikzlibrary{positioning}
-\definecolor{NovaBlue}{HTML}{1976D2}
-\definecolor{NovaMint}{HTML}{0F9B78}
-\definecolor{NovaInk}{HTML}{10263F}
+\usetikzlibrary{arrows.meta,backgrounds,calc,decorations.pathreplacing,fit,positioning,shapes.geometric}
+\definecolor{NovaNavy}{HTML}{123047}
+\definecolor{NovaGrowth}{HTML}{18A67A}
+\definecolor{NovaSky}{HTML}{4A90E2}
+\definecolor{NovaYellow}{HTML}{F4C95D}
+\definecolor{NovaCoral}{HTML}{EF6F61}
+\definecolor{NovaPaper}{HTML}{F8FAF7}
+\definecolor{NovaInk}{HTML}{20323F}
+\colorlet{NovaBlue}{NovaSky}
+\colorlet{NovaMint}{NovaGrowth}
 \definecolor{SubjectAccent}{HTML}{${template.color}}
+\usefonttheme{professionalfonts}
+\renewcommand{\familydefault}{\sfdefault}
+\setbeamercolor{background canvas}{bg=NovaPaper}
+\setbeamercolor{normal text}{fg=NovaInk,bg=NovaPaper}
 \setbeamercolor{structure}{fg=NovaBlue}
-\setbeamercolor{frametitle}{fg=white,bg=NovaInk}
-\setbeamercolor{title}{fg=white,bg=NovaInk}
+\setbeamercolor{frametitle}{fg=white,bg=NovaNavy}
+\setbeamercolor{title}{fg=white,bg=NovaNavy}
 \setbeamercolor{block title}{fg=white,bg=SubjectAccent}
-\setbeamercolor{block body}{fg=NovaInk,bg=SubjectAccent!8}
-\setbeamercolor{block title alerted}{fg=white,bg=SubjectAccent}
-\setbeamercolor{block body alerted}{fg=NovaInk,bg=SubjectAccent!8}
+\setbeamercolor{block body}{fg=NovaInk,bg=SubjectAccent!7}
+\setbeamercolor{block title alerted}{fg=white,bg=NovaCoral}
+\setbeamercolor{block body alerted}{fg=NovaInk,bg=NovaCoral!8}
+\setbeamertemplate{blocks}[rounded][shadow=false]
+\setbeamerfont{frametitle}{size=\Large,series=\bfseries}
+\setbeamerfont{block title}{size=\normalsize,series=\bfseries}
 \setbeamertemplate{navigation symbols}{}
 \setbeamertemplate{frametitle}{
   \nointerlineskip
-  \begin{beamercolorbox}[wd=\paperwidth,ht=0.95cm,dp=0.25cm,leftskip=0.45cm,rightskip=0.45cm]{frametitle}
+  \begin{beamercolorbox}[wd=\paperwidth,ht=0.88cm,dp=0.22cm,leftskip=0.45cm,rightskip=0.45cm]{frametitle}
     \usebeamerfont{frametitle}\insertframetitle\hfill{\small ${template.icon}\hspace{0.2cm}${template.accent}}
   \end{beamercolorbox}
 }
+\setbeamertemplate{footline}{
+  \leavevmode
+  \hbox{
+    \begin{beamercolorbox}[wd=.82\paperwidth,ht=0.24cm,dp=0.14cm,leftskip=0.45cm]{author in head/foot}
+      \scriptsize\color{NovaInk!65}NovaSprout Learning
+    \end{beamercolorbox}
+    \begin{beamercolorbox}[wd=.18\paperwidth,ht=0.24cm,dp=0.14cm,rightskip=0.45cm plus1fil]{date in head/foot}
+      \hfill\scriptsize\color{NovaInk!65}\insertframenumber
+    \end{beamercolorbox}
+  }
+}
+\newcommand{\NovaQuestion}[1]{\begin{block}{Think about it}#1\end{block}}
+\newcommand{\NovaMisconception}[1]{\begin{alertblock}{Check the model}#1\end{alertblock}}
 \title{${escapeLatex(lesson.title ?? "NovaSprout Lesson")}}
 \subtitle{${escapeLatex(`${context.grade ?? ""} · ${context.subject ?? ""} · ${context.topic ?? ""}`)}}
 \author{NovaSprout Learning}
-\date{\today}
+\date{}
 
 \begin{document}
 ${frames}
@@ -1036,6 +1304,35 @@ function getDensityWarnings(slides: Array<{ body: string; title: string }>) {
       return readableBody.length > 780 ? `Slide ${index + 1} "${slide.title}" may be too text-heavy.` : "";
     })
     .filter(Boolean);
+}
+
+function hasProgrammaticVisual(body: string) {
+  return /\\begin\{tikzpicture\}|\\begin\{tabularx?\}/.test(body);
+}
+
+function getVisualCoverage(slides: Array<{ body: string; title: string }>, assets: DeckAsset[]) {
+  const imageSlideNumbers = new Set(
+    assets
+      .filter((asset) => asset.type === "image" && asset.dataUrl?.startsWith("data:image/png;base64,"))
+      .map((asset) => assetSlideNumber(asset.placement))
+      .filter(Boolean)
+  );
+  const visualSlideNumbers = slides
+    .map((slide, index) => (hasProgrammaticVisual(slide.body) || imageSlideNumbers.has(index + 1) ? index + 1 : 0))
+    .filter(Boolean);
+  const warnings = slides
+    .map((slide, index) =>
+      visualSlideNumbers.includes(index + 1)
+        ? ""
+        : `Slide ${index + 1} "${slide.title}" has no dominant instructional visual.`
+    )
+    .filter(Boolean);
+
+  return {
+    percent: slides.length ? Math.round((visualSlideNumbers.length / slides.length) * 100) : 0,
+    visualSlideCount: visualSlideNumbers.length,
+    warnings
+  };
 }
 
 function sanitizeCompilerError(message?: string) {
@@ -1210,16 +1507,19 @@ async function compileDeckRequest(request: Request) {
     selected: compileAssets,
     warnings: assetWarnings
   } = selectAssetsForCompilation(assets);
+  const compiledSlideBodies = buildSlideBodies({ ...body, assets: compileAssets });
   const tex = buildBeamerTex({ ...body, assets: compileAssets });
-  const densityWarnings = getDensityWarnings(slideBodies);
+  const densityWarnings = getDensityWarnings(compiledSlideBodies);
+  const visualCoverage = getVisualCoverage(compiledSlideBodies, compileAssets);
   const plannedImageAssetCount = assets.filter((asset) => asset.type === "image").length;
-  const programmaticVisualCount = slideBodies.filter((slide) =>
-    /\\begin\{tikzpicture\}|\\begin\{tabular\}/.test(slide.body)
-  ).length;
+  const programmaticVisualCount = compiledSlideBodies.filter((slide) => hasProgrammaticVisual(slide.body)).length;
   const qualityChecks = [
     "Structured LessonSlidePlan v1 renderer active.",
-    `${slideBodies.length} Beamer slides generated.`,
+    `${compiledSlideBodies.length} Beamer slides generated.`,
     `${programmaticVisualCount} built-in diagram/table visual${programmaticVisualCount === 1 ? "" : "s"} rendered from the lesson plan.`,
+    `${visualCoverage.visualSlideCount} of ${compiledSlideBodies.length} slides (${visualCoverage.percent}%) contain a topic-specific diagram, model, data display, or generated image.`,
+    "Generated images use a dominant visual column instead of a small overlay.",
+    "Compact NovaSprout footer preserves space for lesson content.",
     `${plannedImageAssetCount} image asset${plannedImageAssetCount === 1 ? "" : "s"} planned for indexed placement.`,
     `${embeddedImageCount} generated image asset${embeddedImageCount === 1 ? "" : "s"} embedded in the compiled PDF.`,
     `${compileAssets.filter((asset) => asset.type === "latex").length} LaTeX overlay asset${
@@ -1246,7 +1546,7 @@ async function compileDeckRequest(request: Request) {
           compilerStatus: remoteCompile.compilerStatus,
           error: remoteCompile.error,
           qualityChecks,
-          qualityWarnings: [...densityWarnings, ...assetWarnings],
+          qualityWarnings: [...densityWarnings, ...visualCoverage.warnings, ...assetWarnings],
           tex: process.env.NODE_ENV === "development" ? tex : undefined
         },
         { status: 422 }
@@ -1257,6 +1557,7 @@ async function compileDeckRequest(request: Request) {
     const pdfSize = remoteCompile.pdfSize ?? 0;
     const warnings = [
       ...densityWarnings,
+      ...visualCoverage.warnings,
       ...assetWarnings,
       ...remoteCompile.warnings,
       ...(pageCount === slideBodies.length
@@ -1310,6 +1611,7 @@ async function compileDeckRequest(request: Request) {
     const pageCount = pageCheck.pages;
     const warnings = [
       ...densityWarnings,
+      ...visualCoverage.warnings,
       ...assetWarnings,
       ...(pageCount === slideBodies.length
         ? []
@@ -1351,7 +1653,7 @@ async function compileDeckRequest(request: Request) {
           ? "LaTeX compiler is not installed in this deployment. Use a TeX-enabled AWS Lambda/container or install pdflatex/tectonic and set LATEX_COMPILER_PATH."
           : sanitizeCompilerError(message),
         qualityChecks: localQualityChecks,
-        qualityWarnings: [...densityWarnings, ...assetWarnings],
+        qualityWarnings: [...densityWarnings, ...visualCoverage.warnings, ...assetWarnings],
         tex: process.env.NODE_ENV === "development" ? tex : undefined
       },
       { status: missingCompiler ? 501 : 422 }
