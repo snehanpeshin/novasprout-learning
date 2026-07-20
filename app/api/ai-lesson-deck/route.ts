@@ -98,10 +98,34 @@ function cleanText(value: unknown, maxLength: number) {
 
 function normalizeLessonText(value?: string) {
   return (value ?? "")
+    .normalize("NFKD")
+    .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+    .replace(/[\u00A0\u2007\u202F]/g, " ")
     .replace(/-\s*[>¿]/g, " to ")
     .replace(/[→⇒]/g, " to ")
     .replace(/[×✕]/g, " x ")
-    .replace(/[–—]/g, "-")
+    .replace(/[÷∕⁄]/g, "/")
+    .replace(/[−–—‑]/g, "-")
+    .replace(/[≤≦]/g, " <= ")
+    .replace(/[≥≧]/g, " >= ")
+    .replace(/[≠]/g, " != ")
+    .replace(/[≈≅]/g, " approximately ")
+    .replace(/[±]/g, " +/- ")
+    .replace(/[∞]/g, " infinity ")
+    .replace(/[√]/g, " sqrt ")
+    .replace(/[πΠ]/g, " pi ")
+    .replace(/[Δ∆]/g, " delta ")
+    .replace(/[θΘ]/g, " theta ")
+    .replace(/[αΑ]/g, " alpha ")
+    .replace(/[βΒ]/g, " beta ")
+    .replace(/[γΓ]/g, " gamma ")
+    .replace(/[μΜ]/g, " micro ")
+    .replace(/[°]/g, " degrees ")
+    .replace(/[•●▪◦]/g, " - ")
+    .replace(/[✓✔]/g, " correct ")
+    .replace(/[✗✘]/g, " incorrect ")
+    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -318,7 +342,7 @@ ${body}
 \begin{center}
 \setlength{\fboxsep}{3pt}
 \fcolorbox{NovaSky!35}{white}{\includegraphics[width=0.96\linewidth,height=5.25cm,keepaspectratio]{${primaryImage.filename}}}
-${primaryImage.caption ? `\\[0.12cm]{\\scriptsize\\color{NovaInk!75}${escapeLatex(primaryImage.caption)}}` : ""}
+${primaryImage.caption ? `\\\\[0.12cm]{\\scriptsize\\color{NovaInk!75}${escapeLatex(primaryImage.caption)}}` : ""}
 \end{center}
 \end{column}
 \end{columns}`
@@ -1529,12 +1553,54 @@ async function compileDeckRequest(request: Request) {
     "Placement codes validated against lt, ct, rt, lm, cm, rm, lb, cb, rb."
   ];
 
-  const remoteCompile = await compileWithRemoteService({ assets: compileAssets, expectedPageCount: slideBodies.length, tex });
+  let remoteAssets = compileAssets;
+  let remoteQualityChecks = qualityChecks;
+  let remoteTex = tex;
+  const remoteRetryWarnings: string[] = [];
+  let remoteCompile = await compileWithRemoteService({ assets: compileAssets, expectedPageCount: slideBodies.length, tex });
+
+  if (remoteCompile && !remoteCompile.ok && compileAssets.some((asset) => asset.type === "image")) {
+    const fallbackAssets = compileAssets.filter((asset) => asset.type !== "image");
+    const fallbackSlideBodies = buildSlideBodies({ ...body, assets: fallbackAssets });
+    const fallbackTex = buildBeamerTex({ ...body, assets: fallbackAssets });
+    const fallbackCompile = await compileWithRemoteService({
+      assets: fallbackAssets,
+      expectedPageCount: fallbackSlideBodies.length,
+      tex: fallbackTex
+    });
+
+    if (fallbackCompile?.ok) {
+      const fallbackCoverage = getVisualCoverage(fallbackSlideBodies, fallbackAssets);
+      const fallbackProgrammaticVisualCount = fallbackSlideBodies.filter((slide) => hasProgrammaticVisual(slide.body)).length;
+      remoteAssets = fallbackAssets;
+      remoteCompile = fallbackCompile;
+      remoteTex = fallbackTex;
+      remoteQualityChecks = [
+        "Structured LessonSlidePlan v1 renderer active.",
+        `${fallbackSlideBodies.length} Beamer slides generated.`,
+        `${fallbackProgrammaticVisualCount} built-in diagram/table visual${fallbackProgrammaticVisualCount === 1 ? "" : "s"} rendered from the lesson plan.`,
+        `${fallbackCoverage.visualSlideCount} of ${fallbackSlideBodies.length} slides (${fallbackCoverage.percent}%) contain a topic-specific diagram, model, or data display.`,
+        "The generated image was replaced with the slide's built-in instructional diagram after a safe compiler retry.",
+        "Compact NovaSprout footer preserves space for lesson content.",
+        `${plannedImageAssetCount} image asset${plannedImageAssetCount === 1 ? "" : "s"} planned for indexed placement.`,
+        "0 generated image assets embedded after the safe compiler retry.",
+        `${fallbackAssets.filter((asset) => asset.type === "latex").length} LaTeX overlay asset${
+          fallbackAssets.filter((asset) => asset.type === "latex").length === 1 ? "" : "s"
+        } included.`,
+        "Remote visual payload after retry: 0 KB.",
+        "Placement codes validated against lt, ct, rt, lm, cm, rm, lb, cb, rb."
+      ];
+      remoteRetryWarnings.push(
+        "The generated image could not be compiled, so the lesson used its topic-specific built-in diagram instead."
+      );
+    }
+  }
+
   if (remoteCompile) {
     if (!remoteCompile.ok) {
       return NextResponse.json(
         {
-          assetManifest: compileAssets.map((asset) => ({
+          assetManifest: remoteAssets.map((asset) => ({
             alt: asset.alt,
             assetId: asset.assetId,
             aspectRatio: asset.aspectRatio,
@@ -1545,9 +1611,9 @@ async function compileDeckRequest(request: Request) {
           })),
           compilerStatus: remoteCompile.compilerStatus,
           error: remoteCompile.error,
-          qualityChecks,
-          qualityWarnings: [...densityWarnings, ...visualCoverage.warnings, ...assetWarnings],
-          tex: process.env.NODE_ENV === "development" ? tex : undefined
+          qualityChecks: remoteQualityChecks,
+          qualityWarnings: [...densityWarnings, ...visualCoverage.warnings, ...assetWarnings, ...remoteRetryWarnings],
+          tex: process.env.NODE_ENV === "development" ? remoteTex : undefined
         },
         { status: 422 }
       );
@@ -1559,6 +1625,7 @@ async function compileDeckRequest(request: Request) {
       ...densityWarnings,
       ...visualCoverage.warnings,
       ...assetWarnings,
+      ...remoteRetryWarnings,
       ...remoteCompile.warnings,
       ...(pageCount === slideBodies.length
         ? []
@@ -1567,7 +1634,7 @@ async function compileDeckRequest(request: Request) {
     ];
 
     return NextResponse.json({
-      assetManifest: compileAssets.map((asset) => ({
+      assetManifest: remoteAssets.map((asset) => ({
         alt: asset.alt,
         assetId: asset.assetId,
         aspectRatio: asset.aspectRatio,
@@ -1581,13 +1648,13 @@ async function compileDeckRequest(request: Request) {
       pdfDataUrl: remoteCompile.pdfDataUrl,
       pdfUrl: remoteCompile.pdfUrl,
       qualityChecks: [
-        ...qualityChecks,
+        ...remoteQualityChecks,
         `Compiled successfully with ${remoteCompile.compilerName}.`,
         `PDF page count checked by remote compiler: ${pageCount}.`,
         `PDF size: ${pdfSize} bytes.`
       ],
       qualityWarnings: warnings,
-      tex: process.env.NODE_ENV === "development" ? tex : undefined
+      tex: process.env.NODE_ENV === "development" ? remoteTex : undefined
     });
   }
 

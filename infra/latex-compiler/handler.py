@@ -92,7 +92,20 @@ def run_command(command, work_dir, timeout):
         timeout=timeout,
     )
     if completed.returncode != 0:
-        raise RuntimeError((completed.stdout + "\n" + completed.stderr)[-2500:])
+        output = completed.stdout + "\n" + completed.stderr
+        lines = output.splitlines()
+        important = [
+            line.strip()
+            for line in lines
+            if re.search(
+                r"(^!|LaTeX Error|Package .* Error|Undefined control sequence|Unicode character|not found|Emergency stop|Fatal error)",
+                line,
+                re.IGNORECASE,
+            )
+        ]
+        nearby_line_refs = [line.strip() for line in lines if re.match(r"^l\.\d+", line.strip())]
+        diagnostic = "\n".join((important + nearby_line_refs)[-18:]).strip()
+        raise RuntimeError(diagnostic or output[-2500:])
     return completed
 
 
@@ -183,4 +196,5 @@ def handler(event, context):
     except PermissionError as error:
         return response(401, {"error": str(error)})
     except Exception as error:
+        print(f"NovaSprout compiler error ({type(error).__name__}): {str(error)[:3000]}", flush=True)
         return response(422, {"error": str(error)})
