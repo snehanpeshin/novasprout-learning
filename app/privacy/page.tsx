@@ -19,10 +19,10 @@ export default function PrivacyPolicy() {
         <p className="eyebrow">Privacy Policy</p>
         <h1>How we protect student and parent information.</h1>
         <p>
-          Effective date: June 15, 2026. NovaSprout Learning is a brand of Karigari
+          Effective date: July 20, 2026. NovaSprout Learning is a brand of Karigari
           Home LLC. This Privacy Policy explains how NovaSprout Learning collects, uses,
           and protects information when families use our website, forms, booking links,
-          online tutoring resources, and related services.
+          mobile app, AI learning tools, online tutoring resources, and related services.
         </p>
       </section>
 
@@ -41,6 +41,11 @@ export default function PrivacyPolicy() {
             learning observations, shared documents, or other educational materials needed
             to support the student.
           </p>
+          <p>
+            When a user creates an AI lesson, we process the selected grade, subject, topic,
+            learning goal, and any optional question the user enters. Users should not enter
+            sensitive personal information in an AI lesson request.
+          </p>
         </article>
 
         <article>
@@ -50,10 +55,27 @@ export default function PrivacyPolicy() {
             <li>Respond to inquiries and schedule consultations.</li>
             <li>Understand student goals and recommend tutoring support.</li>
             <li>Provide online tutoring, notes, resources, and follow-up communication.</li>
+            <li>Generate requested AI lessons, educational visuals, quizzes, and lesson PDFs.</li>
             <li>Improve our website, services, and educational materials.</li>
             <li>Send service-related messages, reminders, and updates.</li>
             <li>Measure advertising performance and website activity.</li>
           </ul>
+        </article>
+
+        <article>
+          <h2>NovaSprout Mobile App</h2>
+          <p>
+            The NovaSprout mobile app stores downloaded lesson PDFs, lesson history, and quiz
+            scores locally on the user's device. A beta access code is stored in the device's
+            secure keychain. Users can remove saved lessons from the app settings, and removing
+            the app removes this locally stored app data.
+          </p>
+          <p>
+            Lesson requests are sent securely to NovaSprout servers and AI service providers to
+            create the requested educational content. The mobile app does not contain our AI
+            provider credentials, does not display advertising, and does not use third-party
+            advertising trackers.
+          </p>
         </article>
 
         <article>
@@ -77,8 +99,9 @@ export default function PrivacyPolicy() {
             We use trusted third-party services to run the website and provide tutoring. These
             may include AWS Amplify for hosting, Calendly for booking, Google Forms or similar
             tools for intake forms, Gmail or Google Workspace for email, Google Meet or Zoom
-            for online sessions, YouTube for video resources, and Google Ads or Google tags
-            for advertising and measurement.
+            for online sessions, YouTube for video resources, OpenAI for AI-assisted educational
+            content and images, and Google Ads or Google tags for website advertising and
+            measurement.
           </p>
           <p>
             These services may process information according to their own privacy policies and

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
+import { legacyLessonToSlidePlan } from "../../lib/lessonSlidePlan";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -12,10 +13,15 @@ type SlideAssetRequest = {
   };
   lesson?: {
     conceptExplanation?: string;
+    duration?: string;
+    fullLessonSegments?: Array<{ activity?: string; time?: string; title?: string }>;
     guidedExample?: string;
     learningObjectives?: string[];
     practiceQuestions?: string[];
+    prerequisiteCheck?: string[];
     quickAssessment?: string[];
+    recommendedNextSession?: string;
+    studentFit?: string;
     title?: string;
     warmUp?: string;
   };
@@ -193,10 +199,19 @@ export async function POST(request: Request) {
   const subject = cleanText(body.context?.subject, 60);
   const topic = cleanText(body.context?.topic, 90);
   const title = cleanText(body.lesson?.title, 120);
-  const slideTitles = (body.slideTitles ?? []).map((item) => cleanText(item, 80)).filter(Boolean).slice(0, 20);
+  const providedSlideTitles = (body.slideTitles ?? [])
+    .map((item) => cleanText(item, 80))
+    .filter(Boolean)
+    .slice(0, 28);
+  const slideTitles = providedSlideTitles.length
+    ? providedSlideTitles
+    : legacyLessonToSlidePlan({
+        context: body.context,
+        lesson: body.lesson
+      }).slides.map((slide) => slide.title).slice(0, 28);
 
   if (!grade || !subject || !topic || !title || !slideTitles.length) {
-    return NextResponse.json({ error: "Missing lesson, context, or slide titles." }, { status: 400 });
+    return NextResponse.json({ error: "Missing lesson or context." }, { status: 400 });
   }
 
   const deterministicAssets = deterministicAssetPlan({ grade, slideTitles, subject, topic });
