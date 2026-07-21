@@ -3,6 +3,8 @@ import Foundation
 enum NovaAPIError: LocalizedError {
     case invalidResponse
     case message(String)
+    case serverError(status: Int, message: String)
+    case network(String)
     case timedOut
 
     var errorDescription: String? {
@@ -11,9 +13,23 @@ enum NovaAPIError: LocalizedError {
             "NovaSprout returned an unreadable response."
         case .message(let message):
             message
+        case .serverError(_, let message):
+            message
+        case .network(let message):
+            message
         case .timedOut:
-            "The lesson is still processing after five minutes. Please try again shortly."
+            "NovaSprout is still processing this lesson. Please try again shortly."
         }
+    }
+
+    var isRetryable: Bool {
+        if case .serverError(let status, _) = self {
+            return [408, 429, 500, 502, 503, 504].contains(status)
+        }
+        if case .network = self {
+            return true
+        }
+        return false
     }
 }
 
@@ -34,11 +50,12 @@ actor APIClient {
         progress: @escaping @Sendable (GenerationStage) async -> Void
     ) async throws -> GeneratedLesson {
         await progress(.lesson)
-        let start: LessonStartResponse = try await post(
+        let start: LessonStartResponse = try await postWithRetry(
             path: "/api/ai-lesson",
             body: lessonRequest,
             accessCode: accessCode,
-            timeout: 40
+            timeout: 40,
+            retries: 2
         )
         if let error = start.error { throw NovaAPIError.message(error) }
         if let lesson = start.lesson { return lesson }
@@ -71,11 +88,12 @@ actor APIClient {
     ) async throws -> (deck: CompiledDeck, pdfData: Data) {
         await progress(.visualPlan)
         let planBody = AssetPlanRequest(context: context, lesson: lesson)
-        let plan: AssetPlanResponse = try await post(
+        let plan: AssetPlanResponse = try await postWithRetry(
             path: "/api/ai-slide-assets",
             body: planBody,
             accessCode: accessCode,
-            timeout: 300
+            timeout: 300,
+            retries: 2
         )
         if let error = plan.error { throw NovaAPIError.message(error) }
 
@@ -86,11 +104,12 @@ actor APIClient {
 
         if !selectedImages.isEmpty {
             await progress(.images)
-            let images: ImageGenerationResponse = try await post(
+            let images: ImageGenerationResponse = try await postWithRetry(
                 path: "/api/ai-slide-images",
                 body: ImageRequest(assets: selectedImages),
                 accessCode: accessCode,
-                timeout: 300
+                timeout: 300,
+                retries: 1
             )
             if let error = images.error { throw NovaAPIError.message(error) }
             let generatedImages = images.images ?? []
@@ -103,11 +122,12 @@ actor APIClient {
         }
 
         await progress(.compilation)
-        let deck: CompiledDeck = try await post(
+        let deck: CompiledDeck = try await postWithRetry(
             path: "/api/ai-lesson-deck",
             body: DeckRequest(assets: compiledAssets, context: context, lesson: lesson),
             accessCode: accessCode,
-            timeout: 300
+            timeout: 300,
+            retries: 2
         )
         if let error = deck.error { throw NovaAPIError.message(error) }
         guard deck.compilerStatus == "compiled" else {
@@ -128,11 +148,18 @@ actor APIClient {
 
     private func loadPDF(from deck: CompiledDeck) async throws -> Data {
         if let urlString = deck.pdfUrl, let url = URL(string: urlString) {
-            let (data, response) = try await URLSession.shared.data(from: url)
-            guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-                throw NovaAPIError.message("The compiled PDF could not be downloaded.")
+            for attempt in 0...2 {
+                do {
+                    let (data, response) = try await URLSession.shared.data(from: url)
+                    guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+                        throw NovaAPIError.message("The compiled PDF could not be downloaded.")
+                    }
+                    return data
+                } catch where attempt < 2 {
+                    try await Task.sleep(for: .seconds(attempt + 1))
+                }
             }
-            return data
+            throw NovaAPIError.message("The compiled PDF could not be downloaded.")
         }
         if let dataURL = deck.pdfDataUrl,
            let comma = dataURL.firstIndex(of: ","),
@@ -154,6 +181,24 @@ actor APIClient {
         return try await send(request)
     }
 
+    private func postWithRetry<Body: Encodable, Response: Decodable>(
+        path: String,
+        body: Body,
+        accessCode: String,
+        timeout: TimeInterval,
+        retries: Int
+    ) async throws -> Response {
+        var attempt = 0
+        while true {
+            do {
+                return try await post(path: path, body: body, accessCode: accessCode, timeout: timeout)
+            } catch let error as NovaAPIError where error.isRetryable && attempt < retries {
+                attempt += 1
+                try await Task.sleep(for: .seconds(min(8, attempt * 2)))
+            }
+        }
+    }
+
     private func post<Body: Encodable, Response: Decodable>(
         path: String,
         body: Body,
@@ -170,11 +215,23 @@ actor APIClient {
     }
 
     private func send<Response: Decodable>(_ request: URLRequest) async throws -> Response {
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch let error as URLError {
+            let message = error.code == .timedOut
+                ? "The NovaSprout service took longer than expected. Retrying may help."
+                : "Could not reach NovaSprout. Check your internet connection and try again."
+            throw NovaAPIError.network(message)
+        }
         guard let http = response as? HTTPURLResponse else { throw NovaAPIError.invalidResponse }
         if !(200...299).contains(http.statusCode) {
             let envelope = try? decoder.decode(APIErrorEnvelope.self, from: data)
-            throw NovaAPIError.message(envelope?.error ?? "NovaSprout returned error \(http.statusCode).")
+            throw NovaAPIError.serverError(
+                status: http.statusCode,
+                message: envelope?.error ?? "NovaSprout returned error \(http.statusCode)."
+            )
         }
         do {
             return try decoder.decode(Response.self, from: data)

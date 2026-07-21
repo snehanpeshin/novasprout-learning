@@ -24,6 +24,7 @@
 - Verify the free sample, AI access, PDF lesson, timer, quiz, local library, email, phone, and Calendly links.
 - Archive a Release build and upload it through Xcode Organizer.
 - Add a working review access code and concise test steps to App Review Information.
+- Use `AppStoreListing.md` for the subtitle, description, keywords, URLs, and review notes.
 - Start with TestFlight. Do not submit the beta access code as a paid digital unlock.
 
 ## Before selling AI access
