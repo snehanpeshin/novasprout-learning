@@ -100,7 +100,10 @@ actor APIClient {
 
         let allAssets = plan.assets ?? []
         let selectedImages = Array(allAssets.filter { $0.type == "image" }.prefix(1))
-        let selectedAssets = allAssets.filter { $0.type == "latex" } + selectedImages
+        // The deck renderer already creates subject-specific equations and diagrams.
+        // Keep optional AI LaTeX snippets out of the native pipeline because an
+        // incomplete formula should never prevent the core lesson from compiling.
+        let selectedAssets = selectedImages
         var compiledAssets = selectedAssets
 
         if !selectedImages.isEmpty {
