@@ -28,6 +28,7 @@ export type VisualType =
   | "comparison_table"
   | "concept_map"
   | "coordinate_graph"
+  | "coordinate_space_3d"
   | "data_table"
   | "double_number_line"
   | "equation_steps"
@@ -37,6 +38,9 @@ export type VisualType =
   | "labeled_system"
   | "process_sequence"
   | "ratio_table"
+  | "shape_classification"
+  | "solid_geometry"
+  | "solid_net"
   | "structure_function"
   | "tape_diagram";
 
@@ -47,7 +51,7 @@ export type VisualSpec = {
   equation?: string;
   id: string;
   labels?: string[];
-  points?: Array<{ x: number; y: number }>;
+  points?: Array<{ x: number; y: number; z?: number }>;
   rows?: string[][];
   steps?: string[];
   tableHeaders?: string[];
@@ -147,7 +151,7 @@ export function detectSubjectKey(subject?: string, topic?: string): SubjectKey {
   if (/\b(digest|biology|cell|organ|organism|ecosystem|photosynthesis|respiration|force|motion|energy|matter|atom|chemical|electric|electricity|circuit|current|voltage|charge|resistance)\b/.test(normalizedTopic)) {
     return "science";
   }
-  if (/\b(ratio|proportion|fraction|equation|algebra|geometry|graph|linear|percent|integer)\b/.test(normalizedTopic)) {
+  if (/\b(ratio|proportion|fraction|equation|algebra|geometry|graph|linear|percent|integer|shape|solid|polyhedron|prism|pyramid|cube|cuboid|cylinder|cone|sphere|surface area|volume|coordinate plane|three-dimensional|3d)\b/.test(normalizedTopic)) {
     return "math";
   }
 
@@ -281,8 +285,8 @@ const topicVocabulary = [
     terms: ["variable", "expression", "equation", "coefficient", "constant", "solution", "inverse operation", "balance"]
   },
   {
-    pattern: /\b(geometry|angle|triangle|area|perimeter|volume)\b/i,
-    terms: ["point", "line", "angle", "triangle", "area", "perimeter", "volume", "parallel", "perpendicular"]
+    pattern: /\b(geometry|angle|triangle|area|perimeter|volume|solid|polyhedron|prism|pyramid|cube|cuboid|cylinder|cone|sphere|three-dimensional|3d)\b/i,
+    terms: ["vertex", "edge", "face", "base", "height", "net", "surface area", "volume", "cross-section", "coordinate"]
   },
   {
     pattern: /\b(reading|main idea|inference|evidence|comprehension)\b/i,
@@ -354,6 +358,35 @@ function visualKeywords(value: string, fallback: string[], maxItems = 5) {
 
 function questionVisual(subjectKey: SubjectKey, topic: string, question: string, id: string): VisualSpec {
   const labels = visualKeywords(question, [topic, "given", "find", "check"], 5);
+  const geometryQuestion = /\b(net|fold|unfold|surface area|cube|cuboid|rectangular prism|prism|pyramid|cylinder|cone|sphere|solid|volume|face|edge|vertex|vertices)\b/i.test(question);
+  if (subjectKey === "math" && /\b(net|fold|unfold|surface area)\b/i.test(question)) {
+    return {
+      accessibilityLabel: `A net showing how the faces and matching edges in ${question} fold into a solid.`,
+      id,
+      labels: ["faces", "fold lines", "matching edges", "solid"],
+      title: "Match the net to the solid",
+      type: "solid_net"
+    };
+  }
+  if (subjectKey === "math" && (/\b(coordinate space|x[- ]?y[- ]?z|ordered triple|plot (?:the )?point|map (?:the )?point)\b/i.test(question) || (!geometryQuestion && /\b(coordinate space|ordered triple|3d mapping)\b/i.test(topic)))) {
+    return {
+      accessibilityLabel: `A three-dimensional coordinate model organizing the point information in ${question}.`,
+      id,
+      labels: ["x-axis", "y-axis", "z-axis", "ordered triple (x, y, z)"],
+      points: [{ x: 3, y: 2, z: 4 }],
+      title: "Map the point in 3D",
+      type: "coordinate_space_3d"
+    };
+  }
+  if (subjectKey === "math" && /\b(cube|cuboid|rectangular prism|prism|pyramid|cylinder|cone|sphere|solid|volume|surface area)\b/i.test(`${topic} ${question}`)) {
+    return {
+      accessibilityLabel: `A dimensioned three-dimensional solid model organizing the measurements in ${question}.`,
+      id,
+      labels: ["length", "width", "height", "faces", "edges", "vertices"],
+      title: `${topic} solid model`,
+      type: "solid_geometry"
+    };
+  }
   if (subjectKey === "math" && /\b(fraction)\b/i.test(`${topic} ${question}`)) {
     const fractions = [...new Set(question.match(/\d+\s*\/\s*(?:\d+|\?)/g) ?? [])].slice(0, 2);
     return {
@@ -387,6 +420,54 @@ function questionVisual(subjectKey: SubjectKey, topic: string, question: string,
 
 function topicVisual(subjectKey: SubjectKey, topic: string, text: string, id: string): VisualSpec {
   const combined = `${topic} ${text}`;
+  const detail = text || topic;
+  if (subjectKey === "math" && /\b(net|fold|unfold|surface area)\b/i.test(detail)) {
+    return {
+      accessibilityLabel: "A two-dimensional net with matching edges that folds into a three-dimensional solid.",
+      id,
+      labels: ["base", "side face", "matching edge", "fold line"],
+      title: "From net to solid",
+      type: "solid_net"
+    };
+  }
+  if (subjectKey === "math" && /\b(coordinate space|x[- ]?y[- ]?z|ordered triple|plot (?:the )?point|map (?:the )?point)\b/i.test(detail)) {
+    return {
+      accessibilityLabel: "Three-dimensional coordinate space with x, y, and z axes and a point projected to each coordinate plane.",
+      id,
+      labels: ["x-axis", "y-axis", "z-axis", "P(3, 2, 4)"],
+      points: [{ x: 3, y: 2, z: 4 }],
+      title: "Locate a point in 3D",
+      type: "coordinate_space_3d"
+    };
+  }
+  if (subjectKey === "math" && /\b(classif|name|identify|compare|polyhed)\b/i.test(detail)) {
+    return {
+      accessibilityLabel: "A classification display comparing a prism, pyramid, cylinder, cone, and sphere by their geometric features.",
+      id,
+      labels: ["prism", "pyramid", "cylinder", "cone", "sphere"],
+      title: "Classify 3D shapes",
+      type: "shape_classification"
+    };
+  }
+  if (subjectKey === "math" && /\b(geometry|shape|solid|prism|pyramid|cube|cuboid|cylinder|cone|sphere|volume|face|edge|vertex|vertices)\b/i.test(detail)) {
+    return {
+      accessibilityLabel: "A projected three-dimensional solid with visible and hidden edges, labeled dimensions, faces, edges, and vertices.",
+      id,
+      labels: ["length", "width", "height", "face", "edge", "vertex"],
+      title: topic,
+      type: "solid_geometry"
+    };
+  }
+  if (subjectKey === "math" && /\b(3d|three-dimensional|coordinate space|x[- ]?y[- ]?z|ordered triple)\b/i.test(topic)) {
+    return {
+      accessibilityLabel: "Three-dimensional coordinate space with x, y, and z axes and a point projected to each coordinate plane.",
+      id,
+      labels: ["x-axis", "y-axis", "z-axis", "P(3, 2, 4)"],
+      points: [{ x: 3, y: 2, z: 4 }],
+      title: "Locate a point in 3D",
+      type: "coordinate_space_3d"
+    };
+  }
   if (subjectKey === "math" && /\bfraction/i.test(combined)) {
     return {
       accessibilityLabel: "Equivalent fraction tape model comparing equal amounts.",
@@ -772,6 +853,92 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
             points: [{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 2 }, { x: 3, y: 4 }, { x: 4, y: 6 }],
             title: "Position over time",
             type: "coordinate_graph"
+          }
+        ]
+      )
+    ];
+  }
+
+  if (subjectKey === "math" && /\b(geometry|shape|solid|polyhedron|prism|pyramid|cube|cuboid|cylinder|cone|sphere|surface area|volume|coordinate space|three-dimensional|3d)\b/.test(lowerTopic)) {
+    return [
+      makeSlide(
+        "solid-anatomy",
+        "labeled_diagram",
+        "Read A 3D Solid",
+        4,
+        {
+          keyIdea: "A solid has measurable dimensions and geometric features that remain connected when the view changes.",
+          bullets: [
+            "Faces are flat or curved boundary surfaces.",
+            "Edges occur where faces meet; vertices occur where edges meet.",
+            "Hidden edges are dashed so the full structure remains visible."
+          ]
+        },
+        [
+          {
+            accessibilityLabel: "Projected rectangular prism with visible and hidden edges, three labeled dimensions, one face, one edge, and one vertex.",
+            id: "dimensioned-solid-model",
+            labels: ["length", "width", "height", "face", "edge", "vertex"],
+            title: "Dimensioned rectangular prism",
+            type: "solid_geometry"
+          }
+        ]
+      ),
+      makeSlide(
+        "coordinate-space-3d",
+        "data_display",
+        "Map Points In 3D",
+        4,
+        {
+          keyIdea: "An ordered triple (x, y, z) records movement along three perpendicular directions.",
+          bullets: ["Move along x first, then y, then z.", "Projection lines connect the point to the coordinate planes.", "Changing one coordinate moves the point parallel to one axis."]
+        },
+        [
+          {
+            accessibilityLabel: "Three-dimensional coordinate axes with point P at 3, 2, 4 and dashed projections to the coordinate planes.",
+            id: "xyz-coordinate-model",
+            labels: ["x-axis", "y-axis", "z-axis", "P(3, 2, 4)"],
+            points: [{ x: 3, y: 2, z: 4 }],
+            title: "Point P(3, 2, 4)",
+            type: "coordinate_space_3d"
+          }
+        ]
+      ),
+      makeSlide(
+        "solid-classification",
+        "comparison",
+        "Classify Solids By Structure",
+        4,
+        {
+          keyIdea: "Classify a solid by its bases, side surfaces, faces, edges, vertices, and cross-sections.",
+          bullets: ["Prisms have two congruent parallel bases.", "Pyramids have one base and triangular side faces.", "Cylinders, cones, and spheres include curved surfaces."]
+        },
+        [
+          {
+            accessibilityLabel: "Five projected solids comparing a prism, pyramid, cylinder, cone, and sphere.",
+            id: "solid-family-comparison",
+            labels: ["prism", "pyramid", "cylinder", "cone", "sphere"],
+            title: "Families of solids",
+            type: "shape_classification"
+          }
+        ]
+      ),
+      makeSlide(
+        "net-to-solid",
+        "process",
+        "Connect A Net To Its Solid",
+        4,
+        {
+          keyIdea: "A net preserves every face and shared edge while unfolding a solid into the plane.",
+          bullets: ["Count faces before folding.", "Match edges that meet in the solid.", "Use the net to reason about surface area."]
+        },
+        [
+          {
+            accessibilityLabel: "Cross-shaped cube net with fold lines and an arrow to a projected cube.",
+            id: "cube-net-folding-model",
+            labels: ["six faces", "fold lines", "matching edges", "cube"],
+            title: "Cube net to cube",
+            type: "solid_net"
           }
         ]
       )

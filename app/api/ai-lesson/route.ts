@@ -875,6 +875,7 @@ Make conceptExplanation substantial enough to become several short slides. Inclu
 Make fullLessonSegments student-facing content sections, not timing instructions for a tutor. Avoid phrases like "tutor explains", "teacher asks", "have the student", or "the tutor should".
 Include topic-specific vocabulary naturally in conceptExplanation and guidedExample so the deck can build a strong keyword slide.
 For visual subjects, describe exactly what should be shown in diagrams/images, using labels and spatial relationships where useful.
+For geometry, spatial reasoning, object-shape, or 3D-coordinate topics, name each solid precisely and include usable dimensions, ordered triples, axes, visible and hidden edges, face-edge-vertex counts, nets, cross-sections, or transformations when relevant. Keep measurements internally consistent so the visual renderer can map the object accurately.
 Make guidedExample include clear steps and a final check.
 Make practiceQuestions self-contained and include a short hint and answer/explanation in plain text, for example: "Try: ... Hint: ... Answer: ... Why: ..."
 Make quickAssessment include answerable questions with brief answer/explanation text when possible.

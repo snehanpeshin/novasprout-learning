@@ -962,6 +962,143 @@ ${dots}
 \end{center}`;
 }
 
+function renderCoordinateSpace3D(visual: VisualSpec) {
+  const source = visual.points?.[0] ?? { x: 3, y: 2, z: 4 };
+  const point = {
+    x: Math.max(0, Math.min(5, Number.isFinite(source.x) ? source.x : 3)),
+    y: Math.max(0, Math.min(5, Number.isFinite(source.y) ? source.y : 2)),
+    z: Math.max(0, Math.min(5, Number.isFinite(source.z) ? source.z ?? 4 : 4))
+  };
+  const px = (point.x * 0.78 - point.y * 0.42).toFixed(2);
+  const py = (point.z * 0.68 - point.y * 0.22).toFixed(2);
+  const floorX = (point.x * 0.78 - point.y * 0.42).toFixed(2);
+  const floorY = (-point.y * 0.22).toFixed(2);
+  const xOnly = (point.x * 0.78).toFixed(2);
+  const yOnlyX = (-point.y * 0.42).toFixed(2);
+  const yOnlyY = (-point.y * 0.22).toFixed(2);
+
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.92, line cap=round, line join=round]
+\fill[NovaSky!8] (0,0) -- (4.35,0) -- (2.45,-1.0) -- (-1.9,-1.0) -- cycle;
+\fill[NovaGrowth!7] (0,0) -- (-1.9,-1.0) -- (-1.9,2.45) -- (0,3.45) -- cycle;
+\draw[->, very thick, NovaSky] (0,0) -- (4.75,0) node[right]{\bfseries\scriptsize x};
+\draw[->, very thick, NovaCoral] (0,0) -- (-2.2,-1.15) node[below left]{\bfseries\scriptsize y};
+\draw[->, very thick, NovaGrowth] (0,0) -- (0,3.85) node[above]{\bfseries\scriptsize z};
+\draw[dashed, gray!58] (${px},${py}) -- (${floorX},${floorY});
+\draw[dashed, gray!58] (${floorX},${floorY}) -- (${xOnly},0);
+\draw[dashed, gray!58] (${floorX},${floorY}) -- (${yOnlyX},${yOnlyY});
+\draw[dashed, gray!45] (${px},${py}) -- (${px},0);
+\filldraw[fill=NovaYellow, draw=NovaInk, very thick] (${px},${py}) circle (0.10);
+\node[draw=NovaInk, fill=white, rounded corners=3pt, above right=0.08cm] at (${px},${py}) {\scriptsize\bfseries P(${point.x}, ${point.y}, ${point.z})};
+\node[below, NovaSky] at (${xOnly},0) {\tiny ${point.x}};
+\node[below left, NovaCoral] at (${yOnlyX},${yOnlyY}) {\tiny ${point.y}};
+\node[left, NovaGrowth] at (0,${(point.z * 0.68).toFixed(2)}) {\tiny ${point.z}};
+\node[below, text width=6.0cm, align=center] at (1.0,-1.45) {\scriptsize Move along x, then y, then z; dashed lines show the point's projections.};
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderSolidGeometry(visual: VisualSpec) {
+  const title = `${visual.title ?? ""} ${visual.accessibilityLabel}`.toLowerCase();
+  if (/sphere/.test(title)) {
+    return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.95]
+\shade[ball color=NovaSky!45, opacity=0.78] (0,0) circle (1.75);
+\draw[very thick, NovaInk] (0,0) circle (1.75);
+\draw[dashed, NovaInk!65] (0,0) ellipse (1.75 and 0.48);
+\draw[very thick, NovaCoral, -{Stealth[length=2mm]}] (0,0) -- (1.55,0) node[midway, above]{\scriptsize radius $r$};
+\fill[NovaInk] (0,0) circle (0.06);
+\node[below] at (0,-2.05) {\scriptsize Every surface point is distance $r$ from the center.};
+\end{tikzpicture}
+\end{center}`;
+  }
+
+  if (/cylinder|cone/.test(title)) {
+    const cone = /cone/.test(title);
+    return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.95]
+${cone
+  ? String.raw`\coordinate (A) at (0,2.35);
+\draw[very thick, NovaInk] (A) -- (-1.65,0) (A) -- (1.65,0);
+\fill[NovaCoral!16] (-1.65,0) arc[start angle=180,end angle=360,x radius=1.65,y radius=0.42] -- (A) -- cycle;`
+  : String.raw`\fill[NovaSky!15] (-1.65,0) rectangle (1.65,2.2);
+\draw[very thick, NovaInk] (-1.65,0) -- (-1.65,2.2) (1.65,0) -- (1.65,2.2);
+\draw[very thick, NovaInk] (0,2.2) ellipse (1.65 and 0.42);`}
+\draw[very thick, NovaInk] (0,0) ellipse (1.65 and 0.42);
+\draw[dashed, NovaInk!60] (-1.65,0) arc[start angle=180,end angle=360,x radius=1.65,y radius=0.42];
+\draw[<->, NovaGrowth, thick] (2.0,0) -- (2.0,${cone ? "2.35" : "2.2"}) node[midway,right]{\scriptsize $h$};
+\draw[<->, NovaCoral, thick] (0,-0.62) -- (1.65,-0.62) node[midway,below]{\scriptsize $r$};
+\node[below] at (0,-1.05) {\scriptsize ${cone ? "one circular base + one curved surface" : "two congruent circular bases + one curved surface"}};
+\end{tikzpicture}
+\end{center}`;
+  }
+
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.86, line cap=round, line join=round]
+\coordinate (A) at (0,0); \coordinate (B) at (3.8,0); \coordinate (C) at (3.8,2.25); \coordinate (D) at (0,2.25);
+\coordinate (E) at (1.05,0.72); \coordinate (F) at (4.85,0.72); \coordinate (G) at (4.85,2.97); \coordinate (H) at (1.05,2.97);
+\fill[NovaSky!13] (B)--(C)--(G)--(F)--cycle;
+\fill[NovaGrowth!11] (D)--(C)--(G)--(H)--cycle;
+\draw[very thick, NovaInk] (A)--(B)--(C)--(D)--cycle (B)--(F)--(G)--(C) (D)--(H)--(G);
+\draw[dashed, thick, NovaInk!55] (A)--(E)--(F) (E)--(H);
+\draw[<->, NovaSky, thick] (0,-0.38)--(3.8,-0.38) node[midway,below]{\scriptsize length $l$};
+\draw[<->, NovaCoral, thick] (4.05,-0.15)--(5.08,0.55) node[midway,below right]{\scriptsize width $w$};
+\draw[<->, NovaGrowth, thick] (5.18,0.72)--(5.18,2.97) node[midway,right]{\scriptsize height $h$};
+\filldraw[fill=NovaYellow, draw=NovaInk] (C) circle (0.08);
+\node[draw=NovaInk, fill=white, rounded corners=2pt, right=0.13cm of C] {\tiny vertex};
+\node[fill=white, rounded corners=2pt] at (4.33,1.58) {\tiny face};
+\node[above, NovaInk] at (2.0,2.25) {\tiny edge};
+\node[below, text width=6.2cm, align=center] at (2.45,-0.95) {\scriptsize Solid structure: 6 faces, 12 edges, 8 vertices. Dashed lines are hidden edges.};
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderShapeClassification() {
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.78, line cap=round, line join=round]
+% Prism
+\draw[thick] (0,0)--(1.0,0)--(1.0,1.05)--(0,1.05)--cycle;
+\draw[thick] (0.35,0.28)--(1.35,0.28)--(1.35,1.33)--(0.35,1.33)--cycle;
+\draw[thick] (0,0)--(0.35,0.28) (1,0)--(1.35,0.28) (1,1.05)--(1.35,1.33) (0,1.05)--(0.35,1.33);
+\node[below] at (0.68,-0.22){\tiny prism};
+% Pyramid
+\draw[thick] (2.0,0)--(3.35,0)--(3.65,0.35)--(2.3,0.35)--cycle;
+\draw[thick] (2.8,1.45)--(2.0,0) (2.8,1.45)--(3.35,0) (2.8,1.45)--(3.65,0.35) (2.8,1.45)--(2.3,0.35);
+\node[below] at (2.8,-0.22){\tiny pyramid};
+% Cylinder
+\draw[thick] (4.35,0) -- (4.35,1.08) (5.55,0)--(5.55,1.08);
+\draw[thick] (4.95,0) ellipse (0.6 and 0.18); \draw[thick] (4.95,1.08) ellipse (0.6 and 0.18);
+\node[below] at (4.95,-0.3){\tiny cylinder};
+% Cone
+\draw[thick] (6.25,0)--(6.95,1.4)--(7.65,0); \draw[thick] (6.95,0) ellipse (0.7 and 0.2);
+\node[below] at (6.95,-0.3){\tiny cone};
+% Sphere
+\shade[ball color=NovaSky!45] (8.75,0.65) circle (0.68); \draw[thick] (8.75,0.65) circle (0.68); \draw[dashed] (8.75,0.65) ellipse (0.68 and 0.18);
+\node[below] at (8.75,-0.3){\tiny sphere};
+\node[draw=NovaGrowth, fill=NovaGrowth!10, rounded corners=4pt, below, text width=8.0cm, align=center] at (4.45,-0.78) {\scriptsize Compare bases, flat faces, curved surfaces, edges, vertices, and possible cross-sections.};
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderSolidNet() {
+  const squares = [
+    [0, 0], [1, 0], [2, 0], [3, 0], [1, 1], [1, -1]
+  ].map(([x, y], index) => `\\draw[fill=NovaPaper, very thick, draw=${index % 2 ? "NovaSky" : "NovaGrowth"}] (${x},${y}) rectangle (${x + 1},${y + 1});`).join("\n");
+
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.77, line cap=round, line join=round]
+${squares}
+\draw[dashed, NovaCoral, thick] (1,0)--(1,1) (2,0)--(2,1) (3,0)--(3,1) (1,1)--(2,1) (1,0)--(2,0);
+\draw[-{Stealth[length=3mm]}, very thick, SubjectAccent] (4.35,0.55)--(5.35,0.55) node[midway,above]{\scriptsize fold};
+\coordinate (A) at (5.8,0); \coordinate (B) at (7.3,0); \coordinate (C) at (7.3,1.5); \coordinate (D) at (5.8,1.5);
+\coordinate (E) at (6.35,0.45); \coordinate (F) at (7.85,0.45); \coordinate (G) at (7.85,1.95); \coordinate (H) at (6.35,1.95);
+\draw[very thick] (A)--(B)--(C)--(D)--cycle (B)--(F)--(G)--(C) (D)--(H)--(G);
+\draw[dashed, thick] (A)--(E)--(F) (E)--(H);
+\node[below, text width=7.5cm, align=center] at (3.8,-1.35) {\scriptsize A valid cube net has six faces and matching edges that meet without overlap.};
+\end{tikzpicture}
+\end{center}`;
+}
+
 function renderEquationSteps(visual: VisualSpec) {
   const steps = visual.steps?.length ? visual.steps : visual.equation ? [visual.equation] : [];
   if (!steps.length) {
@@ -1090,6 +1227,8 @@ function renderVisualSpec(visual: VisualSpec) {
         : renderComparisonVisual(visual);
     case "coordinate_graph":
       return renderCoordinateGraph(visual);
+    case "coordinate_space_3d":
+      return renderCoordinateSpace3D(visual);
     case "double_number_line":
       return renderDoubleNumberLine(visual);
     case "equation_steps":
@@ -1108,6 +1247,12 @@ function renderVisualSpec(visual: VisualSpec) {
       return renderIconGrid(visual);
     case "labeled_cards":
       return renderCardsVisual(visual);
+    case "shape_classification":
+      return renderShapeClassification();
+    case "solid_geometry":
+      return renderSolidGeometry(visual);
+    case "solid_net":
+      return renderSolidNet();
     case "tape_diagram":
       return renderTapeDiagram(visual);
     default:
