@@ -6,8 +6,8 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const openAiStartTimeoutMs = Math.min(
-  20000,
-  Math.max(8000, Number(process.env.OPENAI_LESSON_START_TIMEOUT_MS ?? 12000))
+  25000,
+  Math.max(12000, Number(process.env.OPENAI_LESSON_START_TIMEOUT_MS ?? 22000))
 );
 const openAiLessonModel = process.env.OPENAI_MODEL?.trim() || "gpt-4.1-mini";
 

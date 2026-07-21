@@ -66,10 +66,11 @@ actor APIClient {
         let deadline = Date().addingTimeInterval(300)
         while Date() < deadline {
             try await Task.sleep(for: .seconds(2.5))
-            let status: LessonStartResponse = try await get(
+            let status: LessonStartResponse = try await getWithRetry(
                 path: "/api/ai-lesson/status?responseId=\(responseId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? responseId)",
                 accessCode: accessCode,
-                timeout: 20
+                timeout: 20,
+                retries: 3
             )
             if let error = status.error { throw NovaAPIError.message(error) }
             if let lesson = status.lesson { return lesson }
@@ -179,6 +180,23 @@ actor APIClient {
         request.timeoutInterval = timeout
         request.setValue(accessCode, forHTTPHeaderField: "x-ai-access-token")
         return try await send(request)
+    }
+
+    private func getWithRetry<Response: Decodable>(
+        path: String,
+        accessCode: String,
+        timeout: TimeInterval,
+        retries: Int
+    ) async throws -> Response {
+        var attempt = 0
+        while true {
+            do {
+                return try await get(path: path, accessCode: accessCode, timeout: timeout)
+            } catch let error as NovaAPIError where error.isRetryable && attempt < retries {
+                attempt += 1
+                try await Task.sleep(for: .seconds(min(8, attempt * 2)))
+            }
+        }
     }
 
     private func postWithRetry<Body: Encodable, Response: Decodable>(

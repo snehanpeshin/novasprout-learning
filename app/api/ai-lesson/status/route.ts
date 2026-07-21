@@ -37,7 +37,7 @@ export async function GET(request: Request) {
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12000);
+  const timeout = setTimeout(() => controller.abort(), 18000);
 
   try {
     const response = await fetch(`https://api.openai.com/v1/responses/${encodeURIComponent(responseId)}`, {
