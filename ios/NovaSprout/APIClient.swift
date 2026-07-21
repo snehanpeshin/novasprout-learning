@@ -89,16 +89,23 @@ actor APIClient {
     ) async throws -> (deck: CompiledDeck, pdfData: Data) {
         await progress(.visualPlan)
         let planBody = AssetPlanRequest(context: context, lesson: lesson)
-        let plan: AssetPlanResponse = try await postWithRetry(
-            path: "/api/ai-slide-assets",
-            body: planBody,
-            accessCode: accessCode,
-            timeout: 300,
-            retries: 2
-        )
-        if let error = plan.error { throw NovaAPIError.message(error) }
-
-        let allAssets = plan.assets ?? []
+        var allAssets: [DeckAsset] = []
+        do {
+            let plan: AssetPlanResponse = try await postWithRetry(
+                path: "/api/ai-slide-assets",
+                body: planBody,
+                accessCode: accessCode,
+                timeout: 45,
+                retries: 0
+            )
+            allAssets = plan.assets ?? []
+        } catch let error as NovaAPIError {
+            if case .serverError(let status, _) = error, status == 401 {
+                throw error
+            }
+            // Planning is optional; the deck renderer supplies complete,
+            // subject-specific diagrams when this service is unavailable.
+        }
         let selectedImages = Array(allAssets.filter { $0.type == "image" }.prefix(1))
         // The deck renderer already creates subject-specific equations and diagrams.
         // Keep optional AI LaTeX snippets out of the native pipeline because an
@@ -108,20 +115,26 @@ actor APIClient {
 
         if !selectedImages.isEmpty {
             await progress(.images)
-            let images: ImageGenerationResponse = try await postWithRetry(
-                path: "/api/ai-slide-images",
-                body: ImageRequest(assets: selectedImages),
-                accessCode: accessCode,
-                timeout: 300,
-                retries: 1
-            )
-            if let error = images.error { throw NovaAPIError.message(error) }
-            let generatedImages = images.images ?? []
-            compiledAssets = selectedAssets.map { asset in
-                generatedImages.first(where: {
-                    ($0.assetId != nil && $0.assetId == asset.assetId) ||
-                    ($0.placement == asset.placement && $0.prompt == asset.prompt)
-                }) ?? asset
+            do {
+                let images: ImageGenerationResponse = try await postWithRetry(
+                    path: "/api/ai-slide-images",
+                    body: ImageRequest(assets: selectedImages),
+                    accessCode: accessCode,
+                    timeout: 300,
+                    retries: 0
+                )
+                let generatedImages = images.images ?? []
+                compiledAssets = selectedAssets.compactMap { asset in
+                    generatedImages.first(where: {
+                        ($0.assetId != nil && $0.assetId == asset.assetId) ||
+                        ($0.placement == asset.placement && $0.prompt == asset.prompt)
+                    })
+                }
+            } catch let error as NovaAPIError {
+                if case .serverError(let status, _) = error, status == 401 {
+                    throw error
+                }
+                compiledAssets = []
             }
         }
 

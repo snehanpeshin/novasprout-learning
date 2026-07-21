@@ -215,7 +215,8 @@ export async function POST(request: Request) {
   }
 
   const deterministicAssets = deterministicAssetPlan({ grade, slideTitles, subject, topic });
-  if (deterministicAssets.length) {
+  const useAiAssetPlanner = process.env.ENABLE_AI_ASSET_PLANNER?.trim().toLowerCase() === "true";
+  if (deterministicAssets.length || !useAiAssetPlanner) {
     return NextResponse.json({ assets: deterministicAssets });
   }
 

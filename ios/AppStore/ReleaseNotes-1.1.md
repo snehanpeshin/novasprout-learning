@@ -8,3 +8,4 @@
 - Added automatic recovery for temporary AI, image, compiler, and network errors.
 - Kept background lesson generation running through temporary status-check timeouts.
 - Prevented optional formula overlays from blocking an otherwise valid visual lesson.
+- Made optional visual planning non-blocking so private lessons continue through planner timeouts.
