@@ -4,6 +4,7 @@ struct LessonOverviewView: View {
     @ObservedObject var viewModel: LessonGeneratorViewModel
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var history: LessonHistoryStore
+    @EnvironmentObject private var purchases: PurchaseManager
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -57,8 +58,14 @@ struct LessonOverviewView: View {
 
                         Button {
                             Task {
-                                await viewModel.buildPrivateLesson(accessCode: settings.accessCode, history: history)
-                                if viewModel.playerConfiguration != nil { dismiss() }
+                                await viewModel.buildPrivateLesson(
+                                    access: purchases.accessForDeck(betaCode: settings.accessCode),
+                                    history: history
+                                )
+                                if viewModel.playerConfiguration != nil {
+                                    purchases.finishActiveLesson()
+                                    dismiss()
+                                }
                             }
                         } label: {
                             Label(viewModel.isBuildingDeck ? "Preparing Private Lesson" : "Start Private Lesson", systemImage: "play.rectangle.fill")

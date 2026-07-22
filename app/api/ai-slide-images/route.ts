@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "OPENAI_API_KEY is not configured." }, { status: 500 });
   }
 
-  if (!isAiAccessAllowed(request)) {
+  if (!(await isAiAccessAllowed(request))) {
     return NextResponse.json({ error: aiAccessError }, { status: 401 });
   }
 

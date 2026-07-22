@@ -234,3 +234,98 @@ enum LessonOptions {
         "60-minute deep lesson"
     ]
 }
+
+enum CurriculumTopicValidator {
+    private static let keywords: [String: [String]] = [
+        "Mathematics": [
+            "number", "count", "place value", "addition", "subtraction", "multiplication", "division",
+            "arithmetic", "fraction", "decimal", "percent", "ratio", "proportion", "integer", "equation",
+            "inequality", "algebra", "variable", "expression", "function", "linear", "quadratic",
+            "polynomial", "exponent", "radical", "logarithm", "sequence", "graph", "coordinate",
+            "geometry", "shape", "angle", "triangle", "polygon", "circle", "perimeter", "area",
+            "surface area", "volume", "solid", "prism", "pyramid", "cylinder", "cone", "sphere",
+            "symmetry", "measurement", "time", "money", "statistics", "mean", "median", "mode",
+            "probability", "trigonometry", "calculus", "derivative", "integral", "matrix", "vector"
+        ],
+        "Science": [
+            "science", "scientific method", "experiment", "observation", "hypothesis", "biology", "organism",
+            "plant", "animal", "habitat", "ecosystem", "food chain", "food web", "cell", "genetic", "dna",
+            "evolution", "adaptation", "anatomy", "body system", "digestive", "circulatory", "respiratory",
+            "nervous system", "immune system", "reproduction", "health", "nutrition", "chemistry", "matter",
+            "atom", "molecule", "element", "compound", "mixture", "reaction", "acid", "base", "periodic table",
+            "physics", "force", "motion", "speed", "velocity", "acceleration", "gravity", "friction", "energy",
+            "electricity", "circuit", "magnet", "wave", "sound", "light", "heat", "temperature", "earth science",
+            "rock", "mineral", "soil", "weather", "climate", "water cycle", "ocean", "plate tectonics",
+            "earthquake", "volcano", "fossil", "space", "solar system", "planet", "star", "moon", "astronomy"
+        ],
+        "English": [
+            "english", "reading", "phonics", "alphabet", "spelling", "vocabulary", "sentence", "paragraph",
+            "grammar", "noun", "pronoun", "verb", "adjective", "adverb", "preposition", "conjunction",
+            "punctuation", "comprehension", "main idea", "supporting detail", "inference", "context clue",
+            "summary", "theme", "character", "setting", "plot", "point of view", "figurative language",
+            "metaphor", "simile", "poetry", "fiction", "nonfiction", "literature", "novel", "short story",
+            "drama", "speech", "writing", "essay", "thesis", "claim", "evidence", "argument", "narrative",
+            "research", "citation", "revision", "editing"
+        ],
+        "Social Studies": [
+            "social studies", "history", "geography", "map", "continent", "country", "state", "region", "culture",
+            "civilization", "ancient", "medieval", "renaissance", "revolution", "war", "empire", "migration",
+            "exploration", "colonization", "indigenous", "government", "civics", "citizen", "constitution",
+            "democracy", "republic", "election", "congress", "president", "court", "law", "rights",
+            "civil rights", "economics", "economy", "trade", "market", "supply", "demand", "currency",
+            "resources", "community", "society", "timeline", "primary source", "current event"
+        ],
+        "Computer Science": [
+            "computer", "coding", "code", "program", "programming", "algorithm", "sequence", "loop", "condition",
+            "variable", "function", "debug", "binary", "data", "database", "network", "internet", "web", "html",
+            "css", "javascript", "typescript", "python", "swift", "java", "scratch", "robot", "robotics",
+            "cybersecurity", "privacy", "encryption", "artificial intelligence", "machine learning", "pseudocode"
+        ],
+        "Test Preparation": [
+            "test", "exam", "quiz", "practice", "review", "study skill", "test strategy", "sat", "act", "psat",
+            "ap exam", "state assessment", "math", "science", "english", "reading", "writing", "history"
+        ]
+    ]
+
+    private static let unsafePhrases = [
+        "porn", "pornographic", "explicit sex", "sexual roleplay", "nude photo", "how to make a bomb",
+        "how to build a weapon", "how to buy illegal drugs", "suicide method", "how to die", "kill myself",
+        "self-harm instructions", "steal a password", "credit card fraud", "online casino", "sports betting"
+    ]
+
+    static func error(topic: String, subject: String, grade: String, studentQuestion: String = "") -> String? {
+        let cleaned = topic.trimmingCharacters(in: .whitespacesAndNewlines)
+        let request = "\(cleaned) \(studentQuestion)".lowercased()
+        guard cleaned.count >= 3 else { return "Enter a school topic." }
+        guard cleaned.count <= 90 else { return "Keep the topic under 90 characters." }
+
+        if unsafePhrases.contains(where: request.contains) {
+            return "That request is not suitable for NovaSprout. Choose a safe school-learning topic."
+        }
+
+        guard keywords[subject, default: []].contains(where: { containsTerm($0, in: cleaned) }) else {
+            return "That topic does not appear to match \(subject). Choose a curriculum topic for the selected subject."
+        }
+
+        let advanced = ["calculus", "derivative", "integral", "matrix", "logarithm", "trigonometry"]
+        if advanced.contains(where: { containsTerm($0, in: cleaned) }),
+           !["Grades 9-10", "Grades 11-12", "College / adult"].contains(grade) {
+            return "That topic is outside the selected grade range. Choose a higher grade or a grade-appropriate topic."
+        }
+        return nil
+    }
+
+    private static func containsTerm(_ term: String, in text: String) -> Bool {
+        let escaped = NSRegularExpression.escapedPattern(for: term)
+        let options: String.CompareOptions = [.regularExpression, .caseInsensitive]
+        if text.range(of: "\\b\(escaped)\\b", options: options) != nil {
+            return true
+        }
+        let singularized = text.replacingOccurrences(
+            of: "\\b([A-Za-z]{4,})s\\b",
+            with: "$1",
+            options: .regularExpression
+        )
+        return singularized.range(of: "\\b\(escaped)\\b", options: options) != nil
+    }
+}

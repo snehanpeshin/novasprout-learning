@@ -9,3 +9,7 @@
 - Kept background lesson generation running through temporary status-check timeouts.
 - Prevented optional formula overlays from blocking an otherwise valid visual lesson.
 - Made optional visual planning non-blocking so private lessons continue through planner timeouts.
+- Added a friendlier NovaSprout app icon designed for students.
+- Added curriculum and child-safety checks for lesson topics and questions.
+- Added Apple In-App Purchase options for one AI lesson or monthly AI Tutor access.
+- Added purchase restoration and subscription management in Settings.

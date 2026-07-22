@@ -11,6 +11,7 @@ These are preparation notes, not legal advice. Reconfirm them against the produc
 
 - The first release has no account creation and no app analytics SDK.
 - Live-tutor email and booking actions open the user's external email or browser app; NovaSprout receives information only when the user submits it there.
+- Purchase history: Apple-signed transaction ID, product ID, purchase state, and subscription expiration are sent to NovaSprout servers for App Functionality, fraud prevention, consumable-use control, and subscription limits. No payment-card number is received.
 
 ## User content sent for AI processing
 
@@ -23,3 +24,8 @@ These are preparation notes, not legal advice. Reconfirm them against the produc
 - Lesson PDFs, lesson metadata, and quiz scores are stored on the device.
 - The beta access code is stored in Keychain.
 - Users can clear lesson history in Settings; uninstalling removes local app data.
+
+## Tracking and advertising
+
+- Purchase and lesson data are not used for cross-company tracking or advertising.
+- The native app contains no Google Ads tag or third-party advertising SDK.

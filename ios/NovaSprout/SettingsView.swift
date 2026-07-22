@@ -3,11 +3,25 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var history: LessonHistoryStore
+    @EnvironmentObject private var purchases: PurchaseManager
     @State private var showClearConfirmation = false
 
     var body: some View {
         NavigationStack {
             Form {
+                Section("AI Tutor Access") {
+                    LabeledContent("Monthly access", value: purchases.hasMonthlyAccess ? "Active" : "Not active")
+                    Button("Restore Purchases") {
+                        Task { await purchases.restorePurchases() }
+                    }
+                    Link("Manage Subscription", destination: URL(string: "https://apps.apple.com/account/subscriptions")!)
+                    if !purchases.statusMessage.isEmpty {
+                        Text(purchases.statusMessage)
+                            .font(.footnote)
+                            .foregroundStyle(NovaPalette.teal)
+                    }
+                }
+
                 Section("AI Tutor Beta") {
                     SecureField("Access code", text: $settings.accessCode)
                         .textContentType(.password)

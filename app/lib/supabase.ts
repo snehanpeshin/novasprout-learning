@@ -84,3 +84,56 @@ export async function getSubscriptions() {
 
   return response.json() as Promise<SubscriptionRecord[]>;
 }
+
+export async function claimAppleLessonPurchase({
+  productId,
+  transactionId
+}: {
+  productId: string;
+  transactionId: string;
+}) {
+  const activeUntil = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString();
+  const response = await supabaseFetch("apple_iap_lesson_uses", {
+    body: JSON.stringify({
+      active_until: activeUntil,
+      product_id: productId,
+      transaction_id: transactionId
+    }),
+    headers: { Prefer: "return=minimal" },
+    method: "POST"
+  }).catch((error) => {
+    if (error instanceof Error && error.message.includes("409")) return null;
+    throw error;
+  });
+
+  return response !== null;
+}
+
+export async function hasActiveAppleLessonPurchase(transactionId: string) {
+  const response = await supabaseFetch(
+    `apple_iap_lesson_uses?select=active_until&transaction_id=eq.${encodeURIComponent(transactionId)}&limit=1`
+  );
+  const rows = (await response.json()) as Array<{ active_until: string }>;
+  return rows.some((row) => new Date(row.active_until).getTime() > Date.now());
+}
+
+export async function claimAppleSubscriptionLesson({
+  expiresDate,
+  productId,
+  transactionId
+}: {
+  expiresDate: number;
+  productId: string;
+  transactionId: string;
+}) {
+  const response = await supabaseFetch("rpc/claim_apple_subscription_lesson", {
+    body: JSON.stringify({
+      p_expires_at: new Date(expiresDate).toISOString(),
+      p_lesson_limit: 20,
+      p_product_id: productId,
+      p_transaction_id: transactionId
+    }),
+    method: "POST"
+  });
+  return (await response.json()) === true;
+}

@@ -12,14 +12,19 @@ final class LessonGeneratorViewModel: ObservableObject {
     @Published var showOverview = false
     @Published var playerConfiguration: LessonPlayerConfiguration?
 
-    func generate(accessCode: String) async {
-        guard !request.topic.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = "Enter a lesson topic."
-            return
+    func generate(access: AIRequestAccess) async -> Bool {
+        if let validationError = CurriculumTopicValidator.error(
+            topic: request.topic,
+            subject: request.subject,
+            grade: request.grade,
+            studentQuestion: request.studentQuestion
+        ) {
+            errorMessage = validationError
+            return false
         }
-        guard !accessCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = "Add the NovaSprout beta access code in Settings, or open the free sample lesson."
-            return
+        guard !access.isEmpty else {
+            errorMessage = "Choose one AI lesson, subscribe, add beta access, or open the free sample."
+            return false
         }
 
         errorMessage = ""
@@ -29,20 +34,23 @@ final class LessonGeneratorViewModel: ObservableObject {
         do {
             let generated = try await APIClient.shared.generateLesson(
                 request: request,
-                accessCode: accessCode
+                access: access
             ) { [self] nextStage in
                 await updateStage(nextStage)
             }
             lesson = generated
             context = lessonContext
             showOverview = true
+            isGenerating = false
+            return true
         } catch {
             errorMessage = error.localizedDescription
         }
         isGenerating = false
+        return false
     }
 
-    func buildPrivateLesson(accessCode: String, history: LessonHistoryStore) async {
+    func buildPrivateLesson(access: AIRequestAccess, history: LessonHistoryStore) async {
         guard let lesson, let context else { return }
         errorMessage = ""
         isBuildingDeck = true
@@ -50,7 +58,7 @@ final class LessonGeneratorViewModel: ObservableObject {
             let result = try await APIClient.shared.buildDeck(
                 lesson: lesson,
                 context: context,
-                accessCode: accessCode
+                access: access
             ) { [self] nextStage in
                 await updateStage(nextStage)
             }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { checkCurriculumTopic, checkKidSafeContent } from "../../lib/curriculumGuard";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 import { extractAiLessonOutputText, parseAiLessonJson } from "../../lib/aiLessonResponse";
 
@@ -792,7 +793,7 @@ async function requestOpenAiLesson({
 export async function POST(request: Request) {
   const apiKey = process.env.OPENAI_API_KEY;
 
-  if (!isAiAccessAllowed(request)) {
+  if (!(await isAiAccessAllowed(request, { consumeSingleLesson: true }))) {
     return NextResponse.json({ error: aiAccessError }, { status: 401 });
   }
 
@@ -833,11 +834,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Please choose valid lesson options and topic." }, { status: 400 });
   }
 
+  const curriculumCheck = checkCurriculumTopic({ grade, studentQuestion, subject, topic });
+  if (!curriculumCheck.allowed) {
+    return NextResponse.json({ error: curriculumCheck.error }, { status: 400 });
+  }
+
   if (!apiKey) {
     return NextResponse.json(
       { error: "OPENAI_API_KEY is not configured for this deployment, so the live AI lesson cannot be generated." },
       { status: 503 }
     );
+  }
+
+  const safetyCheck = await checkKidSafeContent({ apiKey, studentQuestion, topic });
+  if (!safetyCheck.allowed) {
+    return NextResponse.json({ error: safetyCheck.error }, { status: 400 });
   }
 
   const prompt = `

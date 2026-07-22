@@ -27,12 +27,12 @@
 - Use `AppStoreListing.md` for the subtitle, description, keywords, URLs, and review notes.
 - Start with TestFlight. Do not submit the beta access code as a paid digital unlock.
 
-## Before selling AI access
+## Selling AI access
 
-- Create StoreKit products in App Store Connect for single lessons and monthly access.
-- Validate receipts or signed transactions on a server.
-- Restore purchases and explain subscription terms in the app.
-- Replace access-code-only paid entitlement before production review.
+- Create the StoreKit products listed in `docs/app-store-monetization.md`.
+- Run the latest Supabase schema and add the Apple IAP Amplify variables.
+- Confirm signed-transaction verification in TestFlight sandbox testing.
+- Submit both in-app purchases with the app version for review.
 
 ## Child safety and privacy
 

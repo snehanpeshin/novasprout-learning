@@ -19,7 +19,7 @@ async function readJsonResponse(response: Response) {
 }
 
 export async function GET(request: Request) {
-  if (!isAiAccessAllowed(request)) {
+  if (!(await isAiAccessAllowed(request))) {
     return NextResponse.json({ error: aiAccessError }, { status: 401 });
   }
 

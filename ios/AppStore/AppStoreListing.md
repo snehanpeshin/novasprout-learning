@@ -25,6 +25,7 @@ Features:
 - A lesson timer and scored quiz
 - A private on-device lesson library
 - A free sample lesson
+- One-lesson and monthly AI Tutor options through Apple In-App Purchase
 - A separate option to request a live online tutor
 
 AI-generated material can contain mistakes. Students should verify important work with a teacher, tutor, or trusted source. Do not enter sensitive personal information.
@@ -43,7 +44,7 @@ To review without an account, open the Learn tab and tap **Open** under **Try a 
 
 To test live generation, enter the review access code supplied separately in **Settings > AI Tutor Beta**, return to **Learn**, enter a topic, and tap **Create My Lesson**. Review the generated outline, then tap **Start Private Lesson**. Generation can take several minutes while the service creates the lesson, visual asset, and PDF.
 
-The Live Tutor tab links to a real-time person-to-person tutoring consultation. The app contains no Stripe links, advertising SDK, or external purchase flow for digital content.
+The Live Tutor tab links to a real-time person-to-person tutoring consultation. Digital AI lessons use Apple In-App Purchase: one consumable lesson or a monthly subscription with up to 20 lessons per renewal period. The app contains no Stripe links, advertising SDK, or external purchase flow for digital content.
 
 ## URLs
 

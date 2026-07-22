@@ -1,5 +1,14 @@
 import Foundation
 
+struct AIRequestAccess {
+    let appleTransactionJWS: String
+    let betaCode: String
+
+    var isEmpty: Bool {
+        appleTransactionJWS.isEmpty && betaCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+}
+
 enum NovaAPIError: LocalizedError {
     case invalidResponse
     case message(String)
@@ -46,14 +55,14 @@ actor APIClient {
 
     func generateLesson(
         request lessonRequest: LessonRequest,
-        accessCode: String,
+        access: AIRequestAccess,
         progress: @escaping @Sendable (GenerationStage) async -> Void
     ) async throws -> GeneratedLesson {
         await progress(.lesson)
         let start: LessonStartResponse = try await postWithRetry(
             path: "/api/ai-lesson",
             body: lessonRequest,
-            accessCode: accessCode,
+            access: access,
             timeout: 40,
             retries: 2
         )
@@ -68,7 +77,7 @@ actor APIClient {
             try await Task.sleep(for: .seconds(2.5))
             let status: LessonStartResponse = try await getWithRetry(
                 path: "/api/ai-lesson/status?responseId=\(responseId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? responseId)",
-                accessCode: accessCode,
+                access: access,
                 timeout: 20,
                 retries: 3
             )
@@ -84,7 +93,7 @@ actor APIClient {
     func buildDeck(
         lesson: GeneratedLesson,
         context: LessonContext,
-        accessCode: String,
+        access: AIRequestAccess,
         progress: @escaping @Sendable (GenerationStage) async -> Void
     ) async throws -> (deck: CompiledDeck, pdfData: Data) {
         await progress(.visualPlan)
@@ -94,7 +103,7 @@ actor APIClient {
             let plan: AssetPlanResponse = try await postWithRetry(
                 path: "/api/ai-slide-assets",
                 body: planBody,
-                accessCode: accessCode,
+                access: access,
                 timeout: 45,
                 retries: 0
             )
@@ -119,7 +128,7 @@ actor APIClient {
                 let images: ImageGenerationResponse = try await postWithRetry(
                     path: "/api/ai-slide-images",
                     body: ImageRequest(assets: selectedImages),
-                    accessCode: accessCode,
+                    access: access,
                     timeout: 300,
                     retries: 0
                 )
@@ -142,7 +151,7 @@ actor APIClient {
         let deck: CompiledDeck = try await postWithRetry(
             path: "/api/ai-lesson-deck",
             body: DeckRequest(assets: compiledAssets, context: context, lesson: lesson),
-            accessCode: accessCode,
+            access: access,
             timeout: 300,
             retries: 2
         )
@@ -188,26 +197,26 @@ actor APIClient {
 
     private func get<Response: Decodable>(
         path: String,
-        accessCode: String,
+        access: AIRequestAccess,
         timeout: TimeInterval
     ) async throws -> Response {
         var request = URLRequest(url: endpoint(path))
         request.httpMethod = "GET"
         request.timeoutInterval = timeout
-        request.setValue(accessCode, forHTTPHeaderField: "x-ai-access-token")
+        applyAccess(access, to: &request)
         return try await send(request)
     }
 
     private func getWithRetry<Response: Decodable>(
         path: String,
-        accessCode: String,
+        access: AIRequestAccess,
         timeout: TimeInterval,
         retries: Int
     ) async throws -> Response {
         var attempt = 0
         while true {
             do {
-                return try await get(path: path, accessCode: accessCode, timeout: timeout)
+                return try await get(path: path, access: access, timeout: timeout)
             } catch let error as NovaAPIError where error.isRetryable && attempt < retries {
                 attempt += 1
                 try await Task.sleep(for: .seconds(min(8, attempt * 2)))
@@ -218,14 +227,14 @@ actor APIClient {
     private func postWithRetry<Body: Encodable, Response: Decodable>(
         path: String,
         body: Body,
-        accessCode: String,
+        access: AIRequestAccess,
         timeout: TimeInterval,
         retries: Int
     ) async throws -> Response {
         var attempt = 0
         while true {
             do {
-                return try await post(path: path, body: body, accessCode: accessCode, timeout: timeout)
+                return try await post(path: path, body: body, access: access, timeout: timeout)
             } catch let error as NovaAPIError where error.isRetryable && attempt < retries {
                 attempt += 1
                 try await Task.sleep(for: .seconds(min(8, attempt * 2)))
@@ -236,14 +245,14 @@ actor APIClient {
     private func post<Body: Encodable, Response: Decodable>(
         path: String,
         body: Body,
-        accessCode: String,
+        access: AIRequestAccess,
         timeout: TimeInterval
     ) async throws -> Response {
         var request = URLRequest(url: endpoint(path))
         request.httpMethod = "POST"
         request.timeoutInterval = timeout
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(accessCode, forHTTPHeaderField: "x-ai-access-token")
+        applyAccess(access, to: &request)
         request.httpBody = try encoder.encode(body)
         return try await send(request)
     }
@@ -276,6 +285,15 @@ actor APIClient {
 
     private func endpoint(_ path: String) -> URL {
         URL(string: path, relativeTo: baseURL)!.absoluteURL
+    }
+
+    private func applyAccess(_ access: AIRequestAccess, to request: inout URLRequest) {
+        if !access.betaCode.isEmpty {
+            request.setValue(access.betaCode, forHTTPHeaderField: "x-ai-access-token")
+        }
+        if !access.appleTransactionJWS.isEmpty {
+            request.setValue(access.appleTransactionJWS, forHTTPHeaderField: "x-apple-transaction-jws")
+        }
     }
 }
 

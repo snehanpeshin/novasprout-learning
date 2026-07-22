@@ -2,15 +2,8 @@ import {
   BarChart3,
   Beaker,
   BookOpenCheck,
-  CalendarClock,
   Calculator,
-  ClipboardCheck,
-  Code2,
-  FileText,
-  Lightbulb,
-  PlayCircle,
-  SearchCheck,
-  Target
+  Code2
 } from "lucide-react";
 
 const defaultBookingUrl = "https://calendly.com/novasprout-learning/free-15-min-intro-call";
@@ -19,9 +12,6 @@ export const bookingUrl =
   [process.env.NEXT_PUBLIC_BOOKING_URL, process.env.NEXT_PUBLIC_CALENDLY_SNEHAN].find((url) =>
     url?.startsWith("https://")
   ) ?? defaultBookingUrl;
-
-export const intakeForm =
-  process.env.NEXT_PUBLIC_INTAKE_FORM_URL ?? "https://forms.gle/YOUR-GOOGLE-FORM";
 
 const defaultContactEmail = "novasproutlearning@gmail.com";
 const envContactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
@@ -34,429 +24,166 @@ export const contactEmail =
 export const contactPhone = "+1 775-248-8317";
 export const contactPhoneHref = "tel:+17752488317";
 
-export const studentRequestEmail = `mailto:${contactEmail}?subject=${encodeURIComponent(
-  "NovaSprout student request"
-)}&body=${encodeURIComponent(`Student name:
-Grade:
-Subject needed:
-Main goal or challenge:
-Preferred days/times:
-Parent/student contact:
-`)}`;
-
-export const tutorApplicationEmail = `mailto:${contactEmail}?subject=${encodeURIComponent(
-  "NovaSprout tutor application"
-)}&body=${encodeURIComponent(`Name:
-Email:
-Subjects you can tutor:
-Grade levels:
-Availability:
-Experience/qualification:
-Link to resume, LinkedIn, or intro video:
-`)}`;
-
 export const subjectTracks = [
   {
     slug: "math-tutoring",
-    title: "Math Tutoring",
     navTitle: "Math",
+    title: "Online Math Tutoring",
     icon: Calculator,
-    summary: "Focused support for homework, concept gaps, test prep, and step-by-step problem solving.",
-    level: "Elementary to high school",
-    hero: "Online math tutoring that makes difficult steps clearer.",
+    accent: "green",
+    level: "Elementary through high school",
+    hero: "Math support that makes each step easier to follow.",
     copy:
-      "Students build fluency through friendly explanations, worked examples, practice routines, and patient support for the exact topics causing friction.",
-    outcomes: ["Number sense and operations", "Fractions, decimals, and percentages", "Pre-algebra and algebra basics", "Word problem strategy"],
-    resources: ["Fractions made simple", "How to start word problems", "One-step equations practice"]
+      "A patient tutor helps the student find the missing step, practice the method, and explain their reasoning with confidence.",
+    summary: "Concept gaps, homework strategy, problem solving, and test preparation.",
+    challenges: [
+      "The student understands examples but gets stuck working alone.",
+      "Fractions, algebra, or word problems have created a persistent gap.",
+      "An upcoming test needs a focused and realistic review plan."
+    ],
+    topics: [
+      "Number sense and operations",
+      "Fractions, decimals, and percentages",
+      "Pre-algebra and algebra",
+      "Geometry and measurement",
+      "Functions, graphs, and data",
+      "Word problems and test preparation"
+    ],
+    session: [
+      "Review the exact concept or assignment causing difficulty",
+      "Model a representative problem step by step",
+      "Practice similar questions with immediate feedback",
+      "End with a clear method and next practice step"
+    ],
+    benefits: ["Clearer mathematical reasoning", "More independent problem solving", "A calmer approach to practice"],
+    faq: [
+      ["Can tutoring follow the student's school curriculum?", "Yes. Families can share the course, current unit, and examples of the skills being taught so the tutor can align support appropriately."],
+      ["Does the tutor complete homework for the student?", "No. The tutor can clarify instructions and guide representative problems while helping the student do their own work."],
+      ["Can sessions focus on test preparation?", "Yes. The tutor can identify priority topics, practice question types, and help the student build a manageable review plan."]
+    ]
   },
   {
     slug: "science-tutoring",
-    title: "Science and STEM Tutoring",
-    navTitle: "Science",
+    navTitle: "Science & STEM",
+    title: "Online Science & STEM Tutoring",
     icon: Beaker,
-    summary: "Biology, scientific reasoning, real-world examples, and practical science explanations.",
-    level: "Middle school to college prep",
-    hero: "Science tutoring that grows curiosity and clear thinking.",
+    accent: "sky",
+    level: "Middle school through college preparation",
+    hero: "Science tutoring built around understanding, not memorizing.",
     copy:
-      "We help students connect school science to real examples, experiments, diagrams, data, and the habit of asking better questions.",
-    outcomes: ["Biology foundations", "Scientific method and experiments", "Data and graph interpretation", "STEM project mentoring"],
-    resources: ["How to take science notes", "Reading graphs in science", "What makes a good experiment?"]
+      "Students connect vocabulary, diagrams, evidence, and real examples so scientific ideas become easier to explain and apply.",
+    summary: "Biology, chemistry and physics foundations, scientific reasoning, and data interpretation.",
+    challenges: [
+      "New vocabulary is hiding the main scientific idea.",
+      "The student needs help interpreting a diagram, graph, or experiment.",
+      "A biology, chemistry, or physics unit needs a clearer foundation."
+    ],
+    topics: [
+      "Biology and life science foundations",
+      "Chemistry concepts and matter",
+      "Physics, force, motion, and energy",
+      "Scientific method and experiments",
+      "Graphs, evidence, and data interpretation",
+      "STEM project reasoning"
+    ],
+    session: [
+      "Map the key system, process, or scientific relationship",
+      "Use diagrams and real examples to make the concept concrete",
+      "Work through evidence-based questions",
+      "Check understanding with a short explanation or practice task"
+    ],
+    benefits: ["Stronger conceptual understanding", "Better use of evidence", "More confident scientific explanations"],
+    faq: [
+      ["Which sciences are available?", "Support may include biology, chemistry and physics foundations, scientific reasoning, and data interpretation when an appropriate tutor is available."],
+      ["Can a tutor help with lab reports?", "A tutor can explain the scientific method, help interpret results, and give feedback on structure without doing graded work for the student."],
+      ["Is STEM project mentoring available?", "Yes, when the project and required subject expertise fit current tutor availability."]
+    ]
   },
   {
     slug: "coding-data-skills",
-    title: "Coding & Data Skills",
-    navTitle: "Coding/Data",
+    navTitle: "Coding & Data",
+    title: "Online Coding & Data-Skills Tutoring",
     icon: Code2,
-    summary: "Python, SQL, spreadsheets, data analysis, dashboards, and project-based technical mentoring.",
+    accent: "coral",
     level: "Teens, college students, and adult learners",
-    hero: "Coding and data skills taught through practical projects.",
+    hero: "Build coding and data skills through practical projects.",
     copy:
-      "Students learn technical ideas through small projects: code that runs, data they can inspect, and dashboards that make information easier to understand.",
-    outcomes: ["Python basics", "SQL and databases", "Excel or Google Sheets", "Data visualization and dashboards"],
-    resources: ["Python variables and input", "SQL SELECT basics", "What is data and why does it matter?"]
+      "Learners write code, inspect real data, and build small projects with guidance that connects each technical idea to something useful.",
+    summary: "Python, SQL, spreadsheets, analysis, dashboards, and project-based mentoring.",
+    challenges: [
+      "Tutorials make sense, but starting a project still feels difficult.",
+      "Code errors are frustrating and the learner needs a debugging method.",
+      "The learner wants practical data skills for school, work, or a portfolio."
+    ],
+    topics: [
+      "Python fundamentals",
+      "SQL and database basics",
+      "Excel and Google Sheets",
+      "Data cleaning and analysis",
+      "Charts and dashboards",
+      "Small project planning and debugging"
+    ],
+    session: [
+      "Define one useful project goal",
+      "Explain the technical idea with a working example",
+      "Build or debug a small piece together",
+      "Leave the learner with a clear next feature or practice task"
+    ],
+    benefits: ["Practical technical confidence", "A repeatable debugging process", "Projects that demonstrate learning"],
+    faq: [
+      ["Do I need coding experience?", "No. Matching considers the learner's current experience, from complete beginner to more focused project support."],
+      ["Which tools can sessions cover?", "Current areas include Python, SQL, spreadsheets, data analysis, and dashboards, subject to tutor availability."],
+      ["Can tutoring support a portfolio project?", "Yes. A tutor can help scope the work, explain concepts, review progress, and coach the learner through their own implementation."]
+    ]
   },
   {
     slug: "study-skills",
-    title: "Study Skills and Academic Support",
     navTitle: "Study Skills",
+    title: "Online Study-Skills Coaching",
     icon: BookOpenCheck,
-    summary: "Note-taking, test prep, organization, confidence, and learning routines that stick.",
-    level: "Elementary to high school, plus college prep",
-    hero: "Study skills that help students feel organized and ready.",
+    accent: "amber",
+    level: "Elementary through college preparation",
+    hero: "Study routines that make schoolwork feel more manageable.",
     copy:
-      "We coach students on how to prepare, organize, ask questions, track progress, and turn tutoring sessions into habits that carry into school.",
-    outcomes: ["Clean note-taking", "Homework planning", "Test preparation", "Independent learning habits"],
-    resources: ["How to study before a math test", "Clean notes in 10 minutes", "How to ask better questions"]
+      "Students practice planning, note-taking, review, and self-checking strategies around the schoolwork they already need to complete.",
+    summary: "Organization, note-taking, test preparation, and independent learning routines.",
+    challenges: [
+      "Assignments are missed or started too late.",
+      "Notes do not make sense when it is time to review.",
+      "The student studies for a long time without a clear strategy."
+    ],
+    topics: [
+      "Weekly planning and prioritization",
+      "Homework routines",
+      "Useful note-taking",
+      "Test preparation",
+      "Breaking down large assignments",
+      "Independent learning and self-checking"
+    ],
+    session: [
+      "Identify the routine creating the most friction",
+      "Choose one simple strategy that fits the student",
+      "Practice it using current schoolwork",
+      "Set a small plan the student can repeat independently"
+    ],
+    benefits: ["More organized schoolwork", "Better preparation habits", "Greater ownership of learning"],
+    faq: [
+      ["Is this subject tutoring?", "Study-skills coaching focuses on how a student plans, takes notes, prepares, and learns. It can complement subject tutoring but does not replace specialized academic support."],
+      ["Can parents discuss learning goals first?", "Yes. The Free Demo Class is a good place to share current routines and decide which skill should be addressed first."],
+      ["Will one session fix organization problems?", "Usually not. The goal is to introduce a realistic routine, practice it, and adjust it over time when ongoing support is useful."]
+    ]
   }
-];
+] as const;
 
-export const processSteps = [
-  {
-    title: "Choose AI or live tutoring",
-    copy: "Start a self-guided AI lesson or go directly to live one-to-one tutoring. Neither service requires the other."
-  },
-  {
-    title: "Start the AI Tutor",
-    copy: "Choose grade, subject, topic, and learning need to generate a lesson deck, practice, and timed quiz."
-  },
-  {
-    title: "Book a live tutor",
-    copy: "Schedule a free demo, then choose a one-hour live lesson or recurring monthly tutoring support."
-  },
-  {
-    title: "Continue your way",
-    copy: "Use either service independently, or combine AI study materials with live tutoring when that is useful."
-  }
-];
-
-export const learningSituations = [
-  {
-    title: "Homework has become frustrating",
-    icon: ClipboardCheck,
-    copy: "Your student needs patient help with the worksheet, chapter, or concept causing friction."
-  },
-  {
-    title: "A test or exam is approaching",
-    icon: CalendarClock,
-    copy: "Build a focused review plan, practice likely question types, and clean up common mistakes."
-  },
-  {
-    title: "A concept was missed",
-    icon: SearchCheck,
-    copy: "Go back to the missing step so current classwork starts to make more sense."
-  },
-  {
-    title: "A STEM project needs support",
-    icon: Lightbulb,
-    copy: "Explore coding, data, science examples, or a small project with practical guidance."
-  }
-];
-
-export const audiencePathways = [
-  {
-    title: "School students",
-    copy: "Homework help, difficult concepts, test preparation, and ongoing subject support.",
-    icon: BookOpenCheck
-  },
-  {
-    title: "Teens exploring STEM and coding",
-    copy: "Project-based support in Python, data, spreadsheets, and technical problem-solving.",
-    icon: Code2
-  },
-  {
-    title: "Students building better study habits",
-    copy: "Organization, note-taking, planning, confidence, and consistent learning routines.",
-    icon: Target
-  }
-];
-
-export const sessionDeliverables = [
-  "AI-generated lesson deck",
-  "Live online tutor explanation",
-  "Guided practice",
-  "Timed quiz and score",
-  "Help with current coursework or goals",
-  "Follow-up notes and suggested practice",
-  "A clear next step after each session"
-];
-
-export const curriculumSources = [
-  {
-    label: "Common Core Math and ELA",
-    href: "https://corestandards.org/"
-  },
-  {
-    label: "Next Generation Science Standards",
-    href: "https://www.nextgenscience.org/standards"
-  },
-  {
-    label: "K-12 Computer Science Framework",
-    href: "https://k12cs.org/"
-  },
-  {
-    label: "C3 Social Studies Framework",
-    href: "https://eric.ed.gov/?id=ED623634"
-  }
-];
-
-export const curriculumDemoGrades = [
-  {
-    band: "Elementary foundations",
-    grades: "Grades 3-5",
-    focus: "Number sense, fractions, reading comprehension, science observations, and study routines.",
-    demo: "A 30-minute guided lesson with one concept, one worked example, practice, and a short parent summary."
-  },
-  {
-    band: "Middle school bridge",
-    grades: "Grades 6-8",
-    focus: "Ratios, equations, graph reading, scientific reasoning, writing structure, and organization.",
-    demo: "A standards-aligned demo that finds gaps, explains the topic, and recommends the next practice path."
-  },
-  {
-    band: "High school readiness",
-    grades: "Grades 9-12",
-    focus: "Algebra, biology, chemistry foundations, data interpretation, test preparation, and technical projects.",
-    demo: "A focused session built around the student's course, upcoming assessment, or project goal."
-  },
-  {
-    band: "Technical mentoring",
-    grades: "Teens, college, adult learners",
-    focus: "Python, SQL, spreadsheets, dashboards, and project-based data skills.",
-    demo: "A practical intro session that turns a learner's goal into a small project plan."
-  }
-];
-
-export const curriculumDemoSubjects = [
-  {
-    subject: "Math",
-    standardsBase: "Common Core-style skill progression",
-    sampleTopics: ["Fractions and ratios", "Expressions and equations", "Functions and graphs", "Problem-solving strategy"],
-    demoOutput: "Step-by-step explanation, guided problems, quick check, and next-practice set."
-  },
-  {
-    subject: "Science and STEM",
-    standardsBase: "NGSS-style science practices and topic progressions",
-    sampleTopics: ["Scientific method", "Life science", "Physical science", "Data and graph interpretation"],
-    demoOutput: "Concept explanation, diagram or example, reasoning questions, and a short reflection prompt."
-  },
-  {
-    subject: "ELA and study support",
-    standardsBase: "Common Core-style reading, writing, speaking, and language goals",
-    sampleTopics: ["Reading comprehension", "Evidence-based writing", "Vocabulary", "Note-taking and planning"],
-    demoOutput: "Reading or writing strategy, guided practice, feedback, and a simple study routine."
-  },
-  {
-    subject: "Coding and data skills",
-    standardsBase: "K-12 CS Framework-inspired concepts and practices",
-    sampleTopics: ["Python basics", "SQL queries", "Spreadsheets", "Dashboards and data stories"],
-    demoOutput: "Mini project, concept explanation, practice task, and recommended next build."
-  }
-];
-
-export const aiTutoringWorkflow = [
-  "Personalized explanations written at the student's current level.",
-  "Practice questions by topic, grade band, and difficulty.",
-  "Homework-style examples that match the student's current classwork or goal.",
-  "Lesson plans that human tutors can review before live sessions.",
-  "Basic assessments, exit tickets, and progress notes after sessions."
-];
-
-export const adminAutomationItems = [
-  "Attendance tracking for completed and missed sessions.",
-  "Scheduling notes, rescheduling reminders, and tutor availability records.",
-  "Fee collection workflow after tutor, rate, and schedule are confirmed.",
-  "Parent reports summarizing topics, practice, and recommended next steps.",
-  "Tutor notes that preserve what was covered and where the student needs support.",
-  "Session follow-up messages with practice links, notes, or next-session focus."
-];
-
-export const matchingSteps = [
-  "Tutors apply with their subjects, levels, experience, and availability.",
-  "NovaSprout reviews the application and communication fit.",
-  "Student requests are matched based on subject, level, schedule, and learning needs.",
-  "Availability is confirmed before payment or recurring scheduling."
-];
-
-export const studentRequestSteps = [
-  {
-    title: "Tell us the need",
-    icon: SearchCheck,
-    copy: "Share the subject, grade level, goals, schedule, and what kind of tutor would help."
-  },
-  {
-    title: "We suggest a fit",
-    icon: ClipboardCheck,
-    copy: "NovaSprout reviews the request and recommends the best available tutor or next step."
-  },
-  {
-    title: "Try the free demo",
-    icon: CalendarClock,
-    copy: "Meet online first, then continue only if the tutor and format feel right."
-  }
-];
-
-export const tutorApplicationSteps = [
-  {
-    title: "Apply to tutor",
-    icon: ClipboardCheck,
-    copy: "Send your subjects, grade levels, availability, experience, and profile links."
-  },
-  {
-    title: "Quality review",
-    icon: SearchCheck,
-    copy: "We review fit, communication style, background, and student support approach."
-  },
-  {
-    title: "Join matched sessions",
-    icon: CalendarClock,
-    copy: "Approved tutors are matched with student requests when subject and schedule align."
-  }
-];
-
-export const tutoringFaqs = [
-  {
-    question: "Who is NovaSprout Learning best for?",
-    answer:
-      "NovaSprout is primarily for school-age students who need clearer explanations, regular practice, and calm online support. Coding and data-skills mentoring may also fit teens, college students, and adult learners."
-  },
-  {
-    question: "What happens during the free demo?",
-    answer:
-      "The demo is an introductory session to understand the student, discuss the subject and goals, explain the tutoring format, and decide whether the match feels appropriate."
-  },
-  {
-    question: "How are tutors selected?",
-    answer:
-      "NovaSprout uses a curated matching process. Tutors apply, NovaSprout reviews fit and communication style, and student requests are matched by subject, level, schedule, and learning needs."
-  },
-  {
-    question: "How much does tutoring cost?",
-    answer:
-      "Live tutoring is a flat $20 per class. Recurring tutoring uses the same per-class rate. Book a free demo before choosing paid classes."
-  },
-  {
-    question: "What platforms are used for lessons?",
-    answer:
-      "Sessions are designed for familiar online meeting tools such as Google Meet or Zoom."
-  },
-  {
-    question: "Do students receive notes or practice?",
-    answer:
-      "Yes. Tutoring is designed around live explanation plus simple follow-up notes, examples, or practice suggestions."
-  },
-  {
-    question: "What is the first-session fit guarantee?",
-    answer:
-      "If the first paid session is not a good fit, contact us within 24 hours and we will offer a refund or replacement session. See the refund policy for details."
-  },
-  {
-    question: "How do cancellation and rescheduling work?",
-    answer:
-      "Detailed cancellation and rescheduling rules still need to be finalized. Families should confirm timing expectations before a paid session or recurring plan."
-  },
-  {
-    question: "Can college students or adults book technical mentoring?",
-    answer:
-      "Yes, for selected coding and data-skills topics when the subject, level, and schedule fit current availability."
-  },
-  {
-    question: "Do I need to create an account?",
-    answer:
-      "No. The first version is intentionally simple: book online, meet through Google Meet or Zoom, then choose the next step."
-  }
-];
-
-export const resourceItems = [
-  {
-    title: "Fractions made simple",
-    track: "Math",
-    type: "Video + notes",
-    icon: PlayCircle,
-    copy: "A short lesson on what fractions mean, how to simplify them, and where students usually get stuck."
-  },
-  {
-    title: "How to start word problems",
-    track: "Math",
-    type: "Practice notes",
-    icon: FileText,
-    copy: "A student-friendly checklist for turning a paragraph into numbers, labels, and a first equation."
-  },
-  {
-    title: "Science notes that make sense",
-    track: "Science",
-    type: "Template",
-    icon: Beaker,
-    copy: "A simple structure for vocabulary, diagrams, observations, and questions after class."
-  },
-  {
-    title: "Python variables and input",
-    track: "Coding",
-    type: "Video + starter code",
-    icon: Code2,
-    copy: "A beginner coding mini-lesson with a tiny program students can modify."
-  },
-  {
-    title: "What is data?",
-    track: "Data",
-    type: "Video + worksheet",
-    icon: BarChart3,
-    copy: "A friendly intro to rows, columns, charts, and asking useful questions from information."
-  },
-  {
-    title: "Test prep planning sheet",
-    track: "Study Skills",
-    type: "Planning note",
-    icon: Target,
-    copy: "A one-page plan for what to review, when to practice, and how to avoid last-minute panic."
-  }
-];
-
-export const pricingPlans = [
-  {
-    action: "ai",
-    service: "ai",
-    title: "Free AI Tutor",
-    price: "Free",
-    copy: "Try personalized AI-generated lessons, explanations, practice, and quizzes.",
-    features: ["Limited monthly AI lessons", "Explanations and practice", "Timed quizzes", "PDF lesson preview"]
-  },
-  {
-    action: "contact",
-    service: "ai",
-    title: "Student AI Tutor",
-    price: "$6 / month",
-    copy: "Use the AI Tutor regularly for full lessons, revision, quizzes, and downloadable study materials.",
-    features: ["More AI lessons", "Comprehensive lesson decks", "Quizzes and worksheets", "Downloadable lesson PDFs"]
-  },
-  {
-    action: "booking",
-    service: "live",
-    title: "Free Live Tutoring Demo",
-    price: "Free",
-    copy: "Meet online with a tutor, discuss the student's goals, and experience the teaching approach.",
-    features: ["Introductory live session", "Subject and goal review", "No paid commitment", "Google Meet or Zoom"]
-  },
-  {
-    action: "contact",
-    service: "live",
-    title: "1-Hour Live Tutoring",
-    price: "$20 / class",
-    copy: "Book a focused one-to-one online lesson with a human tutor in the selected subject.",
-    features: ["One-to-one live session", "Personalized explanation", "Guided practice", "Follow-up notes"]
-  },
-  {
-    action: "contact",
-    service: "live",
-    title: "Recurring Live Tutoring",
-    price: "$20 / class",
-    copy: "Build a regular weekly or monthly tutoring schedule at the same flat per-class rate.",
-    features: ["Recurring live sessions", "Consistent tutor support", "Practice and session notes", "Progress follow-up"]
-  }
-] satisfies Array<{
-  action: "ai" | "booking" | "contact";
-  copy: string;
-  features: string[];
-  price: string;
-  service: "ai" | "live";
-  title: string;
-}>;
+export const generalFaqs = [
+  ["Is the Free Demo Class really free?", "Yes. The Free Demo Class does not require payment or a commitment to continue."],
+  ["Which ages and levels do you support?", "Support ranges from elementary school through college preparation depending on the subject. Coding and data mentoring may also suit college students and adults."],
+  ["Which subjects are available?", "NovaSprout currently focuses on math, science and STEM, coding and data skills, and study-skills coaching."],
+  ["How are tutors selected?", "Tutors submit their subjects, levels, experience, availability, and approach. NovaSprout reviews applications before considering a tutor for a student request."],
+  ["How does matching work?", "We review the subject, level, goals, learning needs, personality fit, availability, and time zone, then recommend a suitable available tutor."],
+  ["What if the first tutor is not the right fit?", "Contact us within 24 hours of the first paid session. Under the fit guarantee, we will offer a refund for that session or a replacement session."],
+  ["Where do sessions take place?", "Sessions take place online using a familiar meeting tool such as Google Meet or Zoom."],
+  ["How long is a session?", "The length is confirmed before booking based on the student's needs and tutor availability."],
+  ["Can parents discuss goals before starting?", "Yes. Parents or guardians can share goals and relevant context in the request and during the Free Demo Class."],
+  ["What is the cancellation policy?", "Paid single sessions are refundable when cancelled at least 24 hours before the scheduled time. See the full Refund Policy for exceptions and package details."]
+] as const;

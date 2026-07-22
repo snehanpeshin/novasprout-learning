@@ -1,11 +1,14 @@
 import SwiftUI
+import StoreKit
 
 struct LearnView: View {
     @Binding var selectedTab: AppTab
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var history: LessonHistoryStore
+    @EnvironmentObject private var purchases: PurchaseManager
     @StateObject private var viewModel = LessonGeneratorViewModel()
     @State private var handledLaunchArguments = false
+    @State private var showPurchaseOptions = false
 
     var body: some View {
         NavigationStack {
@@ -13,6 +16,7 @@ struct LearnView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     brandHeader
                     sampleLesson
+                    accessCard
                     lessonForm
                 }
                 .frame(maxWidth: 760)
@@ -27,6 +31,10 @@ struct LearnView: View {
                 LessonOverviewView(viewModel: viewModel)
                     .environmentObject(settings)
                     .environmentObject(history)
+            }
+            .sheet(isPresented: $showPurchaseOptions) {
+                PurchaseOptionsView()
+                    .environmentObject(purchases)
             }
             .fullScreenCover(item: $viewModel.playerConfiguration) { configuration in
                 LessonPlayerView(configuration: configuration)
@@ -87,6 +95,29 @@ struct LearnView: View {
         .novaCard()
     }
 
+    private var accessCard: some View {
+        HStack(spacing: 12) {
+            Image(systemName: purchases.hasMonthlyAccess ? "checkmark.seal.fill" : "graduationcap.fill")
+                .font(.title2)
+                .foregroundStyle(purchases.hasMonthlyAccess ? NovaPalette.teal : NovaPalette.blue)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(purchases.hasMonthlyAccess ? "AI Tutor access active" : "Create your own AI lesson")
+                    .font(.headline)
+                Text(purchases.hasMonthlyAccess
+                     ? "Your monthly access is ready."
+                     : "Choose one lesson or monthly access.")
+                    .font(.subheadline)
+                    .foregroundStyle(NovaPalette.muted)
+            }
+            Spacer(minLength: 8)
+            if !purchases.hasMonthlyAccess {
+                Button("View") { showPurchaseOptions = true }
+                    .buttonStyle(.bordered)
+            }
+        }
+        .novaCard()
+    }
+
     private var lessonForm: some View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 4) {
@@ -116,6 +147,14 @@ struct LearnView: View {
                 TextField("For example: the digestive system", text: $viewModel.request.topic)
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.sentences)
+                    .onChange(of: viewModel.request.topic) { _, newValue in
+                        if newValue.count > 90 {
+                            viewModel.request.topic = String(newValue.prefix(90))
+                        }
+                    }
+                Text("Use a school topic that matches the selected subject and grade.")
+                    .font(.caption)
+                    .foregroundStyle(NovaPalette.muted)
             }
 
             LabeledContent("Goal") {
@@ -147,7 +186,7 @@ struct LearnView: View {
             }
 
             Button {
-                Task { await viewModel.generate(accessCode: settings.accessCode) }
+                startLesson()
             } label: {
                 Label("Create My Lesson", systemImage: "wand.and.stars")
                     .frame(maxWidth: .infinity)
@@ -156,17 +195,137 @@ struct LearnView: View {
             .controlSize(.large)
             .disabled(viewModel.isGenerating)
 
-            if !settings.hasAccessCode {
-                Button("Add beta access in Settings") {
-                    selectedTab = .settings
+            if !purchases.hasMonthlyAccess {
+                HStack {
+                    Button("Purchase access") { showPurchaseOptions = true }
+                    Spacer()
+                    Button("Beta access") { selectedTab = .settings }
                 }
                 .font(.footnote.weight(.semibold))
-                .frame(maxWidth: .infinity)
             }
 
             Label("Visual lesson creation may take a few minutes. Do not include sensitive student information.", systemImage: "lock.shield")
                 .font(.caption)
                 .foregroundStyle(NovaPalette.muted)
+        }
+        .novaCard()
+    }
+
+    private func startLesson() {
+        if let validationError = CurriculumTopicValidator.error(
+            topic: viewModel.request.topic,
+            subject: viewModel.request.subject,
+            grade: viewModel.request.grade,
+            studentQuestion: viewModel.request.studentQuestion
+        ) {
+            viewModel.errorMessage = validationError
+            return
+        }
+
+        let access = purchases.accessForNewLesson(betaCode: settings.accessCode)
+        guard !access.isEmpty else {
+            showPurchaseOptions = true
+            return
+        }
+
+        Task {
+            if await viewModel.generate(access: access) {
+                await purchases.markSingleLessonStarted(using: access)
+            }
+        }
+    }
+}
+
+private struct PurchaseOptionsView: View {
+    @EnvironmentObject private var purchases: PurchaseManager
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text("Unlock AI Tutor")
+                            .font(.title2.weight(.bold))
+                            .foregroundStyle(NovaPalette.navy)
+                        Text("Create curriculum-checked visual lessons with a timed quiz.")
+                            .foregroundStyle(NovaPalette.muted)
+                    }
+
+                    if let product = purchases.singleLessonProduct {
+                        purchaseRow(
+                            product: product,
+                            title: "One AI lesson",
+                            detail: "One personalized lesson, visual deck, and quiz"
+                        )
+                    }
+
+                    if let product = purchases.monthlyProduct {
+                        purchaseRow(
+                            product: product,
+                            title: "Monthly AI Tutor",
+                            detail: "Up to 20 personalized lessons per subscription month"
+                        )
+                    }
+
+                    if purchases.products.isEmpty && !purchases.isLoading {
+                        Label("Purchases are not available yet. Please try again shortly.", systemImage: "exclamationmark.circle")
+                            .font(.footnote)
+                            .foregroundStyle(NovaPalette.coral)
+                    }
+
+                    if !purchases.statusMessage.isEmpty {
+                        Text(purchases.statusMessage)
+                            .font(.footnote)
+                            .foregroundStyle(NovaPalette.teal)
+                    }
+
+                    Button("Restore Purchases") {
+                        Task { await purchases.restorePurchases() }
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    Text("Monthly access renews automatically unless canceled at least 24 hours before the end of the current period. Payment is charged to your Apple Account. Manage or cancel in App Store subscriptions.")
+                        .font(.caption)
+                        .foregroundStyle(NovaPalette.muted)
+
+                    HStack {
+                        Link("Privacy", destination: URL(string: "https://www.novasproutlearning.com/privacy")!)
+                        Spacer()
+                        Link("Terms", destination: URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!)
+                        Spacer()
+                        Link("Manage subscription", destination: URL(string: "https://apps.apple.com/account/subscriptions")!)
+                    }
+                    .font(.caption.weight(.semibold))
+                }
+                .padding(20)
+            }
+            .background(NovaPalette.background.ignoresSafeArea())
+            .navigationTitle("AI Tutor Access")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Close") { dismiss() }
+                }
+            }
+            .task { await purchases.refresh() }
+        }
+    }
+
+    private func purchaseRow(product: Product, title: String, detail: String) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.headline)
+                Text(detail)
+                    .font(.footnote)
+                    .foregroundStyle(NovaPalette.muted)
+            }
+            Spacer(minLength: 8)
+            Button(product.displayPrice) {
+                Task { await purchases.purchase(product) }
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(purchases.isPurchasing)
         }
         .novaCard()
     }

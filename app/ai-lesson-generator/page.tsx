@@ -1,33 +1,21 @@
 import { ArrowRight, BookOpenCheck, CalendarCheck, GraduationCap, Timer } from "lucide-react";
 import AILessonGenerator from "../components/AILessonGenerator";
 import Footer from "../components/Footer";
+import SiteHeader from "../components/SiteHeader";
 import TrackedLink from "../components/TrackedLink";
 import { bookingUrl } from "../site-data";
 
 export const metadata = {
-  title: "AI-Generated Tutoring | NovaSprout Learning",
+  title: "AI Study Tool | NovaSprout Learning",
   description:
-    "Generate personalized tutoring lessons, study plans, and scored timed exams for NovaSprout Learning students."
+    "Create a personalized visual study lesson and scored quiz with NovaSprout's optional AI learning tool.",
+  alternates: { canonical: "/ai-lesson-generator" }
 };
 
 export default function AILessonGeneratorPage() {
   return (
-    <main className="landing-page">
-      <header className="site-header ai-tutor-header">
-        <a className="brand" href="/" aria-label="NovaSprout Learning home">
-          <img className="brand-logo" src="/novasprout-logo.png" alt="" />
-          <span>NovaSprout Learning</span>
-        </a>
-        <nav aria-label="Main navigation">
-          <a href="/#subjects">Subjects</a>
-          <a href="/#services">Live Tutoring</a>
-          <a href="#how-ai-tutor-works">How it works</a>
-          <a href="/#pricing">Pricing</a>
-          <TrackedLink className="nav-cta" eventName="book_meeting_click" href={bookingUrl} target="_blank">
-            Book Live Demo
-          </TrackedLink>
-        </nav>
-      </header>
+    <main className="landing-page ns-site">
+      <SiteHeader />
 
       <section className="ai-tutor-hero">
         <p className="eyebrow">NovaSprout AI Tutor</p>
@@ -38,7 +26,7 @@ export default function AILessonGeneratorPage() {
             Create a Lesson
             <ArrowRight aria-hidden="true" size={18} />
           </a>
-          <a className="button secondary" href="/#pricing">View Plans</a>
+          <a className="button secondary" href="/pricing">View Live Tutoring</a>
         </div>
       </section>
 
@@ -73,7 +61,7 @@ export default function AILessonGeneratorPage() {
         <div className="booking-actions">
           <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
             <CalendarCheck aria-hidden="true" size={18} />
-            Book Free Demo
+            Book a Free Demo
             <ArrowRight aria-hidden="true" size={18} />
           </TrackedLink>
         </div>

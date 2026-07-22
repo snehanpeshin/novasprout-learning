@@ -1,22 +1,21 @@
 import { Mail, Phone } from "lucide-react";
 import Footer from "../components/Footer";
+import SiteHeader from "../components/SiteHeader";
 import { contactEmail, contactPhone, contactPhoneHref } from "../site-data";
 
 export const metadata = {
   title: "Privacy Policy | NovaSprout Learning",
   description:
-    "Privacy policy for NovaSprout Learning, a brand of Karigari Home LLC."
+    "Privacy policy for NovaSprout Learning, a brand of Karigari Home LLC.",
+  alternates: { canonical: "/privacy" }
 };
 
 export default function PrivacyPolicy() {
   return (
-    <main className="policy-page">
+    <main className="policy-page ns-site ns-policy-page">
+      <SiteHeader />
       <section className="policy-hero">
-        <a className="brand policy-brand" href="/" aria-label="NovaSprout Learning home">
-          <img className="brand-logo" src="/novasprout-logo.png" alt="" />
-          <span>NovaSprout Learning</span>
-        </a>
-        <p className="eyebrow">Privacy Policy</p>
+        <p className="ns-eyebrow">Privacy Policy</p>
         <h1>How we protect student and parent information.</h1>
         <p>
           Effective date: July 20, 2026. NovaSprout Learning is a brand of Karigari
@@ -76,6 +75,13 @@ export default function PrivacyPolicy() {
             provider credentials, does not display advertising, and does not use third-party
             advertising trackers.
           </p>
+          <p>
+            AI lesson purchases and subscriptions are processed by Apple through StoreKit. We
+            receive an Apple-signed transaction identifier, product identifier, purchase status,
+            and subscription expiration information to confirm access, prevent reuse of a
+            single-lesson purchase, and apply monthly lesson limits. We do not receive the user's
+            full payment-card details from Apple.
+          </p>
         </article>
 
         <article>
@@ -97,7 +103,8 @@ export default function PrivacyPolicy() {
           <h2>Third-Party Services</h2>
           <p>
             We use trusted third-party services to run the website and provide tutoring. These
-            may include AWS Amplify for hosting, Calendly for booking, Google Forms or similar
+            may include AWS Amplify for hosting, Supabase for secure request and service records,
+            Calendly for booking, Google Forms or similar
             tools for intake forms, Gmail or Google Workspace for email, Google Meet or Zoom
             for online sessions, YouTube for video resources, OpenAI for AI-assisted educational
             content and images, and Google Ads or Google tags for website advertising and

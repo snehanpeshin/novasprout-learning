@@ -1630,7 +1630,7 @@ async function compileWithRemoteService({
 }
 
 async function compileDeckRequest(request: Request) {
-  if (!isAiAccessAllowed(request)) {
+  if (!(await isAiAccessAllowed(request))) {
     return NextResponse.json({ error: aiAccessError }, { status: 401 });
   }
 
