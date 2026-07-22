@@ -4,9 +4,19 @@ import "./styles.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.novasproutlearning.com"),
-  title: "Online Math, Science and Coding Tutoring | NovaSprout Learning",
+  title: "Personalized Online Tutoring | NovaSprout Learning",
   description:
-    "Personalized online tutoring in math, science, coding, data skills, and study support. Start with a free introductory session."
+    "Personalized one-to-one online tutoring in math, science, coding, data skills, and study skills. Begin with a Free Demo Class.",
+  applicationName: "NovaSprout Learning",
+  category: "education",
+  icons: { icon: "/novasprout-logo.png", apple: "/novasprout-logo.png" },
+  robots: { index: true, follow: true },
+  openGraph: {
+    siteName: "NovaSprout Learning",
+    locale: "en_US",
+    type: "website"
+  },
+  twitter: { card: "summary_large_image" }
 };
 
 export default function RootLayout({

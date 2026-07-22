@@ -1,22 +1,21 @@
 import { Mail, Phone } from "lucide-react";
 import Footer from "../components/Footer";
+import SiteHeader from "../components/SiteHeader";
 import { contactEmail, contactPhone, contactPhoneHref } from "../site-data";
 
 export const metadata = {
   title: "Refund Policy | NovaSprout Learning",
   description:
-    "Refund and cancellation policy for NovaSprout Learning online tutoring services."
+    "Refund and cancellation policy for NovaSprout Learning online tutoring services.",
+  alternates: { canonical: "/refund-policy" }
 };
 
 export default function RefundPolicy() {
   return (
-    <main className="policy-page">
+    <main className="policy-page ns-site ns-policy-page">
+      <SiteHeader />
       <section className="policy-hero">
-        <a className="brand policy-brand" href="/" aria-label="NovaSprout Learning home">
-          <img className="brand-logo" src="/novasprout-logo.png" alt="" />
-          <span>NovaSprout Learning</span>
-        </a>
-        <p className="eyebrow">Refund Policy</p>
+        <p className="ns-eyebrow">Refund Policy</p>
         <h1>Simple refund rules and first-session fit guarantee.</h1>
         <p>
           Effective date: June 20, 2026. NovaSprout Learning is a brand of Karigari
