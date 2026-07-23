@@ -1480,7 +1480,7 @@ async function writeImageAssets(workDir: string, assets: DeckAsset[]) {
   return written;
 }
 
-export function buildBeamerTex(request: LessonDeckRequest) {
+function buildBeamerTex(request: LessonDeckRequest) {
   const lesson = request.lesson ?? {};
   const context = request.context ?? {};
   const assets = request.assets ?? [];
