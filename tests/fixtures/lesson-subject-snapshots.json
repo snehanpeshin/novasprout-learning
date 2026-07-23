@@ -1,0 +1,8 @@
+{
+  "coding": ["process_sequence"],
+  "ela": ["process_sequence"],
+  "math": ["scientific_graph"],
+  "science": ["scientific_graph", "microstate_model", "scientific_graph", "cooling_sequence", "equation_steps"],
+  "social-studies": ["process_sequence"],
+  "visual-art": []
+}

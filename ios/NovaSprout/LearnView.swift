@@ -171,6 +171,36 @@ struct LearnView: View {
                 .labelsHidden()
             }
 
+            DisclosureGroup("Lesson emphasis") {
+                VStack(spacing: 12) {
+                    LabeledContent("Depth") {
+                        Picker("Depth", selection: $viewModel.request.depth) {
+                            Text("Quick").tag("quick")
+                            Text("Standard").tag("standard")
+                            Text("Deep").tag("deep")
+                        }
+                        .labelsHidden()
+                    }
+                    LabeledContent("Visuals") {
+                        Picker("Visuals", selection: $viewModel.request.visualEmphasis) {
+                            Text("Balanced").tag("balanced")
+                            Text("Visual").tag("high")
+                            Text("Visual-first").tag("maximum")
+                        }
+                        .labelsHidden()
+                    }
+                    LabeledContent("Practice") {
+                        Picker("Practice", selection: $viewModel.request.practiceIntensity) {
+                            Text("Light").tag("light")
+                            Text("Standard").tag("standard")
+                            Text("Intensive").tag("intensive")
+                        }
+                        .labelsHidden()
+                    }
+                }
+                .padding(.top, 8)
+            }
+
             VStack(alignment: .leading, spacing: 7) {
                 Text("Your question (optional)")
                     .font(.subheadline.weight(.semibold))

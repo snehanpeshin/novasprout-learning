@@ -13,6 +13,8 @@ const openAiStartTimeoutMs = Math.min(
 const openAiLessonModel = process.env.OPENAI_MODEL?.trim() || "gpt-4.1-mini";
 
 type LessonRequest = {
+  audienceMode?: string;
+  depth?: string;
   difficulty?: string;
   duration?: string;
   grade?: string;
@@ -21,10 +23,12 @@ type LessonRequest = {
   language?: string;
   level?: string;
   mode?: string;
+  practiceIntensity?: string;
   studentQuestion?: string;
   subject?: string;
   teachingStyle?: string;
   topic?: string;
+  visualEmphasis?: string;
 };
 
 const allowedGrades = new Set([
@@ -152,6 +156,50 @@ const lessonJsonSchema = {
     additionalProperties: false,
     properties: {
       conceptExplanation: { type: "string" },
+      conceptModel: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          assessmentTargets: { type: "array", items: { type: "string" } },
+          formulas: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: { expression: { type: "string" }, meaning: { type: "string" }, units: { type: "string" } },
+              required: ["expression", "meaning", "units"]
+            }
+          },
+          misconceptions: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: { correction: { type: "string" }, statement: { type: "string" } },
+              required: ["correction", "statement"]
+            }
+          },
+          nodes: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: { definition: { type: "string" }, id: { type: "string" }, label: { type: "string" } },
+              required: ["definition", "id", "label"]
+            }
+          },
+          relationships: {
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: { explanation: { type: "string" }, from: { type: "string" }, relationship: { type: "string" }, to: { type: "string" } },
+              required: ["explanation", "from", "relationship", "to"]
+            }
+          }
+        },
+        required: ["assessmentTargets", "formulas", "misconceptions", "nodes", "relationships"]
+      },
       customPlan: {
         type: "object",
         additionalProperties: false,
@@ -214,6 +262,7 @@ const lessonJsonSchema = {
     },
     required: [
       "conceptExplanation",
+      "conceptModel",
       "customPlan",
       "duration",
       "fullLessonSegments",
@@ -818,6 +867,10 @@ export async function POST(request: Request) {
     ? body.includeInLesson.map((item) => cleanText(item, 40)).filter((item) => allowedLessonIncludes.has(item)).slice(0, 10)
     : [];
   const studentQuestion = cleanText(body.studentQuestion, 900);
+  const audienceMode = body.audienceMode === "teacher" ? "teacher" : "student";
+  const depth = ["quick", "standard", "deep"].includes(body.depth ?? "") ? body.depth : "standard";
+  const practiceIntensity = ["light", "standard", "intensive"].includes(body.practiceIntensity ?? "") ? body.practiceIntensity : "standard";
+  const visualEmphasis = ["balanced", "high", "maximum"].includes(body.visualEmphasis ?? "") ? body.visualEmphasis : "high";
 
   if (
     !allowedGrades.has(grade) ||
@@ -869,6 +922,10 @@ Student context:
 - Teaching style: ${teachingStyle}
 - Difficulty: ${difficulty}
 - Language support: ${language}
+- Audience export: ${audienceMode}
+- Conceptual depth: ${depth}
+- Practice intensity: ${practiceIntensity}
+- Visual emphasis: ${visualEmphasis}
 - Include in lesson: ${includeInLesson.length ? includeInLesson.join(", ") : "Core lesson, practice, quiz, and live tutor option"}
 - Student question or concern: ${studentQuestion || "No extra question provided."}
 
@@ -886,13 +943,17 @@ Make conceptExplanation substantial enough to become several short slides. Inclu
 Make fullLessonSegments student-facing content sections, not timing instructions for a tutor. Avoid phrases like "tutor explains", "teacher asks", "have the student", or "the tutor should".
 Include topic-specific vocabulary naturally in conceptExplanation and guidedExample so the deck can build a strong keyword slide.
 For visual subjects, describe exactly what should be shown in diagrams/images, using labels and spatial relationships where useful.
+Build conceptModel before writing prose. It is the semantic source for every slide and must contain 4-8 specific concept nodes, 3-8 directional relationships, important misconceptions, assessment targets, and every essential equation.
+Each relationship must name what changes, causes, limits, transforms, or is measured by something else. Do not use vague links such as "related to" unless that wording is scientifically precise.
+In conceptModel.formulas, use safe inline LaTeX for each mathematical expression, plus a plain-language meaning and explicit units. Verify symbols, brace balance, dimensional consistency, and limiting conditions before returning it.
+Plan visuals from relationships, not title keywords. Prefer labeled systems for anatomy, graphs for quantitative relationships, sequences for mechanisms, comparison models for misconceptions, and equation steps for derivations. Never plan a generic map with labels such as Learn, Notice, Practice, or Check.
 For geometry, spatial reasoning, object-shape, or 3D-coordinate topics, name each solid precisely and include usable dimensions, ordered triples, axes, visible and hidden edges, face-edge-vertex counts, nets, cross-sections, or transformations when relevant. Keep measurements internally consistent so the visual renderer can map the object accurately.
 Make guidedExample include clear steps and a final check.
 Make practiceQuestions self-contained and include a short hint and answer/explanation in plain text, for example: "Try: ... Hint: ... Answer: ... Why: ..."
 Make quickAssessment include answerable questions with brief answer/explanation text when possible.
 Avoid teacher-only wording such as "whole-class", "tutor-guided move", "teacher should", or "ask the student to" in student-facing explanation fields.
 Use ASCII arrows as "to" instead of "->".
-Use plain text only. Avoid LaTeX backslashes, markdown, code fences, comments, or explanatory text outside the JSON.
+Use plain text in prose fields. LaTeX is allowed only in conceptModel.formulas.expression. Avoid markdown, code fences, comments, or explanatory text outside the JSON.
 Keep every field brief enough that the full response is complete.
 Return only the JSON object. Do not include markdown, code fences, comments, or explanatory text outside the JSON.
 Keep claims cautious. Do not promise grades, test scores, admissions results, diagnosis, therapy, or guaranteed mastery.

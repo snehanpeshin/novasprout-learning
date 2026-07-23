@@ -9,6 +9,7 @@ enum SampleData {
 
     static let lesson = GeneratedLesson(
         conceptExplanation: "Equivalent fractions name the same amount even though they use different numbers. Multiplying or dividing the numerator and denominator by the same nonzero number keeps the fraction's value unchanged.",
+        conceptModel: nil,
         customPlan: nil,
         duration: "20-minute lesson",
         fullLessonSegments: [

@@ -1,6 +1,8 @@
 import Foundation
 
 struct LessonRequest: Codable, Equatable {
+    var audienceMode = "student"
+    var depth = "standard"
     var grade = "Grades 6-8"
     var subject = "Mathematics"
     var topic = "Ratios and proportions"
@@ -11,6 +13,8 @@ struct LessonRequest: Codable, Equatable {
     var teachingStyle = "Simple and friendly"
     var difficulty = "Standard"
     var language = "English"
+    var practiceIntensity = "standard"
+    var visualEmphasis = "high"
     var includeInLesson = [
         "Key vocabulary",
         "Diagrams",
@@ -20,6 +24,38 @@ struct LessonRequest: Codable, Equatable {
         "Summary notes"
     ]
     var studentQuestion = ""
+}
+
+struct LessonConceptNode: Codable, Hashable {
+    let definition: String
+    let id: String
+    let label: String
+}
+
+struct LessonConceptRelationship: Codable, Hashable {
+    let explanation: String
+    let from: String
+    let relationship: String
+    let to: String
+}
+
+struct LessonFormula: Codable, Hashable {
+    let expression: String
+    let meaning: String
+    let units: String
+}
+
+struct LessonMisconception: Codable, Hashable {
+    let correction: String
+    let statement: String
+}
+
+struct LessonConceptModel: Codable, Hashable {
+    let assessmentTargets: [String]
+    let formulas: [LessonFormula]
+    let misconceptions: [LessonMisconception]
+    let nodes: [LessonConceptNode]
+    let relationships: [LessonConceptRelationship]
 }
 
 struct LessonContext: Codable, Hashable {
@@ -58,6 +94,7 @@ struct TimedExam: Codable, Hashable {
 
 struct GeneratedLesson: Codable, Hashable {
     let conceptExplanation: String?
+    let conceptModel: LessonConceptModel?
     let customPlan: CustomPlan?
     let duration: String?
     let fullLessonSegments: [LessonSegment]?

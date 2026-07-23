@@ -5,6 +5,7 @@ import path from "path";
 import { promisify } from "util";
 import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
+import { validateStructuredFormula, type AudienceMode, type ConceptGraph, type StructuredFormula } from "../../lib/lessonEngine";
 import { legacyLessonToSlidePlan, type LessonPlanSlide, type VisualSpec } from "../../lib/lessonSlidePlan";
 
 export const runtime = "nodejs";
@@ -31,6 +32,7 @@ type DeckAsset = {
 };
 
 type LessonDeckRequest = {
+  audienceMode?: AudienceMode;
   assets?: DeckAsset[];
   context?: {
     grade?: string;
@@ -38,6 +40,7 @@ type LessonDeckRequest = {
     topic?: string;
   };
   lesson?: {
+    conceptModel?: Partial<ConceptGraph>;
     conceptExplanation?: string;
     fullLessonSegments?: Array<{
       activity?: string;
@@ -145,11 +148,11 @@ function escapeLatex(value?: string) {
 }
 
 function safeInlineLatex(value?: string) {
-  return cleanText(value, 240)
+  const expression = cleanText(value, 240)
     .replace(/\\(?:input|include|write|read|openout|openin|usepackage|documentclass|begin|end)\b/gi, "")
-    .replace(/[{}]/g, "")
-    .replace(/[^a-zA-Z0-9\\+\-*/=().,:;_\^\s<>|[\]]/g, "")
+    .replace(/[^a-zA-Z0-9\\+\-*/=().,:;_\^\s<>|[\]{}']/g, "")
     .trim();
+  return validateStructuredFormula({ expression, meaning: "display" }).valid ? expression : "";
 }
 
 function latexItems(items?: string[]) {
@@ -962,6 +965,54 @@ ${dots}
 \end{center}`;
 }
 
+function renderScientificGraph(visual: VisualSpec) {
+  const labels = visualLabels(visual, ["Independent variable", "Dependent variable", "Relationship"]);
+  const points = visual.points?.length ? visual.points.slice(0, 8) : [{ x: 0, y: 0 }, { x: 1, y: 0.4 }, { x: 2, y: 1.1 }, { x: 3, y: 2.2 }, { x: 4, y: 3.5 }];
+  const maxX = Math.max(1, ...points.map((point) => point.x));
+  const maxY = Math.max(1, ...points.map((point) => point.y));
+  const scaled = points.map((point) => `(${((point.x / maxX) * 5.1).toFixed(2)},${((point.y / maxY) * 3.25).toFixed(2)})`).join(" -- ");
+  const dots = points.map((point) => `\\fill[SubjectAccent] (${((point.x / maxX) * 5.1).toFixed(2)},${((point.y / maxY) * 3.25).toFixed(2)}) circle (0.065);`).join("\n");
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.86]
+\draw[step=0.65cm, gray!22, very thin] (0,0) grid (5.2,3.3);
+\draw[->, thick] (0,0) -- (5.6,0) node[right,align=left]{\scriptsize ${escapeLatex(labels[0])}};
+\draw[->, thick] (0,0) -- (0,3.7) node[above,align=center]{\scriptsize ${escapeLatex(labels[1])}};
+\draw[very thick, SubjectAccent] ${scaled};
+${dots}
+\node[draw=NovaCoral, fill=NovaCoral!9, rounded corners=3pt, text width=2.5cm, align=center, font=\scriptsize] at (3.75,2.75) {${escapeLatex(labels[2] ?? visual.title ?? "Observed relationship")}};
+\fill[NovaInk] (0,0) circle (0.055);
+\node[below left, font=\tiny] at (0,0) {0};
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderMicrostateModel(visual: VisualSpec) {
+  const labels = visualLabels(visual, ["Perfect crystal", "One arrangement", "Disordered solid", "Several arrangements"]);
+  const ordered = Array.from({ length: 15 }, (_, index) => {
+    const x = (index % 5) * 0.42 - 0.84;
+    const y = Math.floor(index / 5) * 0.42 - 0.42;
+    return `\\fill[NovaSky] (${x.toFixed(2)},${y.toFixed(2)}) circle (0.09);`;
+  }).join("\n");
+  const disordered = Array.from({ length: 15 }, (_, index) => {
+    const x = (index % 5) * 0.42 - 0.84 + ((index * 7) % 3 - 1) * 0.07;
+    const y = Math.floor(index / 5) * 0.42 - 0.42 + ((index * 5) % 3 - 1) * 0.07;
+    return `\\fill[${index % 3 ? "NovaCoral" : "NovaGrowth"}] (${x.toFixed(2)},${y.toFixed(2)}) circle (0.09);`;
+  }).join("\n");
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.92]
+\node[draw=NovaSky, fill=NovaSky!6, rounded corners=5pt, minimum width=3.15cm, minimum height=2.65cm] at (-1.9,0) {};
+\begin{scope}[shift={(-1.9,0.15)}]${ordered}\end{scope}
+\node[above, font=\scriptsize\bfseries, text=NovaSky!75!black] at (-1.9,1.45) {${escapeLatex(labels[0])}};
+\node[below, font=\scriptsize, align=center] at (-1.9,-1.45) {${escapeLatex(labels[1])}\\$\Omega=1$};
+\node[draw=NovaCoral, fill=NovaCoral!6, rounded corners=5pt, minimum width=3.15cm, minimum height=2.65cm] at (1.9,0) {};
+\begin{scope}[shift={(1.9,0.15)}]${disordered}\end{scope}
+\node[above, font=\scriptsize\bfseries, text=NovaCoral!80!black] at (1.9,1.45) {${escapeLatex(labels[2])}};
+\node[below, font=\scriptsize, align=center] at (1.9,-1.45) {${escapeLatex(labels[3])}\\$\Omega>1$};
+\draw[-{Stealth[length=2mm]}, NovaInk!55, thick] (-0.2,0) -- (0.2,0);
+\end{tikzpicture}
+\end{center}`;
+}
+
 function renderCoordinateSpace3D(visual: VisualSpec) {
   const source = visual.points?.[0] ?? { x: 3, y: 2, z: 4 };
   const point = {
@@ -1227,6 +1278,10 @@ function renderVisualSpec(visual: VisualSpec) {
         : renderComparisonVisual(visual);
     case "coordinate_graph":
       return renderCoordinateGraph(visual);
+    case "scientific_graph":
+      return renderScientificGraph(visual);
+    case "microstate_model":
+      return renderMicrostateModel(visual);
     case "coordinate_space_3d":
       return renderCoordinateSpace3D(visual);
     case "double_number_line":
@@ -1235,6 +1290,7 @@ function renderVisualSpec(visual: VisualSpec) {
       return renderEquationSteps(visual);
     case "flowchart":
     case "process_sequence":
+    case "cooling_sequence":
       return renderProcessVisual(visual);
     case "ratio_table":
     case "data_table":
@@ -1260,7 +1316,7 @@ function renderVisualSpec(visual: VisualSpec) {
   }
 }
 
-function renderPlanSlideBody(slide: LessonPlanSlide, hasImageAsset = false) {
+function renderPlanSlideBody(slide: LessonPlanSlide, hasImageAsset = false, audienceMode: AudienceMode = "student") {
   const content = slide.studentContent;
   const keyIdea = content.keyIdea
     ? normalizeLessonText(content.keyIdea).length > 150
@@ -1275,12 +1331,19 @@ function renderPlanSlideBody(slide: LessonPlanSlide, hasImageAsset = false) {
     content.question ? String.raw`\begin{block}{Question}
 \small ${escapeLatex(content.question)}
 \end{block}` : "",
+    ...(slide.math ?? []).slice(0, 2).map((formula: StructuredFormula) => {
+      const expression = safeInlineLatex(formula.expression);
+      return expression ? String.raw`\begin{block}{Mathematical relationship}
+\centering\Large $${expression}$\\[0.12cm]
+\scriptsize ${escapeLatex(formula.meaning)}${formula.units ? `\\ ${escapeLatex(formula.units)}` : ""}
+\end{block}` : "";
+    }),
     latexBullets(content.bullets, 3),
     latexSteps(content.steps, 3),
-    content.hint ? String.raw`\begin{block}{Hint}
+    audienceMode === "teacher" && content.hint ? String.raw`\begin{block}{Teacher hint}
 \small ${escapeLatex(content.hint)}
 \end{block}` : "",
-    content.answer ? String.raw`\begin{block}{Answer check}
+    audienceMode === "teacher" && content.answer ? String.raw`\begin{block}{Answer and explanation}
 \small ${escapeLatex(content.answer)}
 \end{block}` : ""
   ].filter(Boolean);
@@ -1316,7 +1379,7 @@ function buildSlideBodies(request: LessonDeckRequest) {
   );
 
   return plan.slides.map((slide, index) => ({
-    body: renderPlanSlideBody(slide, imageSlideNumbers.has(index + 1)),
+    body: renderPlanSlideBody(slide, imageSlideNumbers.has(index + 1), request.audienceMode ?? "student"),
     title: slide.title
   }));
 }
@@ -1645,6 +1708,10 @@ async function compileDeckRequest(request: Request) {
     return NextResponse.json({ error: "Missing lesson or student context." }, { status: 400 });
   }
 
+  const semanticPlan = legacyLessonToSlidePlan({ context: body.context, lesson: body.lesson });
+  const semanticWarnings = (semanticPlan.qualityFindings ?? [])
+    .filter((finding) => finding.severity !== "info")
+    .map((finding) => `${finding.slideId ?? "lesson"}: ${finding.explanation}`);
   const slideBodies = buildSlideBodies(body);
   const { errors: assetErrors, normalized: assets } = normalizeAssets(body.assets ?? [], slideBodies.length);
   if (assetErrors.length) {
@@ -1683,7 +1750,8 @@ async function compileDeckRequest(request: Request) {
   const plannedImageAssetCount = assets.filter((asset) => asset.type === "image").length;
   const programmaticVisualCount = compiledSlideBodies.filter((slide) => hasProgrammaticVisual(slide.body)).length;
   const qualityChecks = [
-    "Structured LessonSlidePlan v1 renderer active.",
+    "Structured LessonSlidePlan v2 semantic renderer active.",
+    `${semanticPlan.conceptGraph?.nodes.length ?? 0} concept nodes and ${semanticPlan.conceptGraph?.relationships.length ?? 0} explicit relationships validated.`,
     `${compiledSlideBodies.length} Beamer slides generated.`,
     `${programmaticVisualCount} built-in diagram/table visual${programmaticVisualCount === 1 ? "" : "s"} rendered from the lesson plan.`,
     `${visualCoverage.visualSlideCount} of ${compiledSlideBodies.length} slides (${visualCoverage.percent}%) contain a topic-specific diagram, model, data display, or generated image.`,
@@ -1724,7 +1792,7 @@ async function compileDeckRequest(request: Request) {
       remoteCompile = fallbackCompile;
       remoteTex = fallbackTex;
       remoteQualityChecks = [
-        "Structured LessonSlidePlan v1 renderer active.",
+        "Structured LessonSlidePlan v2 semantic renderer active.",
         `${fallbackSlideBodies.length} Beamer slides generated.`,
         `${fallbackProgrammaticVisualCount} built-in diagram/table visual${fallbackProgrammaticVisualCount === 1 ? "" : "s"} rendered from the lesson plan.`,
         `${fallbackCoverage.visualSlideCount} of ${fallbackSlideBodies.length} slides (${fallbackCoverage.percent}%) contain a topic-specific diagram, model, or data display.`,
@@ -1758,7 +1826,8 @@ async function compileDeckRequest(request: Request) {
           compilerStatus: remoteCompile.compilerStatus,
           error: remoteCompile.error,
           qualityChecks: remoteQualityChecks,
-          qualityWarnings: [...densityWarnings, ...visualCoverage.warnings, ...assetWarnings, ...remoteRetryWarnings],
+          qualityFindings: semanticPlan.qualityFindings,
+          qualityWarnings: [...semanticWarnings, ...densityWarnings, ...visualCoverage.warnings, ...assetWarnings, ...remoteRetryWarnings],
           tex: process.env.NODE_ENV === "development" ? remoteTex : undefined
         },
         { status: 422 }
@@ -1768,6 +1837,7 @@ async function compileDeckRequest(request: Request) {
     const pageCount = remoteCompile.pageCount;
     const pdfSize = remoteCompile.pdfSize ?? 0;
     const warnings = [
+      ...semanticWarnings,
       ...densityWarnings,
       ...visualCoverage.warnings,
       ...assetWarnings,
@@ -1799,6 +1869,7 @@ async function compileDeckRequest(request: Request) {
         `PDF page count checked by remote compiler: ${pageCount}.`,
         `PDF size: ${pdfSize} bytes.`
       ],
+      qualityFindings: semanticPlan.qualityFindings,
       qualityWarnings: warnings,
       tex: process.env.NODE_ENV === "development" ? remoteTex : undefined
     });
@@ -1823,6 +1894,7 @@ async function compileDeckRequest(request: Request) {
     const pageCheck = await countPdfPages(workDir, pdf);
     const pageCount = pageCheck.pages;
     const warnings = [
+      ...semanticWarnings,
       ...densityWarnings,
       ...visualCoverage.warnings,
       ...assetWarnings,
@@ -1851,6 +1923,7 @@ async function compileDeckRequest(request: Request) {
         `PDF page count checked with ${pageCheck.method}: ${pageCount}.`,
         `PDF size: ${pdf.length} bytes.`
       ],
+      qualityFindings: semanticPlan.qualityFindings,
       qualityWarnings: warnings,
       tex
     });
@@ -1866,7 +1939,8 @@ async function compileDeckRequest(request: Request) {
           ? "LaTeX compiler is not installed in this deployment. Use a TeX-enabled AWS Lambda/container or install pdflatex/tectonic and set LATEX_COMPILER_PATH."
           : sanitizeCompilerError(message),
         qualityChecks: localQualityChecks,
-        qualityWarnings: [...densityWarnings, ...visualCoverage.warnings, ...assetWarnings],
+        qualityFindings: semanticPlan.qualityFindings,
+        qualityWarnings: [...semanticWarnings, ...densityWarnings, ...visualCoverage.warnings, ...assetWarnings],
         tex: process.env.NODE_ENV === "development" ? tex : undefined
       },
       { status: missingCompiler ? 501 : 422 }

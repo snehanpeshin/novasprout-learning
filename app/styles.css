@@ -1355,6 +1355,49 @@ h3 {
   resize: vertical;
 }
 
+.lesson-advanced-settings {
+  border: 1px solid #cfe4f4;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.lesson-advanced-settings summary {
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.lesson-advanced-settings > div {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding-top: 12px;
+}
+
+.interactive-practice-prompt details {
+  border-top: 1px solid #d8e8f5;
+  margin-top: 10px;
+  padding-top: 9px;
+}
+
+.interactive-practice-prompt summary {
+  color: var(--blue);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.interactive-practice-prompt details p {
+  margin: 8px 0 0;
+}
+
+@media (max-width: 620px) {
+  .lesson-advanced-settings > div {
+    grid-template-columns: 1fr;
+  }
+}
+
 .topic-suggestions {
   display: flex;
   flex-wrap: wrap;

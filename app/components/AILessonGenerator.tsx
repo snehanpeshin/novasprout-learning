@@ -32,6 +32,13 @@ type ExamQuestion = {
 
 type GeneratedLesson = {
   conceptExplanation?: string;
+  conceptModel?: {
+    assessmentTargets: string[];
+    formulas: Array<{ expression: string; meaning: string; units: string }>;
+    misconceptions: Array<{ correction: string; statement: string }>;
+    nodes: Array<{ definition: string; id: string; label: string }>;
+    relationships: Array<{ explanation: string; from: string; relationship: string; to: string }>;
+  };
   customPlan?: {
     focusAreas?: string[];
     recommendedCadence?: string;
@@ -427,6 +434,35 @@ function parseSlideMinutes(time?: string) {
   return matches[0] ? Math.max(3, matches[0]) : 5;
 }
 
+function parseInteractivePrompt(value: string) {
+  const hint = value.match(/\bHint:\s*([\s\S]*?)(?:\bAnswer:|\bWhy:|$)/i)?.[1]?.trim() ?? "";
+  const answer = value.match(/\bAnswer:\s*([\s\S]*?)(?:\bWhy:|$)/i)?.[1]?.trim() ?? "";
+  const why = value.match(/\bWhy:\s*([\s\S]*?)$/i)?.[1]?.trim() ?? "";
+  const question = value.replace(/\bHint:\s*[\s\S]*$/i, "").replace(/^Try:\s*/i, "").trim();
+  return { answer: [answer, why].filter(Boolean).join(" "), hint, question: question || value };
+}
+
+function InteractivePracticePrompt({ value }: { value: string }) {
+  const prompt = parseInteractivePrompt(value);
+  return (
+    <div className="interactive-practice-prompt">
+      <p>{prompt.question}</p>
+      {prompt.hint ? (
+        <details>
+          <summary>Show hint</summary>
+          <p>{prompt.hint}</p>
+        </details>
+      ) : null}
+      {prompt.answer ? (
+        <details>
+          <summary>Check answer</summary>
+          <p>{prompt.answer}</p>
+        </details>
+      ) : null}
+    </div>
+  );
+}
+
 function buildLessonSlides(lesson: GeneratedLesson, theme: SubjectTheme, includeQuiz: boolean) {
   const slides: LessonSlide[] = [
     {
@@ -507,7 +543,7 @@ function buildLessonSlides(lesson: GeneratedLesson, theme: SubjectTheme, include
       visualLabel: "Try it",
       content: (
         <SubjectLearningCard label="Practice" theme={theme}>
-          <p>{question}</p>
+          <InteractivePracticePrompt value={question} />
         </SubjectLearningCard>
       )
     })) ?? []),
@@ -517,7 +553,7 @@ function buildLessonSlides(lesson: GeneratedLesson, theme: SubjectTheme, include
       visualLabel: "Check",
       content: (
         <SubjectLearningCard label="Check" theme={theme}>
-          <p>{check}</p>
+          <InteractivePracticePrompt value={check} />
         </SubjectLearningCard>
       )
     })) ?? []),
@@ -1440,6 +1476,9 @@ export default function AILessonGenerator() {
   const [teachingStyle, setTeachingStyle] = useState("Visual");
   const [difficulty, setDifficulty] = useState("Adaptive");
   const [lessonLanguage, setLessonLanguage] = useState("English");
+  const [depth, setDepth] = useState("standard");
+  const [visualEmphasis, setVisualEmphasis] = useState("high");
+  const [practiceIntensity, setPracticeIntensity] = useState("standard");
   const [includeInLesson, setIncludeInLesson] = useState<string[]>(lessonIncludes);
   const [studentQuestion, setStudentQuestion] = useState("");
   const [lesson, setLesson] = useState<GeneratedLesson | null>(null);
@@ -1512,6 +1551,8 @@ export default function AILessonGenerator() {
       setNotice("Starting your AI lesson...");
       const startResponse = await fetch("/api/ai-lesson", {
         body: JSON.stringify({
+          audienceMode: "student",
+          depth,
           difficulty,
           duration,
           goal,
@@ -1520,10 +1561,12 @@ export default function AILessonGenerator() {
           language: lessonLanguage,
           level,
           mode,
+          practiceIntensity,
           studentQuestion,
           subject,
           teachingStyle,
-          topic
+          topic,
+          visualEmphasis
         }),
         headers: {
           "Content-Type": "application/json",
@@ -1802,6 +1845,35 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
               ))}
             </select>
           </label>
+          <details className="lesson-advanced-settings">
+            <summary>Lesson emphasis</summary>
+            <div>
+              <label>
+                Depth
+                <select onChange={(event) => setDepth(event.target.value)} value={depth}>
+                  <option value="quick">Quick</option>
+                  <option value="standard">Standard</option>
+                  <option value="deep">Deep</option>
+                </select>
+              </label>
+              <label>
+                Visuals
+                <select onChange={(event) => setVisualEmphasis(event.target.value)} value={visualEmphasis}>
+                  <option value="balanced">Balanced</option>
+                  <option value="high">Visual</option>
+                  <option value="maximum">Visual-first</option>
+                </select>
+              </label>
+              <label>
+                Practice
+                <select onChange={(event) => setPracticeIntensity(event.target.value)} value={practiceIntensity}>
+                  <option value="light">Light</option>
+                  <option value="standard">Standard</option>
+                  <option value="intensive">Intensive</option>
+                </select>
+              </label>
+            </div>
+          </details>
           <fieldset className="lesson-include-field">
             <legend>Include in lesson</legend>
             <div>

@@ -1,4 +1,12 @@
-export const lessonSlidePlanSchemaVersion = "1.0";
+import {
+  enhanceLessonPlan,
+  type AudienceMode,
+  type ConceptGraph,
+  type QualityFinding,
+  type StructuredFormula
+} from "./lessonEngine";
+
+export const lessonSlidePlanSchemaVersion = "2.0";
 
 export type SubjectKey = "math" | "science" | "ela" | "coding" | "general";
 
@@ -29,6 +37,7 @@ export type VisualType =
   | "concept_map"
   | "coordinate_graph"
   | "coordinate_space_3d"
+  | "cooling_sequence"
   | "data_table"
   | "double_number_line"
   | "equation_steps"
@@ -37,10 +46,12 @@ export type VisualType =
   | "labeled_cards"
   | "labeled_system"
   | "process_sequence"
+  | "microstate_model"
   | "ratio_table"
   | "shape_classification"
   | "solid_geometry"
   | "solid_net"
+  | "scientific_graph"
   | "structure_function"
   | "tape_diagram";
 
@@ -63,6 +74,10 @@ export type LessonPlanSlide = {
   accessibilityLabel: string;
   estimatedMinutes: number;
   id: string;
+  layoutType?: "equation-focus" | "full-visual" | "text-focus" | "text-visual";
+  math?: StructuredFormula[];
+  purpose?: string;
+  speakerNotes?: string;
   studentContent: {
     answer?: string;
     bullets?: string[];
@@ -80,6 +95,8 @@ export type LessonPlanSlide = {
 };
 
 export type LessonSlidePlan = {
+  audienceMode?: AudienceMode;
+  conceptGraph?: ConceptGraph;
   context: {
     grade: string;
     subject: string;
@@ -87,6 +104,8 @@ export type LessonSlidePlan = {
     topic: string;
   };
   durationMinutes: number;
+  engineVersion?: string;
+  qualityFindings?: QualityFinding[];
   schemaVersion: typeof lessonSlidePlanSchemaVersion;
   slides: LessonPlanSlide[];
   title: string;
@@ -94,6 +113,7 @@ export type LessonSlidePlan = {
 };
 
 type LegacyLesson = {
+  conceptModel?: Partial<ConceptGraph>;
   conceptExplanation?: string;
   duration?: string;
   fullLessonSegments?: Array<{ activity?: string; time?: string; title?: string }>;
@@ -1459,6 +1479,7 @@ export function legacyLessonToSlidePlan({
   }
 
   return validateAndRepairSlidePlan({
+    conceptGraph: lesson?.conceptModel as ConceptGraph | undefined,
     context: { grade, subject, subjectKey, topic },
     durationMinutes,
     schemaVersion: lessonSlidePlanSchemaVersion,
@@ -1468,7 +1489,7 @@ export function legacyLessonToSlidePlan({
   });
 }
 
-export function validateAndRepairSlidePlan(plan: LessonSlidePlan): LessonSlidePlan {
+export function validateAndRepairSlidePlan(plan: LessonSlidePlan, audienceMode: AudienceMode = "student"): LessonSlidePlan {
   const warnings: string[] = [...plan.validationWarnings];
   const seenIds = new Set<string>();
   const slides = plan.slides.map((slide, index) => {
@@ -1514,11 +1535,11 @@ export function validateAndRepairSlidePlan(plan: LessonSlidePlan): LessonSlidePl
     };
   });
 
-  return {
+  return enhanceLessonPlan({
     ...plan,
     durationMinutes: Math.max(20, Math.min(90, plan.durationMinutes || 45)),
     slides: slides.slice(0, 28),
     title: normalizePlainText(plan.title, 120) || "NovaSprout Lesson",
     validationWarnings: warnings
-  };
+  }, audienceMode) as LessonSlidePlan;
 }

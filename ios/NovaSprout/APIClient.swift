@@ -150,7 +150,7 @@ actor APIClient {
         await progress(.compilation)
         let deck: CompiledDeck = try await postWithRetry(
             path: "/api/ai-lesson-deck",
-            body: DeckRequest(assets: compiledAssets, context: context, lesson: lesson),
+            body: DeckRequest(audienceMode: "student", assets: compiledAssets, context: context, lesson: lesson),
             access: access,
             timeout: 300,
             retries: 2
@@ -307,6 +307,7 @@ private struct ImageRequest: Codable {
 }
 
 private struct DeckRequest: Codable {
+    let audienceMode: String
     let assets: [DeckAsset]
     let context: LessonContext
     let lesson: GeneratedLesson
