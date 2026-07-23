@@ -1,9 +1,9 @@
-import { verifyAppleTransactionJws } from "./appleIap";
+import { verifyAppleTransactionJws } from "./appleIap.ts";
 import {
   claimAppleLessonPurchase,
   claimAppleSubscriptionLesson,
   hasActiveAppleLessonPurchase
-} from "./supabase";
+} from "./supabase.ts";
 
 export async function isAiAccessAllowed(
   request: Request,

@@ -119,6 +119,43 @@ def page_count(work_dir):
         return len(re.findall(rb"/Type\s*/Page\b", pdf_bytes))
 
 
+def inspect_rendered_pdf(work_dir, expected_pages):
+    warnings = []
+    errors = []
+    extracted_text = ""
+    rendered_pages = []
+    try:
+        run_command(["pdftotext", "lesson.pdf", "lesson.txt"], work_dir, 15)
+        extracted_text = (Path(work_dir) / "lesson.txt").read_text(encoding="utf-8", errors="replace")
+    except Exception as error:
+        warnings.append(f"PDF text extraction was unavailable: {error}")
+
+    try:
+        run_command(["pdftoppm", "-png", "-r", "90", "lesson.pdf", "rendered-page"], work_dir, 45)
+        rendered_pages = sorted(Path(work_dir).glob("rendered-page-*.png"))
+    except Exception as error:
+        errors.append(f"PDF pages could not be rendered for inspection: {error}")
+
+    if expected_pages and rendered_pages and len(rendered_pages) != expected_pages:
+        errors.append(f"Rendered {len(rendered_pages)} pages but expected {expected_pages}.")
+    for page in rendered_pages:
+        if page.stat().st_size < 2500:
+            errors.append(f"{page.name} appears blank or incomplete.")
+    for pattern, message in [
+        (r"\bmicro\b", "Corrupted mu notation appears as the word micro."),
+        (r"\b(?:draw three panels|include a normal-table snippet|place a transparent box)\b", "A production instruction appears in learner-facing PDF text."),
+    ]:
+        if re.search(pattern, extracted_text, re.IGNORECASE):
+            errors.append(message)
+    return {
+        "extractedTextCharacters": len(extracted_text),
+        "inspectionErrors": errors,
+        "inspectionWarnings": warnings,
+        "renderedPageBytes": [page.stat().st_size for page in rendered_pages],
+        "renderedPageCount": len(rendered_pages),
+    }
+
+
 def pdf_response(pdf_bytes, metadata):
     bucket = os.environ.get("PDF_OUTPUT_BUCKET", "").strip()
     if bucket:
@@ -173,13 +210,15 @@ def compile_latex(body):
           warnings.append(f"Expected {expected_page_count} pages but compiled PDF has {pages}.")
       if len(pdf_bytes) < 1000:
           warnings.append("Compiled PDF is unexpectedly small.")
+      inspection = inspect_rendered_pdf(work_dir, pages)
 
       return pdf_response(pdf_bytes, {
           "assetManifest": written_assets,
           "compilerName": compiler,
           "pageCount": pages,
           "pdfSize": len(pdf_bytes),
-          "warnings": warnings,
+          "warnings": warnings + inspection["inspectionWarnings"],
+          **inspection,
       })
     finally:
       shutil.rmtree(work_dir, ignore_errors=True)

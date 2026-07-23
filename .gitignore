@@ -9,3 +9,12 @@ NEXT_PUBLIC_CONTACT_EMAIL=*
 **/xcuserdata/
 *.xcuserstate
 DerivedData/
+tmp/pdfs/
+output/pdf/*.aux
+output/pdf/*.log
+output/pdf/*.nav
+output/pdf/*.out
+output/pdf/*.snm
+output/pdf/*.toc
+__pycache__/
+*.pyc

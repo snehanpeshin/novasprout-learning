@@ -3,10 +3,17 @@ import { mkdtemp, readFile, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import path from "path";
 import { promisify } from "util";
-import { NextResponse } from "next/server";
-import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
-import { validateStructuredFormula, type AudienceMode, type ConceptGraph, type StructuredFormula } from "../../lib/lessonEngine";
-import { legacyLessonToSlidePlan, type LessonPlanSlide, type VisualSpec } from "../../lib/lessonSlidePlan";
+import { NextResponse } from "next/server.js";
+import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess.ts";
+import {
+  buildStructuredLessonSpec,
+  validateStructuredFormula,
+  type AudienceMode,
+  type ConceptGraph,
+  type EnhancedEnginePlan,
+  type StructuredFormula
+} from "../../lib/lessonEngine.ts";
+import { legacyLessonToSlidePlan, type LessonPlanSlide, type VisualSpec } from "../../lib/lessonSlidePlan.ts";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -123,7 +130,7 @@ function normalizeLessonText(value?: string) {
     .replace(/[αΑ]/g, " alpha ")
     .replace(/[βΒ]/g, " beta ")
     .replace(/[γΓ]/g, " gamma ")
-    .replace(/[μΜ]/g, " micro ")
+    .replace(/[μΜ]/g, " mu ")
     .replace(/[°]/g, " degrees ")
     .replace(/[•●▪◦]/g, " - ")
     .replace(/[✓✔]/g, " correct ")
@@ -1256,7 +1263,56 @@ ${nodes}
 \end{center}`;
 }
 
+function renderStatisticsVisual(type: VisualSpec["type"]) {
+  if (type === "population_distribution") return String.raw`\begin{center}\begin{tikzpicture}[x=.72cm,y=2.25cm]
+\draw[->,thick] (-4.4,0)--(4.5,0) node[right]{value};
+\draw[very thick,NovaSky,domain=-4:4,samples=60,smooth] plot (\x,{exp(-(\x)^2/3)});
+\draw[dashed,NovaCoral,thick] (0,0)--(0,1.08) node[above] {$\mu$};
+\draw[<->,NovaGrowth,thick] (0,.2)--(1.22,.2) node[midway,above] {$\sigma$};
+\node[fill=NovaYellow!25,rounded corners] at (0,-.25) {fixed population parameters};
+\end{tikzpicture}\end{center}`;
+  if (type === "repeated_samples") return String.raw`\begin{center}\begin{tikzpicture}[x=.75cm,y=1cm]
+\foreach \y in {0,1,2}{\draw[->,gray!70] (-3.5,\y)--(3.5,\y);}
+\node[left,font=\small\bfseries] at (-3.5,2) {Sample 1};\node[left,font=\small\bfseries] at (-3.5,1) {Sample 2};\node[left,font=\small\bfseries] at (-3.5,0) {Sample 3};
+\foreach \x in {-2.8,-2.1,-1.2,-.1,.8}{\fill[NovaSky] (\x,2) circle (2.7pt);}
+\foreach \x in {-1.9,-.7,.2,1.2,2.5}{\fill[NovaGrowth] (\x,1) circle (2.7pt);}
+\foreach \x in {-2.4,-.8,.6,1.7,2.9}{\fill[NovaCoral] (\x,0) circle (2.7pt);}
+\node[draw=NovaGrowth,rounded corners,fill=NovaGrowth!10] at (0,-.85) {different samples $\Rightarrow$ different $\bar{x}$};
+\end{tikzpicture}\end{center}`;
+  if (type === "sampling_distribution") return String.raw`\begin{center}\begin{tikzpicture}[x=1.05cm,y=.55cm]
+\draw[->,thick] (-3,0)--(3.2,0) node[right] {$\bar{x}$};
+\foreach \x/\y in {-2.5/1,-2/1,-1.5/1,-1.5/2,-1/1,-1/2,-.5/1,-.5/2,-.5/3,0/1,0/2,0/3,0/4,.5/1,.5/2,.5/3,1/1,1/2,1.5/1,1.5/2,2/1,2.5/1}{\fill[NovaSky] (\x,\y) circle (2.8pt);}
+\draw[dashed,NovaCoral,thick] (0,0)--(0,4.7) node[above] {center near $\mu$};
+\node[below] at (0,-.45) {one dot = one repeated sample mean};
+\end{tikzpicture}\end{center}`;
+  if (type === "standard_error_comparison") return String.raw`\begin{center}\begin{tikzpicture}[x=.78cm,y=1.05cm]
+\draw[->,gray] (-4,0)--(4.4,0);
+\draw[very thick,NovaCoral,domain=-4:4,samples=60,smooth] plot (\x,{.75*exp(-(\x)^2/6)});
+\draw[very thick,NovaSky,domain=-4:4,samples=60,smooth] plot (\x,{1.35*exp(-(\x)^2/2)});
+\draw[very thick,NovaGrowth,domain=-4:4,samples=60,smooth] plot (\x,{2.05*exp(-(\x)^2/.65)});
+\node[NovaCoral] at (3.5,.65) {$n=5$};\node[NovaSky] at (2.1,1.3) {$n=30$};\node[NovaGrowth] at (.8,2.05) {$n=100$};
+\node[draw,rounded corners,fill=NovaYellow!22] at (0,-.65) {$\operatorname{SE}(\bar{x})=\frac{\sigma}{\sqrt n}$};
+\end{tikzpicture}\end{center}`;
+  if (type === "normal_tail") return String.raw`\begin{center}\begin{tikzpicture}[x=.85cm,y=2.1cm]
+\draw[->,thick] (-4,0)--(4.3,0) node[right] {$z$};
+\fill[NovaYellow!60,domain=2:4,samples=35] (2,0)--plot (\x,{exp(-(\x)^2/2)})--(4,0)--cycle;
+\draw[very thick,NovaSky,domain=-4:4,samples=70,smooth] plot (\x,{exp(-(\x)^2/2)});
+\draw[dashed,NovaCoral,thick] (2,0)--(2,.22) node[above] {$z=2$};
+\node at (2.9,.5) {tail area};\node[below] at (0,-.18) {$z=0$};
+\end{tikzpicture}\end{center}`;
+  if (type === "confidence_interval") return String.raw`\begin{center}\begin{tikzpicture}[x=1cm,y=1cm]
+\draw[->,thick] (-.5,0)--(7,0);
+\draw[NovaGrowth,line width=5pt] (1,0)--(6,0);
+\foreach \x/\lab in {0/78,1/78.08,3.5/82,6/85.92}{\draw[thick] (\x,-.12)--(\x,.12);\node[below] at (\x,-.15) {\lab};}
+\node[NovaCoral,above] at (0,.18) {outside};\node[NovaGrowth,above] at (3.5,.18) {estimate};
+\node[draw,rounded corners,fill=NovaYellow!20] at (3.5,1.05) {$82\pm1.96(2)=(78.08,85.92)$};
+\end{tikzpicture}\end{center}`;
+  return "";
+}
+
 function renderVisualSpec(visual: VisualSpec) {
+  const statisticsVisual = renderStatisticsVisual(visual.type);
+  if (statisticsVisual) return statisticsVisual;
   switch (visual.type) {
     case "labeled_system":
     case "annotated_image":
@@ -1319,15 +1375,13 @@ function renderVisualSpec(visual: VisualSpec) {
 function renderPlanSlideBody(slide: LessonPlanSlide, hasImageAsset = false, audienceMode: AudienceMode = "student") {
   const content = slide.studentContent;
   const keyIdea = content.keyIdea
-    ? normalizeLessonText(content.keyIdea).length > 150
-      ? `${normalizeLessonText(content.keyIdea).slice(0, 147).trim()}...`
-      : normalizeLessonText(content.keyIdea)
+    ? normalizeLessonText(content.keyIdea)
     : "";
   const textParts = [
     keyIdea ? String.raw`\begin{alertblock}{Key idea}
 \small ${escapeLatex(keyIdea)}
 \end{alertblock}` : "",
-    content.explanation ? String.raw`\small ${escapeLatex(normalizeLessonText(content.explanation).slice(0, 300))}` : "",
+    content.explanation ? String.raw`\small ${escapeLatex(normalizeLessonText(content.explanation))}` : "",
     content.question ? String.raw`\begin{block}{Question}
 \small ${escapeLatex(content.question)}
 \end{block}` : "",
@@ -1335,7 +1389,7 @@ function renderPlanSlideBody(slide: LessonPlanSlide, hasImageAsset = false, audi
       const expression = safeInlineLatex(formula.expression);
       return expression ? String.raw`\begin{block}{Mathematical relationship}
 \centering\Large $${expression}$\\[0.12cm]
-\scriptsize ${escapeLatex(formula.meaning)}${formula.units ? `\\ ${escapeLatex(formula.units)}` : ""}
+\small ${escapeLatex(formula.meaning)}${formula.units ? `\\ ${escapeLatex(formula.units)}` : ""}
 \end{block}` : "";
     }),
     latexBullets(content.bullets, 3),
@@ -1350,11 +1404,26 @@ function renderPlanSlideBody(slide: LessonPlanSlide, hasImageAsset = false, audi
   const visualTex = hasImageAsset ? "" : slide.visuals.slice(0, 1).map(renderVisualSpec).filter(Boolean).join("\n");
 
   if (visualTex && textParts.length) {
-    return String.raw`\begin{columns}[T]
-\begin{column}{0.39\textwidth}
+    if (slide.type === "worked_example" || slide.layoutType === "equation-focus") {
+      return String.raw`\begin{columns}[T]
+\begin{column}{0.53\textwidth}
 ${textParts.join("\n\n")}
 \end{column}
-\begin{column}{0.57\textwidth}
+\begin{column}{0.43\textwidth}
+${visualTex}
+\end{column}
+\end{columns}`;
+    }
+    if (slide.type === "guided_practice" || slide.type === "independent_practice") {
+      return String.raw`${textParts.join("\n\n")}
+\vspace{0.08cm}
+${visualTex}`;
+    }
+    return String.raw`\begin{columns}[T]
+\begin{column}{0.45\textwidth}
+${textParts.join("\n\n")}
+\end{column}
+\begin{column}{0.51\textwidth}
 ${visualTex}
 \end{column}
 \end{columns}`;
@@ -1371,6 +1440,10 @@ ${visualTex}
 
 function buildSlideBodies(request: LessonDeckRequest) {
   const plan = legacyLessonToSlidePlan({ context: request.context, lesson: request.lesson });
+  const lessonSpec = buildStructuredLessonSpec(plan as EnhancedEnginePlan);
+  if (lessonSpec.slides.length !== plan.slides.length) {
+    throw new Error("Structured lesson specification does not match the rendered slide plan.");
+  }
   const imageSlideNumbers = new Set(
     (request.assets ?? [])
       .filter((asset) => asset.type === "image")
@@ -1407,7 +1480,7 @@ async function writeImageAssets(workDir: string, assets: DeckAsset[]) {
   return written;
 }
 
-function buildBeamerTex(request: LessonDeckRequest) {
+export function buildBeamerTex(request: LessonDeckRequest) {
   const lesson = request.lesson ?? {};
   const context = request.context ?? {};
   const assets = request.assets ?? [];
@@ -1672,6 +1745,16 @@ async function compileWithRemoteService({
 
   const hasPdfDataUrl = typeof payload?.pdfDataUrl === "string" && payload.pdfDataUrl.startsWith("data:application/pdf;base64,");
   const hasPdfUrl = typeof payload?.pdfUrl === "string" && payload.pdfUrl.startsWith("https://");
+  const inspectionErrors = Array.isArray(payload?.inspectionErrors)
+    ? payload.inspectionErrors.filter((item: unknown) => typeof item === "string")
+    : [];
+  if (inspectionErrors.length) {
+    return {
+      compilerStatus: "quality_failed",
+      error: `Compiled PDF failed rendered-page inspection: ${inspectionErrors.join(" ")}`,
+      ok: false
+    };
+  }
   if (!hasPdfDataUrl && !hasPdfUrl) {
     return {
       compilerStatus: "compile_failed",
@@ -1688,6 +1771,7 @@ async function compileWithRemoteService({
     pdfDataUrl: payload?.pdfDataUrl,
     pdfUrl: payload?.pdfUrl,
     pdfSize: Number(payload?.pdfSize ?? 0),
+    renderedPageCount: Number(payload?.renderedPageCount ?? 0),
     warnings: Array.isArray(payload?.warnings) ? payload.warnings : []
   };
 }

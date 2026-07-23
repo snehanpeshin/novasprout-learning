@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
-    ,"test:lesson-engine": "node --experimental-strip-types --test tests/lesson-engine.test.ts"
+    ,"test:lesson-engine": "node --experimental-strip-types --experimental-specifier-resolution=node --test tests/*.test.ts"
   },
   "dependencies": {
     "@apple/app-store-server-library": "^3.1.0",

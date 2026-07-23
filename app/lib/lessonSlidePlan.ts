@@ -4,7 +4,7 @@ import {
   type ConceptGraph,
   type QualityFinding,
   type StructuredFormula
-} from "./lessonEngine";
+} from "./lessonEngine.ts";
 
 export const lessonSlidePlanSchemaVersion = "2.0";
 
@@ -46,6 +46,12 @@ export type VisualType =
   | "labeled_cards"
   | "labeled_system"
   | "process_sequence"
+  | "population_distribution"
+  | "repeated_samples"
+  | "sampling_distribution"
+  | "standard_error_comparison"
+  | "normal_tail"
+  | "confidence_interval"
   | "microstate_model"
   | "ratio_table"
   | "shape_classification"
@@ -60,9 +66,13 @@ export type VisualSpec = {
   caption?: string;
   columns?: Array<{ items: string[]; title: string }>;
   equation?: string;
+  expectedInsight?: string;
   id: string;
   labels?: string[];
+  learnerQuestion?: string;
+  mathematicalRelationship?: string;
   points?: Array<{ x: number; y: number; z?: number }>;
+  quantitiesEncoded?: string[];
   rows?: string[][];
   steps?: string[];
   tableHeaders?: string[];
@@ -272,6 +282,10 @@ function makeSlide(
 }
 
 const topicVocabulary = [
+  {
+    pattern: /\b(sampling distribution|standard error|z-?scores?|confidence interval|sample mean|central limit|statistics?)\b/i,
+    terms: ["population", "random sample", "parameter", "statistic", "sample mean", "sampling distribution", "standard error", "sample size", "z-score", "confidence interval"]
+  },
   {
     pattern: /\b(digest\w*|stomachs?|intestines?|enzymes?|bile|food)\b/i,
     terms: ["mouth", "esophagus", "stomach", "small intestine", "large intestine", "enzyme", "bile", "absorption", "villi", "waste"]
@@ -556,6 +570,64 @@ function fractionEquationSteps(value: string) {
 
 function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanSlide[] {
   const lowerTopic = topic.toLowerCase();
+  if (subjectKey === "math" && /\b(sampling distribution|standard error|z-?scores?|confidence interval|sample mean|central limit)\b/.test(lowerTopic)) {
+    const visual = (
+      id: string,
+      type: VisualSpec["type"],
+      title: string,
+      labels: string[],
+      relationship: string,
+      question: string,
+      insight: string
+    ): VisualSpec => ({
+      accessibilityLabel: `${title}. ${insight}`,
+      expectedInsight: insight,
+      id,
+      labels,
+      learnerQuestion: question,
+      mathematicalRelationship: relationship,
+      quantitiesEncoded: labels,
+      title,
+      type
+    });
+    return [
+      makeSlide("population-sample", "comparison", "Population And Random Samples", 4, {
+        keyIdea: "A population has fixed parameters. A random sample produces statistics that vary from sample to sample.",
+        bullets: ["Population: the full process or group.", "Sample: observations selected by a random mechanism."]
+      }, [visual("population-model", "population_distribution", "Population and parameters", ["Population", "\\mu", "\\sigma", "Random sample"], "Samples are drawn from one population.", "Which symbols describe the population?", "Population parameters stay fixed while samples change.")]),
+      makeSlide("repeated-samples", "data_display", "Why Sample Means Vary", 4, {
+        keyIdea: "Different random samples usually contain different observations, so their sample means are not identical."
+      }, [visual("repeated-sample-model", "repeated_samples", "Three samples from one population", ["Sample 1", "Sample 2", "Sample 3", "\\bar{x}_1", "\\bar{x}_2", "\\bar{x}_3"], "Each sample produces one sample mean.", "Why do the means differ?", "Sampling variability is expected, not an error.")]),
+      makeSlide("sampling-distribution", "concept", "Build A Sampling Distribution", 5, {
+        keyIdea: "Collecting one sample mean from each repeated sample creates the sampling distribution of the mean.",
+        bullets: ["One dot represents one sample mean.", "The center is near the population mean."]
+      }, [visual("sampling-dotplot", "sampling_distribution", "Many repeated sample means", ["Repeated \\bar{x}", "Center near \\mu", "Sampling variability"], "Each dot is a statistic from one repeated sample.", "What does one dot represent?", "A sampling distribution describes a statistic, not individual observations.")]),
+      makeSlide("standard-error", "concept", "Sample Size Changes Precision", 5, {
+        keyIdea: "For fixed population spread, larger samples produce a narrower sampling distribution.",
+        bullets: ["Standard error is the standard deviation of the sampling distribution.", "Quadrupling n halves the standard error."]
+      }, [visual("se-widths", "standard_error_comparison", "Same scale, different widths", ["n=5", "n=30", "n=100", "\\sigma/\\sqrt{n}"], "\\operatorname{SE}(\\bar{x})=\\sigma/\\sqrt{n}", "Which curve is most precise?", "Precision improves by a square-root relationship.")]),
+      makeSlide("z-score-model", "concept", "Measure Distance With z", 4, {
+        keyIdea: "A z-score is a signed distance measured in standard errors. It is not itself a probability.",
+        bullets: ["Positive z is above the model mean.", "Tail area converts location into probability."]
+      }, [visual("z-tail", "normal_tail", "z equals 2", ["z=0", "z=2", "Upper tail"], "z=(\\bar{x}-\\mu)/(\\sigma/\\sqrt{n})", "What does z=2 measure?", "The marked location is two standard errors above the mean.")]),
+      makeSlide("complete-example", "worked_example", "Complete z And Interval Example", 6, {
+        keyIdea: "Given \\bar{x}=82, \\mu=78, \\sigma=10, and n=25, first compute SE=2 and then z=2.",
+        steps: ["Given: \\bar{x}=82, \\mu=78, \\sigma=10, n=25.", "SE=10/\\sqrt{25}=2.", "z=(82-78)/2=2.", "95% interval: 82\\pm1.96(2)=(78.08,85.92).", "Check: 78 is slightly outside the interval."]
+      }, [visual("ci-number-line", "confidence_interval", "Check the interval endpoints", ["78", "78.08", "82", "85.92"], "82\\pm1.96(2)=(78.08,85.92)", "Is 78 between the endpoints?", "78 is outside because it is less than 78.08.")]),
+      makeSlide("known-unknown-sigma", "comparison", "Choose z Or t", 4, {
+        keyIdea: "Known population standard deviation supports a z-procedure. When it is unknown, estimate with s and normally use t with n-1 degrees of freedom.",
+        bullets: ["Known \\sigma: SE=\\sigma/\\sqrt{n}.", "Unknown \\sigma: estimated SE=s/\\sqrt{n} and use t."]
+      }, [{
+        accessibilityLabel: "A comparison of known and unknown population standard deviation procedures.",
+        columns: [
+          { title: "Known population spread", items: ["Use \\sigma", "z-procedure", "SE=\\sigma/\\sqrt{n}"] },
+          { title: "Unknown population spread", items: ["Use sample s", "t-procedure", "df=n-1"] }
+        ],
+        id: "z-t-comparison",
+        type: "comparison_table"
+      }])
+    ];
+  }
   if (subjectKey === "science" && lowerTopic.includes("digest")) {
     return [
       makeSlide(
@@ -1503,7 +1575,10 @@ export function validateAndRepairSlidePlan(plan: LessonSlidePlan, audienceMode: 
     const cleanTitle = normalizePlainText(slide.title, 90)
       .replace(/\bTutor-guided\b/gi, "Guided")
       .replace(/\bTeacher\b/gi, "Lesson");
-    const repairedTitle = cleanTitle.length > 72 ? `${cleanTitle.slice(0, 69).trim()}...` : cleanTitle;
+    const titleWords = cleanTitle.split(/\s+/).filter(Boolean);
+    const repairedTitle = titleWords.length > 8
+      ? titleWords.slice(0, 8).join(" ").replace(/[,:;]+$/, "")
+      : cleanTitle;
     if (repairedTitle !== cleanTitle) {
       warnings.push(`Long title shortened at slide ${index + 1}.`);
     }

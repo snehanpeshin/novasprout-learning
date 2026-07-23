@@ -72,7 +72,7 @@ test("enhances a legacy plan with v2 semantics and machine-readable findings", (
     ],
     validationWarnings: []
   });
-  assert.equal(plan.engineVersion, "2.0");
+  assert.equal(plan.engineVersion, "2.1");
   assert.equal(plan.slides[0].visuals?.[0]?.type, "scientific_graph");
   assert.ok(plan.slides[0].math?.length);
   assert.ok(plan.conceptGraph.relationships.length >= 3);
