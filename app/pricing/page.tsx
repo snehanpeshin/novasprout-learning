@@ -18,7 +18,7 @@ export default function PricingPage() {
         <p className="ns-eyebrow">Clear tutoring pricing</p>
         <h1>Meet the tutor first. Continue for $20 per class.</h1>
         <p>The Free Demo Class helps the family and tutor understand the goal and decide whether the teaching fit feels right.</p>
-        <a className="ns-button ns-button-primary" href="#free-demo">Book a Free Demo <ArrowRight aria-hidden="true" /></a>
+        <a className="ns-button ns-button-primary" href="#free-demo">Request a Free Demo Class <ArrowRight aria-hidden="true" /></a>
       </section>
 
       <section className="ns-section ns-pricing-detail">

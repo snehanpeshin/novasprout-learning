@@ -19,7 +19,7 @@ export default function ResourcesPage() {
         {subjectTracks.map((subject) => <article key={subject.slug}><subject.icon /><div><h2>{subject.navTitle}</h2><p>{subject.summary}</p><a href={`/${subject.slug}`}>Explore subject support <ArrowRight /></a></div></article>)}
       </section>
       <section className="ns-ai-note"><div><p className="ns-eyebrow">Optional self-guided support</p><h2>Create a personalized AI lesson.</h2><p>Choose a curriculum-appropriate grade, subject, and topic, then study with a visual lesson and quiz.</p></div><a className="ns-button ns-button-secondary" href="/ai-lesson-generator"><Lightbulb />Open AI Study Tool</a></section>
-      <section className="ns-application-cta"><div><p className="ns-eyebrow">Prefer human guidance?</p><h2>Request a live tutor.</h2><p>Begin with a Free Demo Class and decide whether the match feels right.</p></div><a className="ns-button ns-button-primary" href="/contact#free-demo"><BookOpenCheck />Book a Free Demo</a></section>
+      <section className="ns-application-cta"><div><p className="ns-eyebrow">Prefer human guidance?</p><h2>Request a live tutor.</h2><p>Begin with a Free Demo Class and decide whether the match feels right.</p></div><a className="ns-button ns-button-primary" href="/contact#free-demo"><BookOpenCheck />Request a Free Demo Class</a></section>
       <Footer />
     </main>
   );

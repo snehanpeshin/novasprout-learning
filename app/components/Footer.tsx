@@ -25,7 +25,8 @@ export default function Footer() {
         <div>
           <h2>Company</h2>
           <a href="/#how-it-works">How It Works</a>
-          <a href="/#why">Why NovaSprout</a>
+          <a href="/#tutors">Tutor experience</a>
+          <a href="/resources">Learning Resources</a>
           <a href="/ai-lesson-generator">AI Study Tool</a>
         </div>
         <div>

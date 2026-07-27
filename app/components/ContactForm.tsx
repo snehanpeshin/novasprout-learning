@@ -60,6 +60,11 @@ export default function ContactForm() {
 
   return (
     <form className="ns-intake-form" onSubmit={submitRequest}>
+      <div className="ns-form-intro">
+        <p className="ns-card-kicker">What happens next</p>
+        <h3>Reviewed by the NovaSprout team.</h3>
+        <p>We’ll email a tutor recommendation or a follow-up question. If a suitable match is available, you can then choose a free demo time.</p>
+      </div>
       <div className="ns-form-grid">
         <label>
           Parent/guardian or adult student name
@@ -104,7 +109,7 @@ export default function ContactForm() {
       <p className="ns-form-note">For students under 18, a parent or guardian should submit the request. Please do not include sensitive educational, health, or payment information.</p>
       <button className="ns-button ns-button-primary" disabled={status === "sending"} type="submit">
         {status === "sending" ? <LoaderCircle className="ns-spin" aria-hidden="true" /> : <Send aria-hidden="true" />}
-        {status === "sending" ? "Sending request…" : "Request a Free Demo"}
+        {status === "sending" ? "Sending request…" : "Request a Free Demo Class"}
       </button>
       {status === "error" ? (
         <div className="ns-form-error" role="alert">

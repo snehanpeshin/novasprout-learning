@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import {
   ArrowRight,
-  BookOpenCheck,
+  BadgeCheck,
   CalendarCheck,
   Check,
   CheckCircle2,
   ClipboardList,
   Code2,
-  HeartHandshake,
-  Lightbulb,
+  Database,
+  GraduationCap,
   MessageCircleQuestion,
   SearchCheck,
   ShieldCheck,
@@ -25,11 +25,11 @@ import { bookingUrl, generalFaqs, subjectTracks } from "./site-data";
 export const metadata: Metadata = {
   title: "Personalized Online Tutoring | NovaSprout Learning",
   description:
-    "One-to-one online tutoring in math, science, coding, data skills, and study skills. Get thoughtfully matched and begin with a Free Demo Class.",
+    "Patient one-to-one online tutoring matched to the student’s subject, level, goals, and schedule. Request a Free Demo Class before deciding.",
   alternates: { canonical: "/" },
   openGraph: {
     title: "Personalized Online Tutoring | NovaSprout Learning",
-    description: "Patient one-to-one support, curated tutor matching, and a Free Demo Class.",
+    description: "Patient one-to-one tutoring, verified in-house expertise, thoughtful matching, and a Free Demo Class.",
     images: [{ url: "/novasprout-live-tutoring-hero.png", width: 1536, height: 1024, alt: "A student learning online with a tutor" }],
     type: "website"
   }
@@ -54,14 +54,29 @@ export default function Home() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.novasproutlearning.com";
   const structuredData = [{
     "@context": "https://schema.org",
-    "@type": ["EducationalOrganization", "LocalBusiness"],
+    "@type": "EducationalOrganization",
+    "@id": `${siteUrl}/#organization`,
     name: "NovaSprout Learning",
     url: siteUrl,
+    logo: `${siteUrl}/novasprout-logo.png`,
     email: "novasproutlearning@gmail.com",
     telephone: "+1-775-248-8317",
     parentOrganization: { "@type": "Organization", name: "Karigari Home LLC" },
-    areaServed: "Online",
-    serviceType: "Online tutoring"
+    sameAs: [
+      "https://www.facebook.com/profile.php?id=61591516287177",
+      "https://www.instagram.com/novasprout.learning/"
+    ],
+    makesOffer: {
+      "@type": "Offer",
+      price: "20",
+      priceCurrency: "USD",
+      itemOffered: {
+        "@type": "Service",
+        name: "One-to-one online tutoring",
+        serviceType: "Online tutoring",
+        provider: { "@id": `${siteUrl}/#organization` }
+      }
+    }
   }, {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -78,19 +93,19 @@ export default function Home() {
 
       <section className="ns-hero" aria-labelledby="hero-title">
         <div className="ns-hero-copy">
-          <p className="ns-eyebrow">Thoughtfully matched. Live and one-to-one.</p>
-          <h1 id="hero-title">Personalized online tutoring that helps learning finally click.</h1>
+          <p className="ns-eyebrow">Patient, live, and one-to-one</p>
+          <h1 id="hero-title">Patient, one-to-one tutoring matched to how your student learns.</h1>
           <p className="ns-hero-lead">
-            Get patient support in math, science, coding, data skills, and study habits, matched to the student’s level, goals, and schedule.
+            Tell us what’s getting in the way. We’ll recommend a patient tutor for the student’s subject, level, goals, and schedule—then you can meet in a free demo class before deciding.
           </p>
           <div className="ns-actions">
-            <a className="ns-button ns-button-primary" href="#free-demo">Book a Free Demo <ArrowRight aria-hidden="true" /></a>
+            <a className="ns-button ns-button-primary" href="#free-demo">Request a Free Demo Class <ArrowRight aria-hidden="true" /></a>
             <a className="ns-button ns-button-secondary" href="#subjects">Explore Subjects</a>
           </div>
           <div className="ns-reassurance" aria-label="NovaSprout tutoring highlights">
-            <span><Video aria-hidden="true" />Live 1-to-1 support</span>
-            <span><SearchCheck aria-hidden="true" />Curated matching</span>
-            <span><CalendarCheck aria-hidden="true" />First demo class free</span>
+            <span><BadgeCheck aria-hidden="true" />Qualifications and experience reviewed</span>
+            <span><SearchCheck aria-hidden="true" />Matched by subject and level</span>
+            <span><CalendarCheck aria-hidden="true" />Meet before deciding</span>
           </div>
         </div>
         <figure className="ns-hero-visual">
@@ -109,6 +124,49 @@ export default function Home() {
         <div><CheckCircle2 aria-hidden="true" /><span><strong>Free Demo Class</strong> before committing</span></div>
         <div><Target aria-hidden="true" /><span>Matching by <strong>subject, level, goals, and schedule</strong></span></div>
         <div><ShieldCheck aria-hidden="true" /><span><strong>First paid-session fit guarantee</strong></span></div>
+      </section>
+
+      <section className="ns-section ns-tutor-proof" id="tutors" aria-labelledby="tutors-title">
+        <div className="ns-section-heading ns-heading-row">
+          <div>
+            <p className="ns-eyebrow">Current in-house expertise</p>
+            <h2 id="tutors-title">Meet the experience behind the matching.</h2>
+          </div>
+          <p>Profiles are shown without names or personal contact details. Qualifications below come from the tutors’ submitted professional records.</p>
+        </div>
+        <div className="ns-tutor-proof-grid">
+          <article>
+            <span className="ns-profile-icon"><GraduationCap aria-hidden="true" /></span>
+            <div>
+              <p className="ns-card-kicker">Math, physics, and engineering</p>
+              <h3>STEM & engineering specialist</h3>
+              <ul>
+                <li>Ph.D. in Mechanical and Aerospace Engineering</li>
+                <li>M.S. and B.S. degrees in Mechanical Engineering</li>
+                <li>University teaching fellowship and graduate/undergraduate student supervision</li>
+              </ul>
+              <p><strong>Session focus:</strong> concept clarity, equations, diagrams, scientific reasoning, and worked examples.</p>
+            </div>
+          </article>
+          <article>
+            <span className="ns-profile-icon ns-profile-icon-data"><Database aria-hidden="true" /></span>
+            <div>
+              <p className="ns-card-kicker">Coding, data, and practical technology</p>
+              <h3>Coding & data specialist</h3>
+              <ul>
+                <li>M.S. in Information Systems and B.Tech. in Electronics and Communication Engineering</li>
+                <li>Graduate-assistant experience in data analysis and visualization</li>
+                <li>Professional work with Python, SQL, Power BI, Tableau, cloud platforms, and data pipelines</li>
+              </ul>
+              <p><strong>Session focus:</strong> step-by-step coding, data interpretation, practical projects, and debugging.</p>
+            </div>
+          </article>
+        </div>
+        <div className="ns-tutor-review">
+          <BadgeCheck aria-hidden="true" />
+          <p><strong>Before a recommendation:</strong> NovaSprout reviews the tutor’s submitted background, subjects and levels, relevant experience, availability, and teaching approach against the student request.</p>
+          <a className="ns-button ns-button-primary" href="#free-demo">Request a Free Demo Class <ArrowRight aria-hidden="true" /></a>
+        </div>
       </section>
 
       <section className="ns-section ns-problems" aria-labelledby="problems-title">
@@ -162,21 +220,6 @@ export default function Home() {
         </ol>
       </section>
 
-      <section className="ns-section ns-why" id="why" aria-labelledby="why-title">
-        <div className="ns-why-intro">
-          <p className="ns-eyebrow">Why NovaSprout</p>
-          <h2 id="why-title">Less profile browsing. More attention to fit.</h2>
-          <p>We review each request and suggest a suitable available tutor, with a low-risk way to meet first.</p>
-          <a className="ns-text-link" href="#free-demo">Tell us what you need <ArrowRight aria-hidden="true" /></a>
-        </div>
-        <div className="ns-why-list">
-          <article><HeartHandshake aria-hidden="true" /><div><h3>Thoughtful matching</h3><p>Subject expertise matters, but so do communication style, level, goals, and availability.</p></div></article>
-          <article><Lightbulb aria-hidden="true" /><div><h3>Patient explanations</h3><p>Sessions leave room to ask questions, try a method, and understand why it works.</p></div></article>
-          <article><BookOpenCheck aria-hidden="true" /><div><h3>Support around real work</h3><p>Tutoring can connect to the student’s current concepts, projects, and learning routines.</p></div></article>
-          <article><Video aria-hidden="true" /><div><h3>Flexible online access</h3><p>Meet through a familiar online platform from a place where the student can focus.</p></div></article>
-        </div>
-      </section>
-
       <section className="ns-section ns-session" aria-labelledby="session-title">
         <div className="ns-session-visual" aria-hidden="true">
           <span><Sparkles /></span>
@@ -191,18 +234,6 @@ export default function Home() {
             {sessionActivities.map((item) => <li key={item}><Check aria-hidden="true" />{item}</li>)}
           </ul>
           <p className="ns-small-note">Tutors guide learning and do not complete graded assignments for students.</p>
-        </div>
-      </section>
-
-      <section className="ns-expect-band" aria-labelledby="expect-title">
-        <div>
-          <p className="ns-eyebrow">What families can expect</p>
-          <h2 id="expect-title">A clear start, honest communication, and no pressure to continue.</h2>
-        </div>
-        <div className="ns-expect-points">
-          <p><strong>Before:</strong> We review the need and availability.</p>
-          <p><strong>During:</strong> The student experiences the tutor’s teaching style.</p>
-          <p><strong>After:</strong> The family decides whether the match feels right.</p>
         </div>
       </section>
 
@@ -235,7 +266,7 @@ export default function Home() {
         <div className="ns-demo-copy">
           <p className="ns-eyebrow">Free Demo Class</p>
           <h2 id="demo-title">Let’s find the right support for your student.</h2>
-          <p>Tell us enough to understand the need. For students under 18, a parent or guardian should complete the request.</p>
+          <p>The NovaSprout team reviews each request. We’ll email you with an available tutor recommendation or a follow-up question; after that, you can choose a free demo time. For students under 18, a parent or guardian should complete the request.</p>
           <div className="ns-demo-options">
             <p><CheckCircle2 aria-hidden="true" />No payment required</p>
             <p><CheckCircle2 aria-hidden="true" />No commitment to continue</p>

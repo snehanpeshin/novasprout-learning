@@ -1,0 +1,24 @@
+# NovaSprout Learning
+
+> NovaSprout Learning provides patient, one-to-one online tutoring and an optional AI study tool.
+
+NovaSprout Learning is a brand of Karigari Home LLC. Live tutoring is available in math, science and STEM, coding and data skills, and study skills. Families and adult students can request a free demo class before deciding whether to continue.
+
+## Main pages
+
+- [Homepage](https://www.novasproutlearning.com/)
+- [Math tutoring](https://www.novasproutlearning.com/math-tutoring)
+- [Science and STEM tutoring](https://www.novasproutlearning.com/science-tutoring)
+- [Coding and data skills](https://www.novasproutlearning.com/coding-data-skills)
+- [Study skills](https://www.novasproutlearning.com/study-skills)
+- [Pricing](https://www.novasproutlearning.com/pricing)
+- [Request a free demo class](https://www.novasproutlearning.com/contact)
+- [Learning resources](https://www.novasproutlearning.com/resources)
+- [AI study tool](https://www.novasproutlearning.com/ai-lesson-generator)
+
+## Policies and contact
+
+- [Privacy policy](https://www.novasproutlearning.com/privacy)
+- [Refund policy](https://www.novasproutlearning.com/refund-policy)
+- Email: novasproutlearning@gmail.com
+- Phone: +1 775-248-8317

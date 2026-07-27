@@ -61,7 +61,7 @@ export default function AILessonGeneratorPage() {
         <div className="booking-actions">
           <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
             <CalendarCheck aria-hidden="true" size={18} />
-            Book a Free Demo
+            Request a Free Demo Class
             <ArrowRight aria-hidden="true" size={18} />
           </TrackedLink>
         </div>

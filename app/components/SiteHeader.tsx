@@ -29,10 +29,10 @@ export default function SiteHeader() {
           <a href="/#subjects" onClick={() => setOpen(false)}>Subjects</a>
           <a href="/#how-it-works" onClick={() => setOpen(false)}>How It Works</a>
           <a href="/pricing" onClick={() => setOpen(false)}>Pricing</a>
-          <a href="/#why" onClick={() => setOpen(false)}>Why NovaSprout</a>
+          <a href="/#tutors" onClick={() => setOpen(false)}>Tutors</a>
           <a className="ns-nav-secondary" href="/become-a-tutor" onClick={() => setOpen(false)}>Become a Tutor</a>
           <a className="ns-button ns-button-primary ns-nav-cta" href="/contact#free-demo" onClick={() => setOpen(false)}>
-            Book a Free Demo
+            Request a Free Demo Class
           </a>
         </nav>
       </div>

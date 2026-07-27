@@ -19,7 +19,7 @@ export default function SubjectLanding({ slug }: SubjectLandingProps) {
           <h1>{subject.hero}</h1>
           <p>{subject.copy}</p>
           <div className="ns-actions">
-            <a className="ns-button ns-button-primary" href="#free-demo">Book a Free Demo <ArrowRight aria-hidden="true" /></a>
+            <a className="ns-button ns-button-primary" href="#free-demo">Request a Free Demo Class <ArrowRight aria-hidden="true" /></a>
             <a className="ns-button ns-button-secondary" href="#topics">See Topics</a>
           </div>
         </div>

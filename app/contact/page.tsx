@@ -6,7 +6,7 @@ import SiteHeader from "../components/SiteHeader";
 import { contactEmail, contactPhone, contactPhoneHref } from "../site-data";
 
 export const metadata: Metadata = {
-  title: "Book a Free Demo Class | NovaSprout Learning",
+  title: "Request a Free Demo Class | NovaSprout Learning",
   description: "Tell NovaSprout what tutoring support the student needs and request a free online demo class.",
   alternates: { canonical: "/contact" }
 };
