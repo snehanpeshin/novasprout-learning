@@ -1,9 +1,5 @@
+import { authorizeVerifiedAppleAccess } from "./appleAccessAuthorization.ts";
 import { verifyAppleTransactionJws } from "./appleIap.ts";
-import {
-  claimAppleLessonPurchase,
-  claimAppleSubscriptionLesson,
-  hasActiveAppleLessonPurchase
-} from "./supabase.ts";
 
 export async function isAiAccessAllowed(
   request: Request,
@@ -30,30 +26,7 @@ export async function isAiAccessAllowed(
   const appleAccess = await verifyAppleTransactionJws(appleJws);
   if (!appleAccess) return false;
 
-  if (appleAccess.kind === "subscription") {
-    if (!consumeSingleLesson) return true;
-    try {
-      return await claimAppleSubscriptionLesson({
-        expiresDate: appleAccess.expiresDate ?? 0,
-        productId: appleAccess.productId,
-        transactionId: appleAccess.transactionId
-      });
-    } catch {
-      return false;
-    }
-  }
-
-  try {
-    return consumeSingleLesson
-      ? await claimAppleLessonPurchase({
-          productId: appleAccess.productId,
-          transactionId: appleAccess.transactionId
-        })
-      : await hasActiveAppleLessonPurchase(appleAccess.transactionId);
-  } catch {
-    return false;
-  }
-
+  return authorizeVerifiedAppleAccess(appleAccess, consumeSingleLesson);
 }
 
 export const aiAccessError =

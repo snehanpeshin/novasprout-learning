@@ -35,9 +35,17 @@ Prices displayed by the app come from StoreKit and are localized by Apple.
 1. In **Business**, accept the Paid Apps Agreement.
 2. Complete banking and tax information for Karigari Home LLC.
 3. Create both products exactly as listed above.
-4. Add an App Review screenshot and localization to each product.
+4. Add an App Review screenshot and localization to each product. The review
+   screenshot is private to App Review and is different from promotional art.
 5. Add the subscription's privacy and standard-EULA links.
 6. Submit the products with the app version for review.
+
+Promotional artwork is optional unless the purchase is promoted on the App
+Store product page or used for win-back offers. For the current resubmission,
+delete the rejected screenshot from the promotional image field. Any future
+promotional artwork must be a flattened 1024 x 1024 RGB JPG or PNG with no
+rounded corners; it should uniquely represent the purchase and should not be an
+app screenshot.
 
 The first subscription and in-app purchase should be included with a new app
 version submission. Explain both products in App Review Notes.

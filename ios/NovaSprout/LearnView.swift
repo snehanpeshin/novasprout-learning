@@ -259,8 +259,26 @@ struct LearnView: View {
         }
 
         Task {
-            if await viewModel.generate(access: access) {
-                await purchases.markSingleLessonStarted(using: access)
+            var generationAccess = access
+            var generated = await viewModel.generate(access: generationAccess)
+
+            if !generated,
+               viewModel.lastServerStatus == 401,
+               generationAccess.betaCode.isEmpty,
+               !generationAccess.appleTransactionJWS.isEmpty {
+                await purchases.refresh()
+                let refreshedAccess = purchases.accessForNewLesson(betaCode: settings.accessCode)
+                if !refreshedAccess.isEmpty {
+                    generationAccess = refreshedAccess
+                    generated = await viewModel.generate(access: generationAccess)
+                }
+            }
+
+            if generated {
+                await purchases.markSingleLessonStarted(using: generationAccess)
+            } else if viewModel.lastServerStatus == 401,
+                      generationAccess.betaCode.isEmpty {
+                viewModel.errorMessage = "Your App Store purchase could not be verified. Open Settings, restore purchases, and try again."
             }
         }
     }

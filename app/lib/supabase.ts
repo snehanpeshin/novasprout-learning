@@ -23,11 +23,30 @@ type SubscriptionRecord = {
 };
 
 function getSupabaseConfig() {
-  const url = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.SUPABASE_URL?.trim();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
   if (!url || !serviceRoleKey) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    throw new Error(
+      "Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Amplify environment variables, then redeploy."
+    );
+  }
+
+  if (url.includes("your-project") || serviceRoleKey === "REPLACE_ME") {
+    throw new Error(
+      "Replace the example Supabase values in Amplify with credentials from your Supabase project, then redeploy."
+    );
+  }
+
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    throw new Error("SUPABASE_URL is not a valid URL. Correct it in Amplify, then redeploy.");
+  }
+
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+    throw new Error("SUPABASE_URL must start with https:// (or http:// for local development).");
   }
 
   return { serviceRoleKey, url: url.replace(/\/$/, "") };
@@ -35,19 +54,38 @@ function getSupabaseConfig() {
 
 async function supabaseFetch(path: string, init: RequestInit = {}) {
   const { serviceRoleKey, url } = getSupabaseConfig();
-  const response = await fetch(`${url}/rest/v1/${path}`, {
-    ...init,
-    headers: {
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-      "Content-Type": "application/json",
-      ...(init.headers ?? {})
-    }
-  });
+  let response: Response;
+
+  try {
+    response = await fetch(`${url}/rest/v1/${path}`, {
+      ...init,
+      cache: "no-store",
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        "Content-Type": "application/json",
+        ...(init.headers ?? {})
+      }
+    });
+  } catch {
+    throw new Error(
+      "Could not reach the payment database. Check SUPABASE_URL in Amplify and confirm the Supabase project is active."
+    );
+  }
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Supabase request failed: ${response.status} ${body}`);
+    if (response.status === 401 || response.status === 403) {
+      throw new Error(
+        "Supabase rejected the server credentials. Check SUPABASE_SERVICE_ROLE_KEY in Amplify and redeploy."
+      );
+    }
+    if (response.status === 404) {
+      throw new Error(
+        "The payment tables are missing. Run docs/database-schema.sql in the Supabase SQL Editor."
+      );
+    }
+    throw new Error(`The payment database returned error ${response.status}. Check the Supabase logs.`);
   }
 
   return response;

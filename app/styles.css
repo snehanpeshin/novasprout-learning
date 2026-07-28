@@ -3166,6 +3166,11 @@ footer div span:first-child {
   font-size: 1.6rem;
 }
 
+.metric-grid strong.metric-unavailable {
+  color: var(--muted);
+  font-size: 1rem;
+}
+
 .report-row {
   align-items: center;
   border-top: 1px solid var(--line);
@@ -3181,6 +3186,39 @@ footer div span:first-child {
   color: var(--ink);
 }
 
+.admin-status {
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  padding: 5px 9px;
+  white-space: nowrap;
+}
+
+.admin-status-active {
+  background: #eaf8f1;
+  border-color: #9ed7bc;
+  color: #17613f !important;
+}
+
+.admin-status-setup_required {
+  background: #fff8dc;
+  border-color: #f4d071;
+  color: #755100 !important;
+}
+
+.admin-status-planned {
+  background: #f2f5f7;
+  border-color: var(--line);
+  color: var(--muted) !important;
+}
+
+.admin-empty {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin: 12px 0 0;
+}
+
 .setup-warning {
   background: #fff8dc;
   border-color: #f4d071;
@@ -3190,6 +3228,18 @@ footer div span:first-child {
   color: var(--muted);
   line-height: 1.6;
   margin-bottom: 0;
+}
+
+.setup-steps {
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 12px 0 0;
+  padding-left: 22px;
+}
+
+.setup-steps code {
+  color: var(--ink);
+  font-size: 0.85em;
 }
 
 @media (max-width: 1240px) {

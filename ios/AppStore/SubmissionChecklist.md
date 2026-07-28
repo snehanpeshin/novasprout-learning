@@ -20,6 +20,7 @@
 ## Build and review
 
 - Select the Karigari Home LLC signing team in Xcode.
+- For the July 2026 rejection resubmission, upload and select version `1.0 (6)`.
 - Test on at least one current iPhone and iPad simulator or device.
 - Verify the free sample, AI access, PDF lesson, timer, quiz, local library, email, phone, and Calendly links.
 - Archive a Release build and upload it through Xcode Organizer.
@@ -33,6 +34,10 @@
 - Run the latest Supabase schema and add the Apple IAP Amplify variables.
 - Confirm signed-transaction verification in TestFlight sandbox testing.
 - Submit both in-app purchases with the app version for review.
+- Do not use an app screenshot as promoted In-App Purchase artwork. Delete the
+  promotional image if the purchase is not being promoted.
+- Use `AppReviewResponse-2026-07-27.md` for the current rejection response only
+  after every required check in that file is complete.
 
 ## Child safety and privacy
 

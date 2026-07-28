@@ -8,6 +8,7 @@ final class LessonGeneratorViewModel: ObservableObject {
     @Published private(set) var stage: GenerationStage?
     @Published private(set) var isGenerating = false
     @Published private(set) var isBuildingDeck = false
+    @Published private(set) var lastServerStatus: Int?
     @Published var errorMessage = ""
     @Published var showOverview = false
     @Published var playerConfiguration: LessonPlayerConfiguration?
@@ -28,6 +29,7 @@ final class LessonGeneratorViewModel: ObservableObject {
         }
 
         errorMessage = ""
+        lastServerStatus = nil
         isGenerating = true
         stage = .lesson
         let lessonContext = LessonContext(grade: request.grade, subject: request.subject, topic: request.topic)
@@ -43,6 +45,11 @@ final class LessonGeneratorViewModel: ObservableObject {
             showOverview = true
             isGenerating = false
             return true
+        } catch let error as NovaAPIError {
+            if case .serverError(let status, _) = error {
+                lastServerStatus = status
+            }
+            errorMessage = error.localizedDescription
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -96,6 +103,7 @@ final class LessonGeneratorViewModel: ObservableObject {
         lesson = nil
         context = nil
         stage = nil
+        lastServerStatus = nil
         errorMessage = ""
         showOverview = false
         playerConfiguration = nil

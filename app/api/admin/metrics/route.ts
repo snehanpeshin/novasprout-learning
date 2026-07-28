@@ -3,12 +3,48 @@ import { getPayments, getSubscriptions } from "../../../lib/supabase";
 
 export const runtime = "nodejs";
 
+type PlatformStatus = {
+  aiAccess: "active" | "setup_required";
+  lessonModes: "active";
+  paymentReporting: "active" | "setup_required";
+  studentRecords: "planned";
+};
+
+function getPlatformStatus(paymentDatabaseConnected: boolean): PlatformStatus {
+  const aiAccessConfigured = Boolean(
+    process.env.AI_LESSON_ACCESS_TOKEN?.trim() ||
+      process.env.AI_LESSON_ALLOWED_EMAILS?.trim()
+  );
+  const stripeConfigured = Boolean(
+    process.env.STRIPE_SECRET_KEY?.trim() &&
+      process.env.STRIPE_WEBHOOK_SECRET?.trim()
+  );
+
+  return {
+    aiAccess: aiAccessConfigured ? "active" : "setup_required",
+    lessonModes: "active",
+    paymentReporting:
+      stripeConfigured && paymentDatabaseConnected ? "active" : "setup_required",
+    studentRecords: "planned"
+  };
+}
+
+function adminJson(body: object, init?: ResponseInit) {
+  return NextResponse.json(body, {
+    ...init,
+    headers: {
+      "Cache-Control": "no-store, max-age=0",
+      ...(init?.headers ?? {})
+    }
+  });
+}
+
 export async function GET(request: Request) {
   const expectedToken = process.env.ADMIN_DASHBOARD_TOKEN?.trim();
   const providedToken = request.headers.get("x-admin-token")?.trim();
 
   if (!expectedToken || providedToken !== expectedToken) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return adminJson({ error: "Unauthorized" }, { status: 401 });
   }
 
   let payments;
@@ -20,10 +56,11 @@ export async function GET(request: Request) {
     const setupWarning =
       error instanceof Error ? error.message : "Could not connect to the payment database.";
 
-    return NextResponse.json({
+    return adminJson({
       activeSubscriptions: [],
       customers: [],
       payments: [],
+      platformStatus: getPlatformStatus(false),
       revenueByDba: {},
       revenueByMonth: {},
       setupWarning,
@@ -61,10 +98,11 @@ export async function GET(request: Request) {
     ).values()
   );
 
-  return NextResponse.json({
+  return adminJson({
     activeSubscriptions,
     customers,
     payments,
+    platformStatus: getPlatformStatus(true),
     revenueByDba,
     revenueByMonth,
     totalRevenue
