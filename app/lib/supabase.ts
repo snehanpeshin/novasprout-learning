@@ -140,7 +140,9 @@ export async function claimAppleLessonPurchase({
     headers: { Prefer: "return=minimal" },
     method: "POST"
   }).catch((error) => {
-    if (error instanceof Error && error.message.includes("409")) return null;
+    if (error instanceof Error && error.message.includes("409")) {
+      return null;
+    }
     throw error;
   });
 

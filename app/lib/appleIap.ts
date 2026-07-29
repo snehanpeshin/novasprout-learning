@@ -1,11 +1,10 @@
-import { readFileSync } from "fs";
-import path from "path";
 import {
   Environment,
   SignedDataVerifier,
   Type,
   type JWSTransactionDecodedPayload
 } from "@apple/app-store-server-library";
+import { appleRootCertificates } from "./appleRootCertificates.ts";
 
 export const appleSingleLessonProductId =
   process.env.APPLE_IAP_SINGLE_LESSON_PRODUCT_ID?.trim() ||
@@ -23,27 +22,10 @@ export type VerifiedAppleAccess = {
   transactionId: string;
 };
 
-const certificateNames = [
-  "AppleIncRootCertificate.cer",
-  "AppleRootCA-G2.cer",
-  "AppleRootCA-G3.cer"
-];
-
-let rootCertificates: Buffer[] | null = null;
-
-function loadAppleRootCertificates() {
-  if (!rootCertificates) {
-    rootCertificates = certificateNames.map((name) =>
-      readFileSync(path.join(process.cwd(), "app/lib/apple-root-certificates", name))
-    );
-  }
-  return rootCertificates;
-}
-
 function verifier(environment: Environment) {
   const appAppleId = Number(process.env.APPLE_APP_ID);
   return new SignedDataVerifier(
-    loadAppleRootCertificates(),
+    appleRootCertificates,
     true,
     environment,
     "com.karigarihome.novasprout",
@@ -98,9 +80,13 @@ export async function verifyAppleTransactionJws(jws: string) {
       const payload = await verifier(environment).verifyAndDecodeTransaction(jws);
       const access = validAccess(payload);
       if (access) return access;
-    } catch {
+    } catch (error) {
       // App Review transactions are sandbox transactions, while customer
       // transactions are production. Try the other trusted Apple environment.
+      console.error(
+        `[apple-iap] Transaction verification failed in ${environment}:`,
+        error instanceof Error ? error.message : "Unknown verification error."
+      );
     }
   }
 

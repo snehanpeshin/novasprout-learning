@@ -72,6 +72,9 @@ struct LearnView: View {
                 Text("Create a focused visual lesson, study privately, then take a scored quiz.")
                     .font(.subheadline)
                     .foregroundStyle(NovaPalette.muted)
+                Text("Free sample included. Personalized AI lessons require an in-app purchase.")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(NovaPalette.blue)
             }
         }
     }
@@ -111,7 +114,7 @@ struct LearnView: View {
             }
             Spacer(minLength: 8)
             if !purchases.hasMonthlyAccess {
-                Button("View") { showPurchaseOptions = true }
+                Button("Purchase") { showPurchaseOptions = true }
                     .buttonStyle(.bordered)
             }
         }

@@ -86,8 +86,25 @@ test("prevents an already claimed consumable transaction from being reused", asy
     await authorizeVerifiedAppleAccess(
       singleLesson,
       true,
-      accessStore({ claimLessonPurchase: async () => false })
+      accessStore({
+        claimLessonPurchase: async () => false,
+        hasActiveLessonPurchase: async () => false
+      })
     ),
     false
+  );
+});
+
+test("allows a claimed consumable transaction to retry during its active window", async () => {
+  assert.equal(
+    await authorizeVerifiedAppleAccess(
+      singleLesson,
+      true,
+      accessStore({
+        claimLessonPurchase: async () => false,
+        hasActiveLessonPurchase: async () => true
+      })
+    ),
+    true
   );
 });

@@ -39,12 +39,14 @@ export async function authorizeVerifiedAppleAccess(
   }
 
   try {
-    return consumeSingleLesson
-      ? await store.claimLessonPurchase({
-          productId: appleAccess.productId,
-          transactionId: appleAccess.transactionId
-        })
-      : await store.hasActiveLessonPurchase(appleAccess.transactionId);
+    if (consumeSingleLesson) {
+      const claimed = await store.claimLessonPurchase({
+        productId: appleAccess.productId,
+        transactionId: appleAccess.transactionId
+      });
+      return claimed || await store.hasActiveLessonPurchase(appleAccess.transactionId);
+    }
+    return await store.hasActiveLessonPurchase(appleAccess.transactionId);
   } catch {
     // Consumables must remain fail-closed so one transaction cannot be replayed.
     console.error("[apple-iap] Consumable purchase store is unavailable.");
