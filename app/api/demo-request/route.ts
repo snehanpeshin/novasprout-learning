@@ -8,6 +8,10 @@ function clean(value: unknown, maxLength: number) {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
+function emailFallback() {
+  return NextResponse.json({ ok: true, delivery: "email" });
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -39,31 +43,35 @@ export async function POST(request: Request) {
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceKey) {
-      return NextResponse.json({ ok: true, delivery: "email" });
+      return emailFallback();
     }
 
-    const recent = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const duplicateCheck = await fetch(
-      `${supabaseUrl}/rest/v1/demo_requests?email=eq.${encodeURIComponent(lead.email)}&created_at=gte.${encodeURIComponent(recent)}&select=id&limit=1`,
-      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` }, cache: "no-store" }
-    );
-    if (duplicateCheck.ok && ((await duplicateCheck.json()) as unknown[]).length > 0) {
-      return NextResponse.json({ ok: true, duplicate: true });
+    try {
+      const recent = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const duplicateCheck = await fetch(
+        `${supabaseUrl}/rest/v1/demo_requests?email=eq.${encodeURIComponent(lead.email)}&created_at=gte.${encodeURIComponent(recent)}&select=id&limit=1`,
+        { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` }, cache: "no-store" }
+      );
+      if (duplicateCheck.ok && ((await duplicateCheck.json()) as unknown[]).length > 0) {
+        return NextResponse.json({ ok: true, duplicate: true });
+      }
+
+      const saved = await fetch(`${supabaseUrl}/rest/v1/demo_requests`, {
+        method: "POST",
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal"
+        },
+        body: JSON.stringify(lead)
+      });
+      if (!saved.ok) return emailFallback();
+
+      return NextResponse.json({ ok: true });
+    } catch {
+      return emailFallback();
     }
-
-    const saved = await fetch(`${supabaseUrl}/rest/v1/demo_requests`, {
-      method: "POST",
-      headers: {
-        apikey: serviceKey,
-        Authorization: `Bearer ${serviceKey}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal"
-      },
-      body: JSON.stringify(lead)
-    });
-    if (!saved.ok) throw new Error("Could not save demo request");
-
-    return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "Unable to save the request." }, { status: 500 });
   }
