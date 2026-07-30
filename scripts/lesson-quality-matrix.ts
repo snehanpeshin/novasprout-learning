@@ -570,7 +570,7 @@ function structuralIssues(plan: LessonSlidePlan, profile: CycleProfile) {
     issues.push("visible-answer");
   }
   const unrepairedErrors = (plan.qualityFindings ?? []).filter(
-    (finding) => finding.severity === "error" && !/Automatically repaired/i.test(finding.repair)
+    (finding) => finding.severity === "error" && !/Automatically repaired/i.test(finding.repair ?? "")
   );
   issues.push(...unrepairedErrors.map((finding) => finding.code));
   return { issues: [...new Set(issues)], placeholders };
@@ -677,7 +677,6 @@ async function runCase(scenario: Scenario, cycle: number, outputDir: string): Pr
   const profile = profileFor(cycle);
   const lesson = lessonFor(scenario, cycle);
   const plan = legacyLessonToSlidePlan({
-    audienceMode: profile.audienceMode,
     context: { grade: scenario.grade, subject: scenario.subject, topic: scenario.topic },
     lesson
   });
@@ -785,7 +784,7 @@ async function main() {
   }
   process.env.AI_LESSON_ACCESS_TOKEN = accessToken;
   process.env.LATEX_COMPILE_SERVICE_URL = "";
-  process.env.NODE_ENV = "development";
+  Object.assign(process.env, { NODE_ENV: "development" });
 
   const outputDir = path.resolve("tmp", "lesson-quality-matrix", `cycle-${cycle}`);
   await mkdir(outputDir, { recursive: true });
