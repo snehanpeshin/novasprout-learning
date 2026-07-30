@@ -1,20 +1,34 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { CheckCircle2, LoaderCircle, Mail, Send } from "lucide-react";
 import { bookingUrl, contactEmail } from "../site-data";
 
 const subjects = ["Math", "Science & STEM", "Coding & Data Skills", "Study Skills", "Not sure yet"];
 
 export default function ContactForm() {
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "fallback" | "error">("idle");
   const [fallbackEmail, setFallbackEmail] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [timezone, setTimezone] = useState("");
+
+  useEffect(() => {
+    setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || "");
+  }, []);
 
   async function submitRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (status === "sending" || status === "sent") return;
 
     const form = event.currentTarget;
+    setErrorMessage("");
+    if (!form.checkValidity()) {
+      setStatus("error");
+      setErrorMessage("Please complete the highlighted required field.");
+      form.reportValidity();
+      return;
+    }
+
     const data = Object.fromEntries(new FormData(form).entries());
     setStatus("sending");
 
@@ -28,7 +42,8 @@ export default function ContactForm() {
       `Time zone: ${data.timezone}`,
       `Message: ${data.message || "Not provided"}`
     ].join("\n");
-    setFallbackEmail(`mailto:${contactEmail}?subject=${encodeURIComponent("Free Demo Class request")}&body=${encodeURIComponent(emailBody)}`);
+    const preparedEmail = `mailto:${contactEmail}?subject=${encodeURIComponent("Free Demo Class request")}&body=${encodeURIComponent(emailBody)}`;
+    setFallbackEmail(preparedEmail);
 
     try {
       const response = await fetch("/api/demo-request", {
@@ -36,11 +51,17 @@ export default function ContactForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error("Request failed");
+      const result = await response.json().catch(() => ({})) as { delivery?: string; error?: string };
+      if (!response.ok) throw new Error(result.error || "Online delivery is temporarily unavailable.");
+      if (result.delivery === "email") {
+        setStatus("fallback");
+        return;
+      }
       setStatus("sent");
       form.reset();
-    } catch {
-      setStatus("error");
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Online delivery is temporarily unavailable.");
+      setStatus("fallback");
     }
   }
 
@@ -59,7 +80,7 @@ export default function ContactForm() {
   }
 
   return (
-    <form className="ns-intake-form" onSubmit={submitRequest}>
+    <form className="ns-intake-form" noValidate onSubmit={submitRequest}>
       <div className="ns-form-intro">
         <p className="ns-card-kicker">What happens next</p>
         <h3>Reviewed by the NovaSprout team.</h3>
@@ -95,7 +116,14 @@ export default function ContactForm() {
         </label>
         <label>
           Time zone
-          <input name="timezone" placeholder="For example, Eastern Time" maxLength={80} required />
+          <input
+            name="timezone"
+            placeholder="For example, Eastern Time"
+            maxLength={80}
+            required
+            value={timezone}
+            onChange={(event) => setTimezone(event.target.value)}
+          />
         </label>
         <label className="ns-form-wide">
           Anything else? <span>(optional)</span>
@@ -113,8 +141,19 @@ export default function ContactForm() {
       </button>
       {status === "error" ? (
         <div className="ns-form-error" role="alert">
-          <p>We couldn’t save the request just now.</p>
-          <a href={fallbackEmail}><Mail aria-hidden="true" />Send the same details by email</a>
+          <p>{errorMessage}</p>
+        </div>
+      ) : null}
+      {status === "fallback" ? (
+        <div className="ns-form-fallback" role="status">
+          <div>
+            <strong>Finish your request by email.</strong>
+            <p>{errorMessage || `Your details are ready to send to ${contactEmail}.`}</p>
+          </div>
+          <a className="ns-button ns-button-secondary" href={fallbackEmail}>
+            <Mail aria-hidden="true" />
+            Open prepared email
+          </a>
         </div>
       ) : null}
     </form>

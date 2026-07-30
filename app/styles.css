@@ -371,6 +371,11 @@ body {
 .ns-form-error p { color: #7c3023; font-size: 0.82rem; margin: 0 0 7px; }
 .ns-form-error a { align-items: center; color: #7c3023; display: inline-flex; font-size: 0.8rem; font-weight: 800; gap: 7px; }
 .ns-form-error svg { height: 16px; width: 16px; }
+.ns-form-fallback { align-items: center; background: var(--ns-green-soft); border-left: 3px solid var(--ns-green); display: flex; gap: 18px; justify-content: space-between; margin-top: 16px; padding: 14px 16px; }
+.ns-form-fallback strong { color: var(--ns-ink); display: block; font-size: 0.86rem; }
+.ns-form-fallback p { font-size: 0.77rem; line-height: 1.45; margin: 3px 0 0; }
+.ns-form-fallback .ns-button { flex: 0 0 auto; min-height: 40px; padding: 9px 13px; }
+.ns-form-fallback .ns-button svg { height: 16px; width: 16px; }
 .ns-form-success { align-self: center; background: white; border-radius: 7px; padding: clamp(34px, 5vw, 58px); }
 .ns-form-success > svg { color: var(--ns-green); height: 38px; width: 38px; }
 .ns-form-success h3 { font-size: 1.7rem; margin: 16px 0 10px; }
@@ -541,6 +546,8 @@ body {
   .ns-steps,
   .ns-pricing-steps { grid-template-columns: 1fr; }
   .ns-steps { gap: 26px; }
+  .ns-form-fallback { align-items: stretch; flex-direction: column; }
+  .ns-form-fallback .ns-button { justify-content: center; width: 100%; }
   .ns-expect-points { border-left: 0; border-top: 1px solid #bdcac5; padding-left: 0; padding-top: 15px; }
   .ns-footer-grid { grid-template-columns: repeat(2, 1fr); }
   .ns-footer-brand { grid-column: 1 / -1; }

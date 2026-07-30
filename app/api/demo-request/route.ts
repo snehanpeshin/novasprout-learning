@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceKey) {
-      return NextResponse.json({ error: "Request storage is not configured." }, { status: 503 });
+      return NextResponse.json({ ok: true, delivery: "email" });
     }
 
     const recent = new Date(Date.now() - 5 * 60 * 1000).toISOString();
