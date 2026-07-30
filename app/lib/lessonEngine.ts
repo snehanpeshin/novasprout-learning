@@ -95,6 +95,7 @@ export type StructuredSlideSpec = {
   pedagogicalRole: string;
   slideId: string;
   sourceOrDerivation: string;
+  slideType: string;
   title: string;
   validationRequirements: string[];
   visualIntent?: SemanticVisualSpec;
@@ -141,7 +142,8 @@ type EngineSlide = {
   layoutType?: string;
   math?: StructuredFormula[];
   purpose?: string;
-  speakerNotes?: string;
+  slideType?: string;
+  speakerNotes?: unknown;
   studentContent?: {
     answer?: string;
     bullets?: string[];
@@ -776,6 +778,7 @@ export function buildStructuredLessonSpec(plan: EnhancedEnginePlan): StructuredL
       pedagogicalRole: clean(slide.purpose, 180),
       slideId: clean(slide.id, 80) || `slide-${index + 1}`,
       sourceOrDerivation: (slide.math ?? []).length ? "Validated concept graph and deterministic mathematics layer." : "Lesson objective and topic-grounded content model.",
+      slideType: slide.slideType ?? slide.type ?? "concept_explanation",
       title: clean(slide.title, 90),
       validationRequirements: ["topic relevance", "complete learner-facing sentences", "layout budget", ...(slide.math?.length ? ["valid canonical LaTeX", "defined variables", "numeric consistency"] : [])],
       visualIntent: slide.visuals?.[0] ? {

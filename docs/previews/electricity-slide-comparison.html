@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NovaSprout lesson slide comparison</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #dce4e8;
+      color: #20323f;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    .slide {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      overflow: hidden;
+      background: #f8faf7;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 88px;
+      padding: 0 46px;
+      background: #123047;
+      color: white;
+    }
+    .header h1 { margin: 0; font-size: 34px; line-height: 1.1; }
+    .header span { font-size: 18px; font-weight: 700; }
+    .footer {
+      position: absolute;
+      inset: auto 0 0;
+      display: flex;
+      justify-content: space-between;
+      height: 34px;
+      padding: 8px 46px;
+      color: #506472;
+      font-size: 15px;
+      border-top: 1px solid #d5dfe2;
+    }
+    .before-content {
+      display: grid;
+      grid-template-columns: 40% 60%;
+      gap: 32px;
+      padding: 48px;
+    }
+    .tiny-copy {
+      width: 340px;
+      padding: 16px;
+      border-left: 5px solid #ef6f61;
+      background: white;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+    .map {
+      position: relative;
+      width: 620px;
+      height: 480px;
+    }
+    .node {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: 150px;
+      min-height: 64px;
+      padding: 8px;
+      border: 2px solid #4a90e2;
+      border-radius: 8px;
+      background: white;
+      text-align: center;
+      font-size: 19px;
+      font-weight: 700;
+    }
+    .node.center {
+      left: 235px;
+      top: 190px;
+      border-color: #123047;
+      background: #f4c95d;
+    }
+    .node.a { left: 25px; top: 40px; }
+    .node.b { right: 25px; top: 40px; }
+    .node.c { left: 25px; bottom: 40px; }
+    .node.d { right: 25px; bottom: 40px; }
+    .map svg { position: absolute; inset: 0; }
+    .after-content {
+      display: grid;
+      grid-template-columns: 35% 65%;
+      gap: 30px;
+      padding: 36px 46px 48px;
+    }
+    .idea {
+      margin-bottom: 22px;
+      padding: 18px;
+      border-left: 6px solid #ef6f61;
+      background: #fff3f1;
+      font-size: 22px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+    .takeaways {
+      margin: 0;
+      padding-left: 24px;
+      font-size: 20px;
+      line-height: 1.55;
+    }
+    .diagram {
+      position: relative;
+      height: 500px;
+      padding: 16px;
+      border: 2px solid #b7d5e8;
+      border-radius: 8px;
+      background: white;
+    }
+    .diagram svg { width: 100%; height: 100%; }
+    .caption {
+      position: absolute;
+      left: 50%;
+      bottom: 10px;
+      transform: translateX(-50%);
+      width: max-content;
+      max-width: 90%;
+      padding: 8px 14px;
+      border-radius: 6px;
+      background: #e7f5ef;
+      color: #0d6c51;
+      font-weight: 700;
+      font-size: 17px;
+    }
+  </style>
+</head>
+<body>
+  <section class="slide" id="before" aria-label="Before: generic keyword map">
+    <header class="header">
+      <h1>Voltage Current Resistance And Power In Circuits...</h1>
+      <span>Explore</span>
+    </header>
+    <main class="before-content">
+      <div>
+        <div class="tiny-copy">
+          Electricity includes voltage, current, resistance, and power. Learn the connected ideas and then practice.
+        </div>
+      </div>
+      <div class="map" aria-label="Generic five-node map">
+        <svg viewBox="0 0 620 480" aria-hidden="true">
+          <g stroke="#8297a3" stroke-width="3">
+            <line x1="310" y1="222" x2="100" y2="72"/>
+            <line x1="310" y1="222" x2="520" y2="72"/>
+            <line x1="310" y1="222" x2="100" y2="408"/>
+            <line x1="310" y1="222" x2="520" y2="408"/>
+          </g>
+        </svg>
+        <div class="node center">What connects?</div>
+        <div class="node a">And</div>
+        <div class="node b">Find</div>
+        <div class="node c">Connected</div>
+        <div class="node d">Shows</div>
+      </div>
+    </main>
+    <footer class="footer"><span>NovaSprout Learning</span><span>Before</span></footer>
+  </section>
+
+  <section class="slide" id="after" aria-label="After: semantic circuit diagram">
+    <header class="header">
+      <h1>A Complete Electric Circuit</h1>
+      <span>Explore</span>
+    </header>
+    <main class="after-content">
+      <div>
+        <div class="idea">Electric current needs a closed conducting path and an energy source.</div>
+        <ul class="takeaways">
+          <li>The long battery plate is positive (+).</li>
+          <li>The short battery plate is negative (-).</li>
+          <li>Conventional current moves from + to - around the outer circuit.</li>
+        </ul>
+      </div>
+      <div class="diagram" aria-label="Closed circuit with battery, switch, lamp, and current arrows">
+        <svg viewBox="0 0 760 460" role="img">
+          <defs>
+            <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L9,3 z" fill="#4a90e2"/>
+            </marker>
+          </defs>
+          <g fill="none" stroke="#20323f" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M110 100 H315"/>
+            <path d="M390 100 H650 V350 H455"/>
+            <path d="M365 350 H110 V270"/>
+            <path d="M110 190 V100"/>
+            <line x1="315" y1="100" x2="390" y2="100" stroke="#18a67a"/>
+            <line x1="70" y1="190" x2="150" y2="190" stroke-width="12"/>
+            <line x1="84" y1="270" x2="136" y2="270" stroke-width="6"/>
+          </g>
+          <circle cx="410" cy="350" r="45" fill="#fff4cc" stroke="#d6a91c" stroke-width="6"/>
+          <path d="M380 320 L440 380 M440 320 L380 380" stroke="#d6a91c" stroke-width="6"/>
+          <g fill="#123047" font-family="Arial" font-size="22" font-weight="700">
+            <text x="28" y="185">+</text>
+            <text x="43" y="278">-</text>
+            <text x="18" y="235">battery</text>
+            <text x="306" y="72">closed switch</text>
+            <text x="385" y="430">lamp</text>
+          </g>
+          <g fill="none" stroke="#4a90e2" stroke-width="7" marker-end="url(#arrow)">
+            <path d="M170 100 H255"/>
+            <path d="M650 145 V225"/>
+            <path d="M300 350 H220"/>
+          </g>
+          <rect x="245" y="190" width="275" height="80" rx="8" fill="#edf6fc" stroke="#4a90e2" stroke-width="3"/>
+          <text x="382" y="220" text-anchor="middle" fill="#123047" font-family="Arial" font-size="20" font-weight="700">conventional current</text>
+          <text x="382" y="250" text-anchor="middle" fill="#123047" font-family="Arial" font-size="20">moves from + to -</text>
+        </svg>
+        <div class="caption">Interpretation: closing the switch completes the path.</div>
+      </div>
+    </main>
+    <footer class="footer"><span>NovaSprout Learning</span><span>After</span></footer>
+  </section>
+</body>
+</html>

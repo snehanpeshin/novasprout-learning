@@ -5,8 +5,18 @@ import {
   type QualityFinding,
   type StructuredFormula
 } from "./lessonEngine.ts";
+import { finalizeInstructionalPlan } from "./lessonSlides/lessonPlanner.ts";
+import { classifySlide } from "./lessonSlides/slideClassifier.ts";
+import type {
+  AssessmentItem,
+  DeckQualityScore,
+  SemanticSlideType,
+  SlideQualityScore,
+  SpeakerNotes,
+  VisualSelectionType
+} from "./lessonSlides/types.ts";
 
-export const lessonSlidePlanSchemaVersion = "2.0";
+export const lessonSlidePlanSchemaVersion = "3.0";
 
 export type SubjectKey = "math" | "science" | "ela" | "coding" | "general";
 
@@ -59,7 +69,19 @@ export type VisualType =
   | "solid_net"
   | "scientific_graph"
   | "structure_function"
-  | "tape_diagram";
+  | "tape_diagram"
+  | "battery_symbol"
+  | "circuit_diagram"
+  | "cover_illustration"
+  | "electric_power"
+  | "electric_relationships"
+  | "ohms_law"
+  | "parallel_circuit"
+  | "series_circuit"
+  | "series_parallel_comparison"
+  | "vocabulary_grid"
+  | "voltmeter_circuit"
+  | "worked_solution";
 
 export type VisualSpec = {
   accessibilityLabel: string;
@@ -74,6 +96,7 @@ export type VisualSpec = {
   points?: Array<{ x: number; y: number; z?: number }>;
   quantitiesEncoded?: string[];
   rows?: string[][];
+  sections?: Array<{ label: string; text: string }>;
   steps?: string[];
   tableHeaders?: string[];
   title?: string;
@@ -81,13 +104,16 @@ export type VisualSpec = {
 };
 
 export type LessonPlanSlide = {
+  assessment?: AssessmentItem;
   accessibilityLabel: string;
   estimatedMinutes: number;
   id: string;
   layoutType?: "equation-focus" | "full-visual" | "text-focus" | "text-visual";
   math?: StructuredFormula[];
   purpose?: string;
-  speakerNotes?: string;
+  qualityScore?: SlideQualityScore;
+  slideType: SemanticSlideType;
+  speakerNotes?: SpeakerNotes;
   studentContent: {
     answer?: string;
     bullets?: string[];
@@ -100,11 +126,13 @@ export type LessonPlanSlide = {
   };
   title: string;
   type: SlideType;
+  visualSelection?: VisualSelectionType;
   visualPriority: "high" | "medium" | "low";
   visuals: VisualSpec[];
 };
 
 export type LessonSlidePlan = {
+  answerKey?: AssessmentItem[];
   audienceMode?: AudienceMode;
   conceptGraph?: ConceptGraph;
   context: {
@@ -114,6 +142,7 @@ export type LessonSlidePlan = {
     topic: string;
   };
   durationMinutes: number;
+  deckQuality?: DeckQualityScore;
   engineVersion?: string;
   qualityFindings?: QualityFinding[];
   schemaVersion: typeof lessonSlidePlanSchemaVersion;
@@ -148,7 +177,6 @@ export function normalizePlainText(value?: string, maxLength = 900) {
   return (value ?? "")
     .replace(/-\s*[>¿]/g, " to ")
     .replace(/[→⇒]/g, " to ")
-    .replace(/[×✕]/g, " x ")
     .replace(/[–—]/g, "-")
     .replace(/\s+/g, " ")
     .trim()
@@ -273,6 +301,7 @@ function makeSlide(
     accessibilityLabel: `${title}. ${studentContent.keyIdea ?? studentContent.explanation ?? studentContent.question ?? ""}`.trim(),
     estimatedMinutes,
     id,
+    slideType: classifySlide({ legacyType: type }),
     studentContent,
     title,
     type,
@@ -725,78 +754,156 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
     ];
   }
 
-  if (subjectKey === "science" && /\b(electric|circuit|current|voltage|charge|resistance)\b/.test(lowerTopic)) {
+  if (subjectKey === "science" && /\b(electric(?:ity|al)?|circuits?|currents?|voltages?|charges?|resistances?)\b/.test(lowerTopic)) {
     return [
       makeSlide(
         "electric-circuit-map",
         "labeled_diagram",
-        "Simple Circuit Map",
+        "A Complete Electric Circuit",
         4,
         {
           bullets: [
             "A complete circuit is a closed path for electric charge.",
-            "A battery supplies the push that moves charge around the circuit.",
-            "A bulb or motor changes electrical energy into light, motion, heat, or sound."
+            "The long battery plate is positive (+); the short plate is negative (-).",
+            "Conventional current arrows point from positive to negative around the outer circuit."
           ],
           keyIdea: "Electricity needs a complete path and an energy source."
         },
         [
           {
-            accessibilityLabel: "Simple circuit with battery, wires, switch, and bulb labeled.",
+            accessibilityLabel: "Closed circuit with a correctly polarized battery, wires, switch, lamp, and conventional-current arrows.",
             caption: "Closed path means current can flow.",
             id: "simple-circuit-labeled",
-            labels: ["Battery", "Wire", "Switch", "Bulb", "Closed path"],
+            labels: ["Battery (+/-)", "Wire", "Closed switch", "Lamp", "Current (+ to -)"],
             title: "Simple circuit",
-            type: "labeled_system"
+            type: "circuit_diagram"
           }
         ]
       ),
       makeSlide(
-        "charge-flow",
-        "process",
-        "How Current Flows",
+        "electric-relationships",
+        "comparison",
+        "Four Measurable Circuit Ideas",
         4,
         {
           bullets: [
-            "Charges are already present in the wires.",
-            "The battery creates an electric push across the circuit.",
-            "When the path is closed, charges drift and transfer energy to devices."
+            "Voltage is potential difference, measured in volts (V).",
+            "Current is charge flow rate, measured in amperes (A).",
+            "Resistance opposes current, measured in ohms (Ω).",
+            "Power is energy transferred each second, measured in watts (W)."
           ],
-          keyIdea: "Current is the rate of charge flow, not a substance used up by the bulb."
+          keyIdea: "Voltage, current, resistance, and power describe different parts of one energy-transfer system."
         },
         [
           {
-            accessibilityLabel: "Process showing battery push, closed path, charge flow, and energy transfer.",
-            caption: "Push to flow to energy transfer.",
-            id: "current-flow-process",
-            steps: ["Battery push", "Closed path", "Charge flow", "Energy transfer"],
-            type: "process_sequence"
+            accessibilityLabel: "Four-part relationship display for voltage, current, resistance, and power with symbols and units.",
+            id: "electric-relationships-visual",
+            type: "electric_relationships"
           }
         ]
+      ),
+      {
+        ...makeSlide(
+          "ohms-law",
+          "concept",
+          "Ohm's Law and Rearrangements",
+          4,
+          {
+            bullets: ["Use V = IR when voltage, current, and resistance describe the same component.", "Keep volts, amperes, and ohms with every substituted value."],
+            keyIdea: "V = IR can be rearranged as I = V/R or R = V/I."
+          },
+          [{
+            accessibilityLabel: "Ohm's law triangle and three algebraically equivalent equations.",
+            equation: "V = I R",
+            id: "ohms-law-equations",
+            labels: ["V = IR", "I = V/R", "R = V/I", "1 Ω = 1 V/A"],
+            type: "ohms_law"
+          }]
+        ),
+        slideType: "formula_reference"
+      },
+      makeSlide(
+        "series-circuit",
+        "worked_example",
+        "Series Circuit: One Path",
+        5,
+        {
+          keyIdea: "Series resistances add, and the same current passes through every component.",
+          steps: ["GIVEN: V = 9 V, R₁ = 2 Ω, R₂ = 4 Ω.", "FIND: total resistance and current.", "Rₑq = 2 Ω + 4 Ω = 6 Ω.", "I = 9 V / 6 Ω = 1.5 A.", "CHECK: V/Ω gives A."]
+        },
+        [{
+          accessibilityLabel: "Nine-volt series circuit with two resistors, one path, and conventional-current arrows.",
+          id: "series-circuit-diagram",
+          labels: ["9 V battery", "R₁ = 2 Ω", "R₂ = 4 Ω", "I = 1.5 A"],
+          type: "series_circuit"
+        }]
       ),
       makeSlide(
-        "voltage-current-resistance",
+        "parallel-circuit",
+        "worked_example",
+        "Parallel Circuit: Branching Paths",
+        5,
+        {
+          keyIdea: "Each parallel branch has the source voltage, while total current is the sum of branch currents.",
+          steps: ["GIVEN: V = 9 V, R₁ = 6 Ω, R₂ = 3 Ω.", "I₁ = 9 V / 6 Ω = 1.5 A.", "I₂ = 9 V / 3 Ω = 3 A.", "I total = 1.5 A + 3 A = 4.5 A.", "CHECK: branch currents recombine."]
+        },
+        [{
+          accessibilityLabel: "Nine-volt parallel circuit with two resistor branches and labeled branch currents.",
+          id: "parallel-circuit-diagram",
+          labels: ["9 V battery", "R₁ = 6 Ω", "R₂ = 3 Ω", "I₁", "I₂"],
+          type: "parallel_circuit"
+        }]
+      ),
+      makeSlide(
+        "series-parallel-comparison",
         "comparison",
-        "Voltage, Current, Resistance",
+        "Series vs Parallel Circuits",
         4,
         {
-          keyIdea: "Voltage pushes, current flows, and resistance opposes the flow.",
-          bullets: ["Higher voltage can push more current.", "Higher resistance makes current smaller.", "Devices use resistance to change electrical energy."]
+          keyIdea: "Connection shape determines how current and voltage are shared.",
+          bullets: ["Series: one path, same current, voltage is divided.", "Parallel: multiple branches, same branch voltage, current is divided."]
         },
-        [
-          {
-            accessibilityLabel: "Comparison table for voltage, current, and resistance.",
-            columns: [
-              { items: ["Electric push", "Measured in volts"], title: "Voltage" },
-              { items: ["Charge flow rate", "Measured in amps"], title: "Current" },
-              { items: ["Opposes flow", "Measured in ohms"], title: "Resistance" }
-            ],
-            id: "vcr-comparison",
-            title: "Three circuit ideas",
-            type: "comparison_table"
-          }
-        ]
+        [{
+          accessibilityLabel: "Actual series and parallel circuit diagrams shown side by side with meaningful comparison criteria.",
+          id: "series-parallel-diagrams",
+          type: "series_parallel_comparison"
+        }]
       ),
+      makeSlide(
+        "voltmeter-placement",
+        "labeled_diagram",
+        "Measure Voltage Across a Component",
+        4,
+        {
+          keyIdea: "A voltmeter connects in parallel across the two ends of the component.",
+          bullets: ["Do not place a voltmeter as the only path in a series loop.", "Its two leads compare electric potential at two points."]
+        },
+        [{
+          accessibilityLabel: "Voltmeter connected across a resistor in a closed circuit.",
+          id: "voltmeter-across-resistor",
+          labels: ["battery", "resistor", "voltmeter", "parallel connection"],
+          type: "voltmeter_circuit"
+        }]
+      ),
+      {
+        ...makeSlide(
+          "electric-power",
+          "worked_example",
+          "Electrical Power",
+          4,
+          {
+            keyIdea: "Power measures how quickly a circuit component transfers energy.",
+            steps: ["GIVEN: V = 9 V and I = 0.50 A.", "FORMULA: P = VI.", "SUBSTITUTE: P = 9 V × 0.50 A.", "SOLVE: P = 4.5 W.", "CHECK: V × A gives W."]
+          },
+          [{
+            accessibilityLabel: "Power calculation with formula, substitution, units, and highlighted result.",
+            equation: "P = V I",
+            id: "electric-power-calculation",
+            type: "electric_power"
+          }]
+        ),
+        slideType: "worked_example"
+      },
       makeSlide(
         "conductors-insulators",
         "comparison",
@@ -1610,11 +1717,12 @@ export function validateAndRepairSlidePlan(plan: LessonSlidePlan, audienceMode: 
     };
   });
 
-  return enhanceLessonPlan({
+  const enhanced = enhanceLessonPlan({
     ...plan,
     durationMinutes: Math.max(20, Math.min(90, plan.durationMinutes || 45)),
-    slides: slides.slice(0, 28),
+    slides: slides.slice(0, 36),
     title: normalizePlainText(plan.title, 120) || "NovaSprout Lesson",
     validationWarnings: warnings
   }, audienceMode) as LessonSlidePlan;
+  return finalizeInstructionalPlan(enhanced);
 }

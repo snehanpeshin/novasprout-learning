@@ -14,6 +14,7 @@ import {
   type StructuredFormula
 } from "../../lib/lessonEngine.ts";
 import { legacyLessonToSlidePlan, type LessonPlanSlide, type VisualSpec } from "../../lib/lessonSlidePlan.ts";
+import { speakerNotesText } from "../../lib/lessonSlides/speakerNotesGenerator.ts";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -23,6 +24,7 @@ const remoteCompilerTimeoutMs = 285000;
 const maxEmbeddedImageAssets = 4;
 const maxEmbeddedImageBytes = 2_800_000;
 const maxRemoteAssetPayloadBytes = 3_600_000;
+const electricityPattern = /\b(electric|electricity|circuit|current|voltage|resistance|resistor|battery|ohm|power|voltmeter)\b/i;
 
 type DeckAsset = {
   assetId?: string;
@@ -141,7 +143,15 @@ function normalizeLessonText(value?: string) {
 }
 
 function escapeLatex(value?: string) {
-  return normalizeLessonText(value)
+  const tokenized = (value ?? "")
+    .replace(/Rₑq/g, "NOVAREQSYMBOL")
+    .replace(/Ω/g, "NOVAOMEGASYMBOL")
+    .replace(/μ/g, "NOVAMUSYMBOL")
+    .replace(/Δ/g, "NOVADELTASYMBOL")
+    .replace(/[×✕]/g, "NOVATIMESSYMBOL")
+    .replace(/²/g, "NOVASQUARESYMBOL")
+    .replace(/³/g, "NOVACUBESYMBOL");
+  return normalizeLessonText(tokenized)
     .replace(/\\/g, "\\textbackslash{}")
     .replace(/&/g, "\\&")
     .replace(/%/g, "\\%")
@@ -151,7 +161,14 @@ function escapeLatex(value?: string) {
     .replace(/{/g, "\\{")
     .replace(/}/g, "\\}")
     .replace(/~/g, "\\textasciitilde{}")
-    .replace(/\^/g, "\\textasciicircum{}");
+    .replace(/\^/g, "\\textasciicircum{}")
+    .replace(/NOVAREQSYMBOL/g, "$R_{\\mathrm{eq}}$")
+    .replace(/NOVAOMEGASYMBOL/g, "$\\Omega$")
+    .replace(/NOVAMUSYMBOL/g, "$\\mu$")
+    .replace(/NOVADELTASYMBOL/g, "$\\Delta$")
+    .replace(/NOVATIMESSYMBOL/g, "$\\times$")
+    .replace(/NOVASQUARESYMBOL/g, "$^{2}$")
+    .replace(/NOVACUBESYMBOL/g, "$^{3}$");
 }
 
 function safeInlineLatex(value?: string) {
@@ -176,7 +193,7 @@ function latexItems(items?: string[]) {
 
 function frameTitle(title: string) {
   const normalized = normalizeLessonText(title);
-  return normalized.length > 54 ? `${normalized.slice(0, 51).trim()}...` : normalized;
+  return normalized.length > 58 ? normalized.slice(0, 58).replace(/\s+\S*$/, "").replace(/[,:;/-]+$/, "") : normalized;
 }
 
 function getSubjectTemplate(subject?: string, topic?: string) {
@@ -303,7 +320,7 @@ function compilerImageAssets(assets: DeckAsset[]) {
     }));
 }
 
-function frameBody(title: string, body: string, assets: DeckAsset[], slideNumber: number) {
+function frameBody(title: string, body: string, assets: DeckAsset[], slideNumber: number, notes = "") {
   const slideAssets = assets.filter((asset) => assetSlideNumber(asset.placement) === slideNumber);
   const primaryImage = slideAssets.find(
     (asset) => asset.type === "image" && asset.dataUrl?.startsWith("data:image/png;base64,") && asset.filename
@@ -361,6 +378,7 @@ ${primaryImage.caption ? `\\\\[0.12cm]{\\scriptsize\\color{NovaInk!75}${escapeLa
   return String.raw`\begin{frame}{${escapeLatex(frameTitle(title))}}
 ${slideBody}
 ${assetTex}
+${notes ? `\\note{${escapeLatex(notes)}}` : ""}
 \end{frame}`;
 }
 
@@ -740,28 +758,207 @@ function renderDigestiveSystemVisual(visual: VisualSpec) {
 
 function renderCircuitVisual(visual: VisualSpec) {
   return String.raw`\begin{center}
-\begin{tikzpicture}[scale=0.92, every node/.style={font=\scriptsize}]
-\draw[line width=1.4pt, NovaInk] (-2.8,-1.35) -- (-2.8,1.35) -- (2.8,1.35) -- (2.8,-1.35) -- (-2.8,-1.35);
-\draw[line width=1.2pt] (-3.08,-0.35) -- (-2.52,-0.35);
-\draw[line width=2.2pt] (-2.95,0.28) -- (-2.65,0.28);
-\node[left, text=NovaInk] at (-3.1,-0.03) {Battery};
-\draw[line width=1.2pt] (-0.85,1.35) -- (-0.2,1.35);
-\draw[line width=1.2pt] (0.2,1.35) -- (0.85,1.35);
-\draw[line width=1.2pt, NovaCoral] (-0.2,1.35) -- (0.46,1.78);
-\fill[NovaInk] (-0.2,1.35) circle (0.055);
-\fill[NovaInk] (0.2,1.35) circle (0.055);
-\node[above] at (0,1.86) {Switch};
-\draw[line width=1.2pt, NovaYellow!70!black, fill=NovaYellow!35] (1.32,-1.35) circle (0.42);
-\draw[NovaYellow!70!black, line width=1pt] (1.03,-1.64) -- (1.61,-1.06) (1.03,-1.06) -- (1.61,-1.64);
-\foreach \a in {0,45,...,315} {\draw[NovaYellow!70!black] (1.32,-1.35) ++(\a:0.52) -- ++(\a:0.18);}
-\node[below] at (1.32,-2.02) {Bulb: energy output};
-\draw[-{Stealth[length=3mm]}, line width=1.2pt, NovaSky] (-1.75,1.35) -- (-1.05,1.35);
-\draw[-{Stealth[length=3mm]}, line width=1.2pt, NovaSky] (2.8,0.55) -- (2.8,-0.2);
-\draw[-{Stealth[length=3mm]}, line width=1.2pt, NovaSky] (0.25,-1.35) -- (-0.5,-1.35);
-\node[fill=NovaSky!12, draw=NovaSky, rounded corners=3pt, align=center] at (0,0) {Closed path\\current can flow};
-\node[font=\scriptsize\bfseries, text=NovaCoral] at (0,-2.45) {Opening the switch breaks the path, so the bulb turns off.};
+\begin{tikzpicture}[scale=0.93, every node/.style={font=\scriptsize}]
+\draw[line width=1.35pt, NovaInk] (-3,1.45) -- (-0.45,1.45);
+\draw[line width=1.35pt, NovaInk] (0.35,1.45) -- (3,1.45) -- (3,-1.45) -- (1.05,-1.45);
+\draw[line width=1.35pt, NovaInk] (0.25,-1.45) -- (-3,-1.45) -- (-3,-0.34);
+\draw[line width=1.35pt, NovaInk] (-3,0.34) -- (-3,1.45);
+\draw[line width=2.2pt, NovaInk] (-3.52,0.34) -- (-2.48,0.34);
+\draw[line width=1.25pt, NovaInk] (-3.34,-0.34) -- (-2.66,-0.34);
+\node[left, font=\bfseries] at (-3.58,0.34) {$+$};
+\node[left, font=\bfseries] at (-3.40,-0.34) {$-$};
+\node[left, align=right] at (-3.62,0) {battery\\long / short plates};
+\fill[NovaInk] (-0.45,1.45) circle (0.055);
+\fill[NovaInk] (0.35,1.45) circle (0.055);
+\draw[line width=1.35pt, NovaGrowth] (-0.45,1.45) -- (0.35,1.45);
+\node[above] at (-0.05,1.58) {closed switch};
+\draw[line width=1.2pt, NovaYellow!70!black, fill=NovaYellow!30] (0.65,-1.45) circle (0.40);
+\draw[NovaYellow!70!black, line width=1pt] (0.38,-1.72) -- (0.92,-1.18) (0.38,-1.18) -- (0.92,-1.72);
+\node[below] at (0.65,-1.92) {lamp};
+\draw[-{Stealth[length=3mm]}, line width=1.2pt, NovaSky] (-2.15,1.45) -- (-1.35,1.45);
+\draw[-{Stealth[length=3mm]}, line width=1.2pt, NovaSky] (3,0.62) -- (3,-0.18);
+\draw[-{Stealth[length=3mm]}, line width=1.2pt, NovaSky] (-0.55,-1.45) -- (-1.35,-1.45);
+\node[fill=NovaSky!10, draw=NovaSky, rounded corners=3pt, align=center] at (0,0) {conventional current\\moves from $+$ to $-$};
+\node[font=\scriptsize\bfseries, text=NovaGrowth] at (0,-2.42) {A closed conducting path allows current and energy transfer.};
 \end{tikzpicture}
 \end{center}`;
+}
+
+function renderCoverIllustration(visual: VisualSpec) {
+  const electricity = (visual.labels ?? []).some((label) => electricityPattern.test(label));
+  if (electricity) {
+    return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.86]
+\fill[NovaSky!9, rounded corners=12pt] (-4.2,-2.15) rectangle (4.2,2.2);
+\draw[NovaInk,line width=1.6pt,rounded corners=10pt] (-3.0,-1.1) -- (-3.0,1.1) -- (3.0,1.1) -- (3.0,-1.1) -- (-1.0,-1.1);
+\draw[NovaInk,line width=1.6pt] (-.2,-1.1)--(-3,-1.1);
+\draw[NovaInk,line width=2.4pt] (-3.45,.25)--(-2.55,.25);
+\draw[NovaInk,line width=1.2pt] (-3.30,-.25)--(-2.70,-.25);
+\node[font=\Large\bfseries] at (-3.72,.25) {$+$};
+\node[font=\Large\bfseries] at (-3.55,-.28) {$-$};
+\draw[NovaYellow!70!black,fill=NovaYellow!34,line width=1.2pt] (.4,-1.1) circle (.55);
+\draw[NovaYellow!70!black,line width=1pt] (0,-1.5)--(.8,-.7) (0,-.7)--(.8,-1.5);
+\foreach \a in {0,45,...,315}{\draw[NovaYellow!75!black] (.4,-1.1)++(\a:.68)--++(\a:.24);}
+\draw[-{Stealth[length=3mm]},NovaSky,line width=1.4pt] (-2.1,1.1)--(-1.15,1.1);
+\draw[-{Stealth[length=3mm]},NovaSky,line width=1.4pt] (3,.55)--(3,-.35);
+\node[fill=white,draw=NovaGrowth,rounded corners=5pt,align=center,font=\bfseries] at (0,.15) {SOURCE $\rightarrow$ PATH $\rightarrow$ DEVICE};
+\node[font=\large\bfseries,text=NovaNavy] at (0,-2.6) {See the circuit. Explain the relationship. Solve with units.};
+\end{tikzpicture}
+\end{center}`;
+  }
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.9]
+\fill[NovaSky!10,rounded corners=12pt] (-4,-2) rectangle (4,2);
+\node[draw=NovaGrowth,fill=white,rounded corners=8pt,minimum width=2.3cm,minimum height=1.1cm,font=\bfseries] (idea) at (-2.35,.55) {Understand};
+\node[draw=NovaSky,fill=white,rounded corners=8pt,minimum width=2.3cm,minimum height=1.1cm,font=\bfseries] (model) at (0,.55) {Model};
+\node[draw=NovaCoral,fill=white,rounded corners=8pt,minimum width=2.3cm,minimum height=1.1cm,font=\bfseries] (apply) at (2.35,.55) {Apply};
+\draw[-{Stealth[length=3mm]},thick,NovaNavy] (idea)--(model);
+\draw[-{Stealth[length=3mm]},thick,NovaNavy] (model)--(apply);
+\node[font=\large\bfseries,text=NovaNavy,align=center] at (0,-1) {One clear idea at a time\\with examples and checks};
+\end{tikzpicture}
+\end{center}`;
+}
+
+function renderVocabularyGrid(visual: VisualSpec) {
+  const entries = (visual.columns ?? []).slice(0, 6);
+  const nodes = entries.map((entry, index) => {
+    const x = (index % 3) * 3.45 - 3.45;
+    const y = index < 3 ? 1.15 : -1.25;
+    const detail = entry.items.map((item) => escapeLatex(item)).join("\\\\[0.08cm]");
+    return `\\node[draw=${index % 2 ? "NovaGrowth" : "NovaSky"},fill=white,rounded corners=5pt,text width=3.0cm,minimum height=1.8cm,align=left,inner sep=7pt] at (${x},${y}) {\\textbf{${escapeLatex(entry.title)}}\\\\[0.1cm]{\\scriptsize ${detail}}};`;
+  }).join("\n");
+  return String.raw`\begin{center}\begin{tikzpicture}[scale=0.86]${nodes}\end{tikzpicture}\end{center}`;
+}
+
+function renderElectricRelationships(visual: VisualSpec) {
+  const cards = (visual.columns ?? []).slice(0, 4).map((column, index) => {
+    const x = index % 2 ? 2.15 : -2.15;
+    const y = index < 2 ? 1.25 : -1.05;
+    const color = index % 2 ? "NovaGrowth" : "NovaSky";
+    return `\\node[draw=${color},fill=${color}!8,rounded corners=7pt,text width=3.45cm,minimum height=1.65cm,align=center] at (${x},${y}) {\\large\\bfseries ${escapeLatex(column.title)}\\\\[.14cm]{\\scriptsize ${column.items.map(escapeLatex).join("\\\\")}}};`;
+  }).join("\n");
+  return String.raw`\begin{center}\begin{tikzpicture}[scale=0.9]
+${cards}
+\node[draw=NovaYellow!75!black,fill=NovaYellow!22,rounded corners=5pt,font=\large\bfseries] at (0,-2.25) {$V=IR\qquad P=VI$};
+\end{tikzpicture}\end{center}`;
+}
+
+function renderOhmsLaw(visual: VisualSpec) {
+  return String.raw`\begin{center}\begin{tikzpicture}[scale=0.92]
+\node[draw=NovaNavy,fill=NovaYellow!24,circle,minimum size=2.35cm,font=\Large\bfseries] (law) at (0,.75) {$V=IR$};
+\node[draw=NovaSky,fill=NovaSky!8,rounded corners=5pt,text width=2.5cm,align=center,font=\large] at (-3,-1.15) {$V=IR$\\{\scriptsize find voltage}};
+\node[draw=NovaGrowth,fill=NovaGrowth!8,rounded corners=5pt,text width=2.5cm,align=center,font=\large] at (0,-1.15) {$I=\dfrac{V}{R}$\\{\scriptsize find current}};
+\node[draw=NovaCoral,fill=NovaCoral!8,rounded corners=5pt,text width=2.5cm,align=center,font=\large] at (3,-1.15) {$R=\dfrac{V}{I}$\\{\scriptsize find resistance}};
+\node[font=\small\bfseries,text=NovaNavy] at (0,-2.2) {$1\,\Omega=1\,\mathrm{V}/\mathrm{A}$};
+\end{tikzpicture}\end{center}`;
+}
+
+function renderBatterySymbol() {
+  return String.raw`\begin{center}\begin{tikzpicture}[scale=1.0]
+\draw[NovaInk,line width=1.5pt] (-3,0)--(-.55,0);
+\draw[NovaInk,line width=2.8pt] (-.55,-1.25)--(-.55,1.25);
+\draw[NovaInk,line width=1.35pt] (.45,-.78)--(.45,.78);
+\draw[NovaInk,line width=1.5pt] (.45,0)--(3,0);
+\node[above,font=\Large\bfseries] at (-.55,1.3) {$+$};
+\node[above,font=\Large\bfseries] at (.45,.85) {$-$};
+\node[below,align=center] at (-.55,-1.35) {long plate\\positive terminal};
+\node[below,align=center] at (.45,-1.35) {short plate\\negative terminal};
+\draw[-{Stealth[length=3mm]},NovaSky,line width=1.4pt] (-2.65,.45)--(-1.55,.45);
+\node[above,text=NovaSky,font=\bfseries] at (-2.1,.48) {conventional current};
+\end{tikzpicture}\end{center}`;
+}
+
+function renderSeriesCircuit() {
+  return String.raw`\begin{center}\begin{tikzpicture}[scale=.88,every node/.style={font=\scriptsize}]
+\draw[NovaInk,line width=1.35pt] (-3,-1.35)--(-3,-.3) (-3,.3)--(-3,1.35)--(-1.85,1.35);
+\draw[NovaInk,line width=2.2pt] (-3.42,.3)--(-2.58,.3);\draw[NovaInk,line width=1.2pt] (-3.28,-.3)--(-2.72,-.3);
+\node[left] at (-3.45,0) {9 V};
+\draw[NovaInk,line width=1.35pt] (-1.85,1.35)--(-1.55,1.65)--(-1.15,1.05)--(-.75,1.65)--(-.35,1.05)--(-.05,1.35);
+\node[above] at (-.95,1.72) {$R_1=2\,\Omega$};
+\draw[NovaInk,line width=1.35pt] (-.05,1.35)--(.65,1.35)--(.35,1.05)--(.95,1.65)--(1.35,1.05)--(1.75,1.65)--(2.05,1.35)--(3,1.35)--(3,-1.35)--(-3,-1.35);
+\node[above] at (1.2,1.72) {$R_2=4\,\Omega$};
+\draw[-{Stealth[length=3mm]},NovaSky,line width=1.3pt] (-2.25,1.35)--(-1.9,1.35);
+\node[draw=NovaGrowth,fill=NovaGrowth!9,rounded corners=4pt,align=center] at (0,-.15) {$R_{\mathrm{eq}}=2\,\Omega+4\,\Omega=6\,\Omega$\\$I=\dfrac{9\,\mathrm{V}}{6\,\Omega}=1.5\,\mathrm{A}$};
+\node[font=\bfseries,text=NovaGrowth] at (0,-2.05) {One path: the same 1.5 A passes through both resistors.};
+\end{tikzpicture}\end{center}`;
+}
+
+function renderParallelCircuit() {
+  return String.raw`\begin{center}\begin{tikzpicture}[scale=.88,every node/.style={font=\scriptsize}]
+\draw[NovaInk,line width=1.35pt] (-3,-1.6)--(-3,-.3) (-3,.3)--(-3,1.6)--(3,1.6)--(3,-1.6)--(-3,-1.6);
+\draw[NovaInk,line width=2.2pt] (-3.42,.3)--(-2.58,.3);\draw[NovaInk,line width=1.2pt] (-3.28,-.3)--(-2.72,-.3);
+\node[left] at (-3.45,0) {9 V};
+\draw[NovaInk,line width=1.2pt] (-1.55,1.6)--(-1.55,.55)--(-.8,.55);
+\draw[NovaInk,line width=1.2pt] (.8,.55)--(1.55,.55)--(1.55,1.6);
+\draw[NovaInk,line width=1.2pt] (-1.55,-.55)--(-.8,-.55);
+\draw[NovaInk,line width=1.2pt] (.8,-.55)--(1.55,-.55);
+\draw[NovaInk,line width=1.2pt] (-1.55,.55)--(-1.55,-.55) (1.55,.55)--(1.55,-.55);
+\draw[NovaInk,line width=1.2pt] (-.8,.55) rectangle (.8,.55);\draw[NovaInk,line width=1.2pt] (-.8,.32) rectangle (.8,.78);
+\draw[NovaInk,line width=1.2pt] (-.8,-.78) rectangle (.8,-.32);
+\node at (0,.55) {$R_1=6\,\Omega$};\node at (0,-.55) {$R_2=3\,\Omega$};
+\draw[-{Stealth[length=2.5mm]},NovaSky,line width=1.2pt] (-1.4,.85)--(-.75,.85);
+\draw[-{Stealth[length=2.5mm]},NovaGrowth,line width=1.2pt] (-1.4,-.85)--(-.75,-.85);
+\node[above,NovaSky] at (0,.82) {$I_1=1.5\,\mathrm{A}$};
+\node[below,NovaGrowth] at (0,-.82) {$I_2=3\,\mathrm{A}$};
+\node[draw=NovaYellow!70!black,fill=NovaYellow!20,rounded corners=4pt,font=\bfseries] at (0,-2.15) {$I_{\mathrm{total}}=I_1+I_2=4.5\,\mathrm{A}$};
+\end{tikzpicture}\end{center}`;
+}
+
+function renderSeriesParallelComparison() {
+  return String.raw`\begin{center}\begin{tikzpicture}[scale=.82,every node/.style={font=\scriptsize}]
+\node[font=\large\bfseries,text=NovaSky] at (-3.1,2.05) {SERIES};
+\draw[NovaInk,line width=1.2pt,rounded corners=5pt] (-5.25,-.4) rectangle (-.95,1.55);
+\draw[NovaInk,line width=1.2pt] (-4.6,.55)--(-3.95,.55);
+\draw[NovaInk,line width=1.2pt] (-3.95,.3) rectangle (-3.0,.8);
+\draw[NovaInk,line width=1.2pt] (-3.0,.55)--(-2.55,.55);
+\draw[NovaInk,line width=1.2pt] (-2.55,.3) rectangle (-1.6,.8);
+\draw[NovaInk,line width=1.2pt] (-1.6,.55)--(-.95,.55);
+\node[align=center] at (-3.1,-1.1) {one path\\same current\\voltage shared};
+\node[font=\large\bfseries,text=NovaGrowth] at (3.1,2.05) {PARALLEL};
+\draw[NovaInk,line width=1.2pt,rounded corners=5pt] (.95,-.4) rectangle (5.25,1.55);
+\draw[NovaInk,line width=1.2pt] (1.75,1.55)--(1.75,.2) (4.45,1.55)--(4.45,.2);
+\draw[NovaInk,line width=1.2pt] (1.75,1.0)--(2.6,1.0) (3.6,1.0)--(4.45,1.0);
+\draw[NovaInk,line width=1.2pt] (2.6,.75) rectangle (3.6,1.25);
+\draw[NovaInk,line width=1.2pt] (1.75,.2)--(2.6,.2) (3.6,.2)--(4.45,.2);
+\draw[NovaInk,line width=1.2pt] (2.6,-.05) rectangle (3.6,.45);
+\node[align=center] at (3.1,-1.1) {branching paths\\same branch voltage\\current splits};
+\end{tikzpicture}\end{center}`;
+}
+
+function renderVoltmeterCircuit() {
+  return String.raw`\begin{center}\begin{tikzpicture}[scale=.9,every node/.style={font=\scriptsize}]
+\draw[NovaInk,line width=1.3pt] (-3,-1.25)--(-3,-.25) (-3,.25)--(-3,1.25)--(-1.25,1.25);
+\draw[NovaInk,line width=2.2pt] (-3.4,.25)--(-2.6,.25);\draw[NovaInk,line width=1.2pt] (-3.25,-.25)--(-2.75,-.25);
+\draw[NovaInk,line width=1.3pt] (-1.25,1.0) rectangle (1.25,1.5);
+\node at (0,1.25) {resistor};
+\draw[NovaInk,line width=1.3pt] (1.25,1.25)--(3,1.25)--(3,-1.25)--(-3,-1.25);
+\draw[NovaGrowth,line width=1.15pt] (-1.0,1.0)--(-1.0,0)--(-.55,0);
+\draw[NovaGrowth,line width=1.15pt] (1.0,1.0)--(1.0,0)--(.55,0);
+\draw[NovaGrowth,line width=1.4pt,fill=NovaGrowth!8] (0,0) circle (.55);
+\node[font=\large\bfseries] at (0,0) {V};
+\node[draw=NovaYellow!70!black,fill=NovaYellow!20,rounded corners=4pt,align=center] at (0,-2.0) {Connect a voltmeter across the component\\to compare potential at its two ends.};
+\end{tikzpicture}\end{center}`;
+}
+
+function renderElectricPower() {
+  return String.raw`\begin{center}\begin{tikzpicture}[scale=.92]
+\node[draw=NovaSky,fill=NovaSky!8,rounded corners=5pt,text width=7.6cm,align=left] at (0,1.45) {\textbf{GIVEN}\quad $V=9\,\mathrm{V}$,\quad $I=0.50\,\mathrm{A}$};
+\node[draw=NovaGrowth,fill=NovaGrowth!8,rounded corners=5pt,text width=7.6cm,align=left] at (0,.55) {\textbf{FORMULA}\quad $P=VI$};
+\node[draw=NovaCoral,fill=NovaCoral!7,rounded corners=5pt,text width=7.6cm,align=left] at (0,-.35) {\textbf{SUBSTITUTE}\quad $P=9\,\mathrm{V}\times0.50\,\mathrm{A}$};
+\node[draw=NovaYellow!75!black,fill=NovaYellow!24,rounded corners=5pt,text width=7.6cm,align=left,font=\large] at (0,-1.25) {\textbf{SOLVE}\quad $\boxed{P=4.5\,\mathrm{W}}$};
+\node[font=\small\bfseries,text=NovaNavy] at (0,-2.15) {CHECK: volts $\times$ amperes gives watts.};
+\end{tikzpicture}\end{center}`;
+}
+
+function renderWorkedSolution(visual: VisualSpec) {
+  const sections = (visual.sections ?? []).slice(0, 6);
+  const nodes = sections.map((section, index) => {
+    const x = index % 2 ? 2.45 : -2.45;
+    const y = 1.75 - Math.floor(index / 2) * 1.35;
+    const color = index === sections.length - 1 ? "NovaYellow" : index % 2 ? "NovaGrowth" : "NovaSky";
+    return `\\node[draw=${color}!80!black,fill=${color}!10,rounded corners=5pt,text width=4.1cm,minimum height=1.0cm,align=left,inner sep=6pt] at (${x},${y}) {\\textbf{${escapeLatex(section.label)}}\\\\{\\scriptsize ${escapeLatex(section.text)}}};`;
+  }).join("\n");
+  return String.raw`\begin{center}\begin{tikzpicture}[scale=.86]${nodes}\end{tikzpicture}\end{center}`;
 }
 
 function renderCellVisual(visual: VisualSpec) {
@@ -1314,6 +1511,30 @@ function renderVisualSpec(visual: VisualSpec) {
   const statisticsVisual = renderStatisticsVisual(visual.type);
   if (statisticsVisual) return statisticsVisual;
   switch (visual.type) {
+    case "cover_illustration":
+      return renderCoverIllustration(visual);
+    case "vocabulary_grid":
+      return renderVocabularyGrid(visual);
+    case "circuit_diagram":
+      return renderCircuitVisual(visual);
+    case "battery_symbol":
+      return renderBatterySymbol();
+    case "electric_relationships":
+      return renderElectricRelationships(visual);
+    case "ohms_law":
+      return renderOhmsLaw(visual);
+    case "series_circuit":
+      return renderSeriesCircuit();
+    case "parallel_circuit":
+      return renderParallelCircuit();
+    case "series_parallel_comparison":
+      return renderSeriesParallelComparison();
+    case "voltmeter_circuit":
+      return renderVoltmeterCircuit();
+    case "electric_power":
+      return renderElectricPower();
+    case "worked_solution":
+      return renderWorkedSolution(visual);
     case "labeled_system":
     case "annotated_image":
       if ((visual.labels ?? []).some((label) => /stomach|esophagus|intestine/i.test(label))) {
@@ -1374,68 +1595,171 @@ function renderVisualSpec(visual: VisualSpec) {
 
 function renderPlanSlideBody(slide: LessonPlanSlide, hasImageAsset = false, audienceMode: AudienceMode = "student") {
   const content = slide.studentContent;
-  const keyIdea = content.keyIdea
-    ? normalizeLessonText(content.keyIdea)
-    : "";
-  const textParts = [
-    keyIdea ? String.raw`\begin{alertblock}{Key idea}
-\small ${escapeLatex(keyIdea)}
-\end{alertblock}` : "",
-    content.explanation ? String.raw`\small ${escapeLatex(normalizeLessonText(content.explanation))}` : "",
-    content.question ? String.raw`\begin{block}{Question}
-\small ${escapeLatex(content.question)}
-\end{block}` : "",
-    ...(slide.math ?? []).slice(0, 2).map((formula: StructuredFormula) => {
-      const expression = safeInlineLatex(formula.expression);
-      return expression ? String.raw`\begin{block}{Mathematical relationship}
-\centering\Large $${expression}$\\[0.12cm]
-\small ${escapeLatex(formula.meaning)}${formula.units ? `\\ ${escapeLatex(formula.units)}` : ""}
-\end{block}` : "";
-    }),
-    latexBullets(content.bullets, 3),
-    latexSteps(content.steps, 3),
-    audienceMode === "teacher" && content.hint ? String.raw`\begin{block}{Teacher hint}
-\small ${escapeLatex(content.hint)}
-\end{block}` : "",
-    audienceMode === "teacher" && content.answer ? String.raw`\begin{block}{Answer and explanation}
-\small ${escapeLatex(content.answer)}
-\end{block}` : ""
-  ].filter(Boolean);
   const visualTex = hasImageAsset ? "" : slide.visuals.slice(0, 1).map(renderVisualSpec).filter(Boolean).join("\n");
+  const keyIdea = content.keyIdea ? String.raw`\begin{alertblock}{Main idea}\small ${escapeLatex(content.keyIdea)}\end{alertblock}` : "";
+  const explanation = content.explanation ? String.raw`{\small ${escapeLatex(content.explanation)}}` : "";
+  const hint = content.hint ? String.raw`\begin{block}{Optional hint}{\scriptsize ${escapeLatex(content.hint)}}\end{block}` : "";
+  const teacherAnswer = audienceMode === "teacher" && slide.assessment
+    ? String.raw`\begin{block}{Answer key}{\small ${escapeLatex(slide.assessment.correctAnswer)}\\ ${escapeLatex(slide.assessment.explanation)}}\end{block}`
+    : "";
+  const formulaBlocks = (slide.math ?? []).slice(0, slide.slideType === "formula_reference" ? 4 : 1).map((formula: StructuredFormula) => {
+    const expression = safeInlineLatex(formula.expression);
+    return expression ? String.raw`\begin{block}{Formula}
+\centering\Large $${expression}$\\[0.1cm]
+{\scriptsize ${escapeLatex(formula.meaning)}${formula.units ? `\\ ${escapeLatex(formula.units)}` : ""}}
+\end{block}` : "";
+  }).filter(Boolean).join("\n");
 
-  if (visualTex && textParts.length) {
-    if (slide.type === "worked_example" || slide.layoutType === "equation-focus") {
-      return String.raw`\begin{columns}[T]
-\begin{column}{0.53\textwidth}
-${textParts.join("\n\n")}
-\end{column}
-\begin{column}{0.43\textwidth}
-${visualTex}
-\end{column}
-\end{columns}`;
-    }
-    if (slide.type === "guided_practice" || slide.type === "independent_practice") {
-      return String.raw`${textParts.join("\n\n")}
-\vspace{0.08cm}
-${visualTex}`;
-    }
+  if (slide.slideType === "lesson_cover") {
     return String.raw`\begin{columns}[T]
-\begin{column}{0.45\textwidth}
-${textParts.join("\n\n")}
+\begin{column}{0.38\textwidth}
+${keyIdea}
+\begin{block}{By the end, you can}
+${latexBullets(content.bullets, 3)}
+\end{block}
 \end{column}
-\begin{column}{0.51\textwidth}
+\begin{column}{0.58\textwidth}
 ${visualTex}
 \end{column}
 \end{columns}`;
+  }
+
+  if (slide.slideType === "learning_objectives") {
+    return String.raw`\begin{block}{Learning goals}
+${latexSteps(content.bullets, 4)}
+\end{block}
+\begin{alertblock}{Success looks like}
+\small Explain the relationship, use the model, and justify one answer.
+\end{alertblock}`;
+  }
+
+  if (slide.slideType === "vocabulary" && visualTex) return visualTex;
+
+  if (slide.slideType === "labeled_diagram") {
+    return String.raw`${visualTex}
+\vspace{0.08cm}
+\begin{block}{Interpret the model}
+\small ${escapeLatex(content.keyIdea || content.explanation || "Use each label to explain how the parts work together.")}
+\end{block}`;
+  }
+
+  if (slide.slideType === "worked_example") {
+    const visualType = slide.visuals[0]?.type;
+    if (visualType === "worked_solution" || visualType === "electric_power") return visualTex;
+    const selectedSteps = (content.steps ?? []).filter((_, index, all) => index < 2 || index === all.length - 1);
+    return String.raw`\begin{columns}[T]
+\begin{column}{0.36\textwidth}
+${keyIdea}
+${latexSteps(selectedSteps, 3)}
+\end{column}
+\begin{column}{0.60\textwidth}
+${visualTex || formulaBlocks}
+\end{column}
+\end{columns}`;
+  }
+
+  if (slide.slideType === "formula_reference") {
+    return String.raw`\begin{columns}[T]
+\begin{column}{0.34\textwidth}
+${keyIdea}
+${latexBullets(content.bullets, 3)}
+\end{column}
+\begin{column}{0.62\textwidth}
+${visualTex || formulaBlocks}
+\end{column}
+\end{columns}`;
+  }
+
+  if (slide.slideType === "comparison") {
+    return String.raw`${visualTex}
+\vspace{0.08cm}
+\begin{alertblock}{Use the difference}
+\small ${escapeLatex(content.keyIdea || "Compare the cases using the labels in the visual.")}
+\end{alertblock}`;
+  }
+
+  if (slide.slideType === "guided_practice" || slide.slideType === "independent_practice" || slide.slideType === "knowledge_check") {
+    return String.raw`\begin{columns}[T]
+\begin{column}{0.42\textwidth}
+\begin{block}{${slide.slideType === "knowledge_check" ? "Knowledge check" : "Your turn"}}
+\large ${escapeLatex(content.question || slide.assessment?.question || "Explain your reasoning.")}
+\end{block}
+${hint}
+${teacherAnswer}
+\end{column}
+\begin{column}{0.54\textwidth}
+${visualTex}
+\end{column}
+\end{columns}`;
+  }
+
+  if (slide.slideType === "misconception") {
+    const bullets = content.bullets ?? [];
+    return String.raw`\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\begin{alertblock}{Common mistake}
+\small ${escapeLatex(bullets[0] || "A tempting shortcut ignores an important relationship.")}
+\end{alertblock}
+\begin{block}{Why it is wrong}
+\small ${escapeLatex(bullets[1] || "It does not match the evidence or model.")}
+\end{block}
+\end{column}
+\begin{column}{0.48\textwidth}
+\begin{block}{Better reasoning}
+\small ${escapeLatex(content.keyIdea || "Use the model and check each step.")}
+\end{block}
+${visualTex}
+\end{column}
+\end{columns}`;
+  }
+
+  if (slide.slideType === "summary") {
+    return String.raw`\begin{block}{Takeaways}
+${latexBullets(content.bullets, 5)}
+\end{block}
+${formulaBlocks}
+\begin{alertblock}{Retrieve without notes}
+\small ${escapeLatex(content.question || "What relationship from this lesson would you use first, and why?")}
+\end{alertblock}`;
+  }
+
+  if (slide.slideType === "next_steps") {
+    return String.raw`\begin{block}{Use your evidence}
+\large ${escapeLatex(content.keyIdea || content.explanation || "Choose the next topic from the questions that were hardest.")}
+\end{block}
+\begin{alertblock}{Next action}
+\small ${escapeLatex(content.question || "What will you practice next?")}
+\end{alertblock}`;
+  }
+
+  if (slide.slideType === "prerequisite_check") {
+    return String.raw`\begin{block}{Check the foundation}
+${content.question ? `\\large ${escapeLatex(content.question)}` : latexBullets(content.bullets, 4)}
+\end{block}
+${hint}`;
+  }
+
+  if (slide.slideType === "process_or_sequence" && visualTex) {
+    return String.raw`${visualTex}
+\begin{alertblock}{What drives the sequence?}\small ${escapeLatex(content.keyIdea || content.explanation || "Explain why each step leads to the next.")}\end{alertblock}`;
   }
 
   if (visualTex) {
-    return visualTex;
+    return String.raw`\begin{columns}[T]
+\begin{column}{0.40\textwidth}
+${keyIdea}
+${explanation}
+${content.examples?.[0] ? `\\begin{block}{Example}\\small ${escapeLatex(content.examples[0])}\\end{block}` : ""}
+${latexBullets(content.bullets, 3)}
+\end{column}
+\begin{column}{0.56\textwidth}
+${visualTex}
+\end{column}
+\end{columns}`;
   }
 
-  return textParts.join("\n\n") || String.raw`\begin{block}{Learn}
-\small Review this idea, try one example, and explain your thinking.
-\end{block}`;
+  return [keyIdea, explanation, formulaBlocks, latexBullets(content.bullets, 5), latexSteps(content.steps, 5)]
+    .filter(Boolean).join("\n\n") || String.raw`\begin{block}{Main idea}\small Explain this concept with one concrete example.\end{block}`;
 }
 
 function buildSlideBodies(request: LessonDeckRequest) {
@@ -1453,6 +1777,7 @@ function buildSlideBodies(request: LessonDeckRequest) {
 
   return plan.slides.map((slide, index) => ({
     body: renderPlanSlideBody(slide, imageSlideNumbers.has(index + 1), request.audienceMode ?? "student"),
+    notes: slide.speakerNotes ? speakerNotesText(slide.speakerNotes) : "",
     title: slide.title
   }));
 }
@@ -1487,7 +1812,7 @@ function buildBeamerTex(request: LessonDeckRequest) {
   const template = getSubjectTemplate(context.subject, context.topic);
   const slideBodies = buildSlideBodies(request);
   const frames = slideBodies
-    .map((slide, index) => frameBody(slide.title, slide.body, assets, index + 1))
+    .map((slide, index) => frameBody(slide.title, slide.body, assets, index + 1, slide.notes))
     .join("\n\n");
 
   return String.raw`\documentclass[aspectratio=169]{beamer}
@@ -1793,6 +2118,18 @@ async function compileDeckRequest(request: Request) {
   }
 
   const semanticPlan = legacyLessonToSlidePlan({ context: body.context, lesson: body.lesson });
+  if (semanticPlan.deckQuality && !semanticPlan.deckQuality.exportReady) {
+    return NextResponse.json(
+      {
+        compilerStatus: "quality_gate_failed",
+        error: "The lesson did not pass the instructional-design quality gate, so it was not exported.",
+        qualityFindings: semanticPlan.qualityFindings,
+        qualityScore: semanticPlan.deckQuality,
+        qualityWarnings: semanticPlan.deckQuality.reasons
+      },
+      { status: 422 }
+    );
+  }
   const semanticWarnings = (semanticPlan.qualityFindings ?? [])
     .filter((finding) => finding.severity !== "info")
     .map((finding) => `${finding.slideId ?? "lesson"}: ${finding.explanation}`);
@@ -1834,7 +2171,9 @@ async function compileDeckRequest(request: Request) {
   const plannedImageAssetCount = assets.filter((asset) => asset.type === "image").length;
   const programmaticVisualCount = compiledSlideBodies.filter((slide) => hasProgrammaticVisual(slide.body)).length;
   const qualityChecks = [
-    "Structured LessonSlidePlan v2 semantic renderer active.",
+    "Structured LessonSlidePlan v3 semantic renderer active.",
+    `Deck quality score ${semanticPlan.deckQuality?.average ?? 0}/100; minimum slide score ${semanticPlan.deckQuality?.minimum ?? 0}/100.`,
+    `${semanticPlan.answerKey?.length ?? 0} student answer${semanticPlan.answerKey?.length === 1 ? "" : "s"} stored outside learner-facing slides.`,
     `${semanticPlan.conceptGraph?.nodes.length ?? 0} concept nodes and ${semanticPlan.conceptGraph?.relationships.length ?? 0} explicit relationships validated.`,
     `${compiledSlideBodies.length} Beamer slides generated.`,
     `${programmaticVisualCount} built-in diagram/table visual${programmaticVisualCount === 1 ? "" : "s"} rendered from the lesson plan.`,
@@ -1876,7 +2215,8 @@ async function compileDeckRequest(request: Request) {
       remoteCompile = fallbackCompile;
       remoteTex = fallbackTex;
       remoteQualityChecks = [
-        "Structured LessonSlidePlan v2 semantic renderer active.",
+        "Structured LessonSlidePlan v3 semantic renderer active.",
+        `Deck quality score ${semanticPlan.deckQuality?.average ?? 0}/100; minimum slide score ${semanticPlan.deckQuality?.minimum ?? 0}/100.`,
         `${fallbackSlideBodies.length} Beamer slides generated.`,
         `${fallbackProgrammaticVisualCount} built-in diagram/table visual${fallbackProgrammaticVisualCount === 1 ? "" : "s"} rendered from the lesson plan.`,
         `${fallbackCoverage.visualSlideCount} of ${fallbackSlideBodies.length} slides (${fallbackCoverage.percent}%) contain a topic-specific diagram, model, or data display.`,
