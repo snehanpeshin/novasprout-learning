@@ -1,14 +1,15 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { CheckCircle2, LoaderCircle, Mail, Send } from "lucide-react";
-import { bookingUrl, contactEmail } from "../site-data";
+import { CheckCircle2, ClipboardList, LoaderCircle, Mail, Send } from "lucide-react";
+import { bookingUrl, buildIntakeFormUrl, contactEmail, intakeFormUrl } from "../site-data";
 
 const subjects = ["Math", "Science & STEM", "Coding & Data Skills", "Study Skills", "Not sure yet"];
 
 export default function ContactForm() {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "fallback" | "error">("idle");
   const [fallbackEmail, setFallbackEmail] = useState("");
+  const [intakeHref, setIntakeHref] = useState(intakeFormUrl);
   const [errorMessage, setErrorMessage] = useState("");
   const [timezone, setTimezone] = useState("");
 
@@ -44,6 +45,18 @@ export default function ContactForm() {
     ].join("\n");
     const preparedEmail = `mailto:${contactEmail}?subject=${encodeURIComponent("Free Demo Class request")}&body=${encodeURIComponent(emailBody)}`;
     setFallbackEmail(preparedEmail);
+    setIntakeHref(buildIntakeFormUrl({
+      details: [
+        `Grade or level: ${String(data.grade)}`,
+        `Goal or challenge: ${String(data.goal)}`,
+        `Preferred days/times: ${String(data.availability)}`,
+        `Time zone: ${String(data.timezone)}`,
+        data.message ? `Additional note: ${String(data.message)}` : ""
+      ].filter(Boolean).join("\n"),
+      email: String(data.email),
+      name: String(data.name),
+      subject: String(data.subject)
+    }));
 
     try {
       const response = await fetch("/api/demo-request", {
@@ -85,6 +98,10 @@ export default function ContactForm() {
         <p className="ns-card-kicker">What happens next</p>
         <h3>Reviewed by the NovaSprout team.</h3>
         <p>We’ll email a tutor recommendation or a follow-up question. If a suitable match is available, you can then choose a free demo time.</p>
+        <a className="ns-form-intake-link" href={intakeFormUrl} target="_blank" rel="noreferrer">
+          <ClipboardList aria-hidden="true" />
+          Complete the full Google intake form
+        </a>
       </div>
       <div className="ns-form-grid">
         <label>
@@ -147,13 +164,19 @@ export default function ContactForm() {
       {status === "fallback" ? (
         <div className="ns-form-fallback" role="status">
           <div>
-            <strong>Finish your request by email.</strong>
-            <p>{errorMessage || `Your details are ready to send to ${contactEmail}.`}</p>
+            <strong>Finish your request in the intake form.</strong>
+            <p>{errorMessage || "Your details will be carried into NovaSprout’s Google intake form."}</p>
           </div>
-          <a className="ns-button ns-button-secondary" href={fallbackEmail}>
-            <Mail aria-hidden="true" />
-            Open prepared email
-          </a>
+          <div className="ns-form-fallback-actions">
+            <a className="ns-button ns-button-primary" href={intakeHref} target="_blank" rel="noreferrer">
+              <ClipboardList aria-hidden="true" />
+              Continue intake
+            </a>
+            <a className="ns-text-link" href={fallbackEmail}>
+              <Mail aria-hidden="true" />
+              Use email instead
+            </a>
+          </div>
         </div>
       ) : null}
     </form>

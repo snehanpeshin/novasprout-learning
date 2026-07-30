@@ -2,6 +2,7 @@
 
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { intakeFormUrl } from "../site-data";
 
 export default function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -31,7 +32,7 @@ export default function SiteHeader() {
           <a href="/pricing" onClick={() => setOpen(false)}>Pricing</a>
           <a href="/#tutors" onClick={() => setOpen(false)}>Tutors</a>
           <a className="ns-nav-secondary" href="/become-a-tutor" onClick={() => setOpen(false)}>Become a Tutor</a>
-          <a className="ns-button ns-button-primary ns-nav-cta" href="/contact#free-demo" onClick={() => setOpen(false)}>
+          <a className="ns-button ns-button-primary ns-nav-cta" href={intakeFormUrl} target="_blank" rel="noreferrer" onClick={() => setOpen(false)}>
             Request a Free Demo Class
           </a>
         </nav>

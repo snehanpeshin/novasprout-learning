@@ -13,6 +13,43 @@ export const bookingUrl =
     url?.startsWith("https://")
   ) ?? defaultBookingUrl;
 
+const defaultIntakeFormUrl =
+  "https://docs.google.com/forms/d/e/1FAIpQLScxiEKJZqN7nWeSzq3b-zeU-jJAONPeak9hbGbiYa8QcdHYnw/viewform";
+const configuredIntakeFormUrl = process.env.NEXT_PUBLIC_INTAKE_FORM_URL;
+const intakeFormBaseUrl =
+  configuredIntakeFormUrl?.startsWith("https://docs.google.com/forms/")
+    ? configuredIntakeFormUrl.split("?")[0]
+    : defaultIntakeFormUrl;
+
+export const intakeFormUrl = `${intakeFormBaseUrl}?usp=dialog`;
+
+export function buildIntakeFormUrl({
+  details,
+  email,
+  name,
+  subject
+}: {
+  details?: string;
+  email?: string;
+  name?: string;
+  subject?: string;
+} = {}) {
+  const url = new URL(intakeFormUrl);
+  const hasPrefill = Boolean(details || email || name || subject);
+  if (hasPrefill) url.searchParams.set("usp", "pp_url");
+  if (name) {
+    url.searchParams.set("entry.2005620554", name);
+    url.searchParams.set("entry.1959790052", name);
+  }
+  if (email) {
+    url.searchParams.set("entry.1045781291", email);
+    url.searchParams.set("entry.1261253410", email);
+  }
+  if (subject) url.searchParams.set("entry.839337160", subject);
+  if (details) url.searchParams.set("entry.32517725", details);
+  return url.toString();
+}
+
 const defaultContactEmail = "novasproutlearning@gmail.com";
 const envContactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
 

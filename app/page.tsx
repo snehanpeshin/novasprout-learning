@@ -21,7 +21,7 @@ import {
 import ContactForm from "./components/ContactForm";
 import Footer from "./components/Footer";
 import SiteHeader from "./components/SiteHeader";
-import { bookingUrl, generalFaqs, subjectTracks } from "./site-data";
+import { bookingUrl, generalFaqs, intakeFormUrl, subjectTracks } from "./site-data";
 
 const appStoreUrl = "https://apps.apple.com/us/app/novasprout-ai-tutor/id6793519745";
 
@@ -112,7 +112,7 @@ export default function Home() {
             Tell us what’s getting in the way. We’ll recommend a patient tutor for the student’s subject, level, goals, and schedule—then you can meet in a free demo class before deciding.
           </p>
           <div className="ns-actions">
-            <a className="ns-button ns-button-primary" href="#free-demo">Request a Free Demo Class <ArrowRight aria-hidden="true" /></a>
+            <a className="ns-button ns-button-primary" href={intakeFormUrl} target="_blank" rel="noreferrer">Request a Free Demo Class <ArrowRight aria-hidden="true" /></a>
             <a className="ns-button ns-button-secondary" href="#subjects">Explore Subjects</a>
           </div>
           <div className="ns-reassurance" aria-label="NovaSprout tutoring highlights">
@@ -199,7 +199,7 @@ export default function Home() {
         <div className="ns-tutor-review">
           <BadgeCheck aria-hidden="true" />
           <p><strong>Before a recommendation:</strong> NovaSprout reviews the tutor’s submitted background, subjects and levels, relevant experience, availability, and teaching approach against the student request.</p>
-          <a className="ns-button ns-button-primary" href="#free-demo">Request a Free Demo Class <ArrowRight aria-hidden="true" /></a>
+          <a className="ns-button ns-button-primary" href={intakeFormUrl} target="_blank" rel="noreferrer">Request a Free Demo Class <ArrowRight aria-hidden="true" /></a>
         </div>
       </section>
 

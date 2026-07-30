@@ -3,7 +3,7 @@ import AILessonGenerator from "../components/AILessonGenerator";
 import Footer from "../components/Footer";
 import SiteHeader from "../components/SiteHeader";
 import TrackedLink from "../components/TrackedLink";
-import { bookingUrl } from "../site-data";
+import { intakeFormUrl } from "../site-data";
 
 export const metadata = {
   title: "AI Study Tool | NovaSprout Learning",
@@ -59,9 +59,9 @@ export default function AILessonGeneratorPage() {
           <p>It is a separate service, so students can book a human tutor without using the AI Tutor first.</p>
         </div>
         <div className="booking-actions">
-          <TrackedLink className="button primary full" eventName="book_meeting_click" href={bookingUrl} target="_blank">
+          <TrackedLink className="button primary full" eventName="intake_form_click" href={intakeFormUrl} target="_blank">
             <CalendarCheck aria-hidden="true" size={18} />
-            Request a Free Demo Class
+            Complete Tutoring Intake
             <ArrowRight aria-hidden="true" size={18} />
           </TrackedLink>
         </div>

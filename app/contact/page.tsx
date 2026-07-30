@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Mail, Phone } from "lucide-react";
+import { ClipboardList, Mail, Phone } from "lucide-react";
 import ContactForm from "../components/ContactForm";
 import Footer from "../components/Footer";
 import SiteHeader from "../components/SiteHeader";
-import { contactEmail, contactPhone, contactPhoneHref } from "../site-data";
+import { contactEmail, contactPhone, contactPhoneHref, intakeFormUrl } from "../site-data";
 
 export const metadata: Metadata = {
   title: "Request a Free Demo Class | NovaSprout Learning",
@@ -26,6 +26,7 @@ export default function ContactPage() {
           <p>The subject, current level, main challenge, goals, availability, and time zone are enough to begin.</p>
           <p>For students under 18, a parent or guardian should complete the form and participate in the initial arrangements.</p>
           <div className="ns-direct-contact">
+            <a href={intakeFormUrl} target="_blank" rel="noreferrer"><ClipboardList aria-hidden="true" /><span><strong>Intake</strong>Complete the Google form</span></a>
             <a href={`mailto:${contactEmail}`}><Mail aria-hidden="true" /><span><strong>Email</strong>{contactEmail}</span></a>
             <a href={contactPhoneHref}><Phone aria-hidden="true" /><span><strong>Phone</strong>{contactPhone}</span></a>
           </div>

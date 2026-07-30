@@ -1,5 +1,5 @@
-import { Facebook, Instagram, Mail, Phone } from "lucide-react";
-import { contactEmail, contactPhone, contactPhoneHref, subjectTracks } from "../site-data";
+import { ClipboardList, Facebook, Instagram, Mail, Phone } from "lucide-react";
+import { contactEmail, contactPhone, contactPhoneHref, intakeFormUrl, subjectTracks } from "../site-data";
 
 const appStoreUrl = "https://apps.apple.com/us/app/novasprout-ai-tutor/id6793519745";
 
@@ -41,6 +41,7 @@ export default function Footer() {
         </div>
         <div>
           <h2>Contact</h2>
+          <a href={intakeFormUrl} target="_blank" rel="noreferrer"><ClipboardList aria-hidden="true" />Student intake form</a>
           <a href={`mailto:${contactEmail}`}><Mail aria-hidden="true" />{contactEmail}</a>
           <a href={contactPhoneHref}><Phone aria-hidden="true" />{contactPhone}</a>
         </div>

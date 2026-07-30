@@ -3,6 +3,7 @@ import { ArrowRight, Check, ShieldCheck } from "lucide-react";
 import ContactForm from "../components/ContactForm";
 import Footer from "../components/Footer";
 import SiteHeader from "../components/SiteHeader";
+import { intakeFormUrl } from "../site-data";
 
 export const metadata: Metadata = {
   title: "Online Tutoring Pricing | NovaSprout Learning",
@@ -18,7 +19,7 @@ export default function PricingPage() {
         <p className="ns-eyebrow">Clear tutoring pricing</p>
         <h1>Meet the tutor first. Continue for $20 per class.</h1>
         <p>The Free Demo Class helps the family and tutor understand the goal and decide whether the teaching fit feels right.</p>
-        <a className="ns-button ns-button-primary" href="#free-demo">Request a Free Demo Class <ArrowRight aria-hidden="true" /></a>
+        <a className="ns-button ns-button-primary" href={intakeFormUrl} target="_blank" rel="noreferrer">Request a Free Demo Class <ArrowRight aria-hidden="true" /></a>
       </section>
 
       <section className="ns-section ns-pricing-detail">

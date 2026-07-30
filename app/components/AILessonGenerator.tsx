@@ -21,7 +21,7 @@ import {
   type LucideIcon
 } from "lucide-react";
 import { legacyLessonToSlidePlan } from "../lib/lessonSlidePlan";
-import { contactEmail } from "../site-data";
+import { buildIntakeFormUrl, contactEmail } from "../site-data";
 
 type ExamQuestion = {
   answerIndex: number;
@@ -1664,30 +1664,19 @@ Student grade:
 Subject:
 Interested in: Free trial / Paid AI-generated lessons
 `)}`;
-  const liveTutorRequestHref = `mailto:${contactEmail}?subject=${encodeURIComponent(
-    `Live tutor request: ${grade} ${subject} - ${topic}`
-  )}&body=${encodeURIComponent(`Hi NovaSprout Learning,
-
-I would like to request a separate live tutoring session for this topic.
-
-Grade: ${grade}
-Subject: ${subject}
-Topic: ${topic}
-Output type: ${mode}
-Goal: ${goal}
-Student level: ${level}
-Teaching style: ${teachingStyle}
-Difficulty: ${difficulty}
-
-Specific difficulty:
-Preferred tutor:
-Preferred date and time:
-Individual or group session:
-Homework/worksheet link:
-
-Notes from AI lesson:
-${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tutor."}
-`)}`;
+  const liveTutorRequestHref = buildIntakeFormUrl({
+    details: [
+      `Grade: ${grade}`,
+      `Topic: ${topic}`,
+      `Output type: ${mode}`,
+      `Goal: ${goal}`,
+      `Student level: ${level}`,
+      `Teaching style: ${teachingStyle}`,
+      `Difficulty: ${difficulty}`,
+      `Suggested next session: ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tutor."}`
+    ].join("\n"),
+    subject
+  });
 
   if (!isUnlocked) {
     return (
@@ -1942,7 +1931,7 @@ ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tuto
                       <Images aria-hidden="true" size={18} />
                       Open Private Lesson
                     </button>
-                    <a className="button secondary" href={liveTutorRequestHref}>
+                    <a className="button secondary" href={liveTutorRequestHref} target="_blank" rel="noreferrer">
                       Request a Live Tutor
                     </a>
                   </div>

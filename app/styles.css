@@ -351,6 +351,8 @@ body {
 .ns-form-intro .ns-card-kicker { margin: 0 0 6px; }
 .ns-form-intro h3 { font-family: inherit; font-size: 1.05rem; margin: 0 0 7px; }
 .ns-form-intro > p:last-child { font-size: 0.82rem; line-height: 1.58; margin: 0; max-width: 650px; }
+.ns-form-intake-link { align-items: center; color: var(--ns-green); display: inline-flex; font-size: 0.78rem; font-weight: 800; gap: 7px; margin-top: 13px; }
+.ns-form-intake-link svg { height: 16px; width: 16px; }
 .ns-form-grid { display: grid; gap: 17px; grid-template-columns: repeat(2, 1fr); }
 .ns-intake-form label { color: var(--ns-ink); display: grid; font-size: 0.79rem; font-weight: 800; gap: 7px; }
 .ns-intake-form label span { color: var(--ns-muted); font-weight: 500; }
@@ -376,6 +378,9 @@ body {
 .ns-form-fallback p { font-size: 0.77rem; line-height: 1.45; margin: 3px 0 0; }
 .ns-form-fallback .ns-button { flex: 0 0 auto; min-height: 40px; padding: 9px 13px; }
 .ns-form-fallback .ns-button svg { height: 16px; width: 16px; }
+.ns-form-fallback-actions { align-items: center; display: flex; flex: 0 0 auto; gap: 13px; }
+.ns-form-fallback-actions .ns-text-link { align-items: center; display: inline-flex; font-size: 0.76rem; gap: 6px; white-space: nowrap; }
+.ns-form-fallback-actions .ns-text-link svg { height: 15px; width: 15px; }
 .ns-form-success { align-self: center; background: white; border-radius: 7px; padding: clamp(34px, 5vw, 58px); }
 .ns-form-success > svg { color: var(--ns-green); height: 38px; width: 38px; }
 .ns-form-success h3 { font-size: 1.7rem; margin: 16px 0 10px; }
@@ -547,7 +552,9 @@ body {
   .ns-pricing-steps { grid-template-columns: 1fr; }
   .ns-steps { gap: 26px; }
   .ns-form-fallback { align-items: stretch; flex-direction: column; }
+  .ns-form-fallback-actions { align-items: stretch; flex-direction: column; }
   .ns-form-fallback .ns-button { justify-content: center; width: 100%; }
+  .ns-form-fallback-actions .ns-text-link { justify-content: center; }
   .ns-expect-points { border-left: 0; border-top: 1px solid #bdcac5; padding-left: 0; padding-top: 15px; }
   .ns-footer-grid { grid-template-columns: repeat(2, 1fr); }
   .ns-footer-brand { grid-column: 1 / -1; }
