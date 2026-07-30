@@ -1,8 +1,12 @@
 import { slidePurpose } from "./slideClassifier.ts";
+import { rewriteToFit } from "./contentCompressor.ts";
 import type { SemanticSlideInput, SemanticSlideType, SpeakerNotes } from "./types.ts";
 
 function clean(value?: string, max = 360) {
-  return (value ?? "").replace(/\s+/g, " ").trim().slice(0, max);
+  const normalized = (value ?? "").replace(/\s+/g, " ").trim();
+  return normalized.length <= max
+    ? normalized
+    : rewriteToFit(normalized, Math.max(4, Math.floor(max / 7)));
 }
 
 export function createSpeakerNotes({

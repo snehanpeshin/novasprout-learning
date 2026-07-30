@@ -1,4 +1,11 @@
-import { fitTextToBox, shortenTitle } from "./contentCompressor.ts";
+import type { LessonPlanSlide, VisualSpec } from "../lessonSlidePlan.ts";
+import { validateCircuitSemanticConsistency } from "./circuitBinding.ts";
+import {
+  fitTextToBox,
+  isCompleteSentence,
+  rewriteToFit,
+  shortenTitle
+} from "./contentCompressor.ts";
 import { supportsDiagramType } from "./diagramRendererRegistry.ts";
 import { validateFormattedMath } from "./mathRenderer.ts";
 import { isValidConceptNode } from "./visualSelector.ts";
@@ -9,7 +16,10 @@ import type {
 } from "./types.ts";
 
 function clean(value?: string, max = 1200) {
-  return (value ?? "").replace(/\s+/g, " ").trim().slice(0, max);
+  const normalized = (value ?? "").replace(/\s+/g, " ").trim();
+  return normalized.length <= max
+    ? normalized
+    : rewriteToFit(normalized, Math.max(4, Math.floor(max / 7)));
 }
 
 function wordCount(value?: string) {
@@ -18,8 +28,8 @@ function wordCount(value?: string) {
 
 function completeSentence(value?: string) {
   const text = clean(value);
-  if (!text || /[.!?]$/.test(text)) return text;
-  return `${text.replace(/[,;:]$/, "")}.`;
+  if (!text || isCompleteSentence(text)) return text;
+  return rewriteToFit(text, Math.max(4, wordCount(text)));
 }
 
 function uniqueStrings(items?: string[]) {
@@ -27,6 +37,101 @@ function uniqueStrings(items?: string[]) {
     const normalized = clean(item).toLowerCase();
     return normalized && all.findIndex((candidate) => clean(candidate).toLowerCase() === normalized) === index;
   });
+}
+
+const genericActivityText = [
+  "a visual model for the science idea",
+  "explain your reasoning",
+  "practice and quiz",
+  "step-by-step example",
+  "your turn"
+];
+
+function learnerTask(slide: SemanticSlideInput) {
+  return clean(slide.studentContent?.question || slide.assessment?.question, 600);
+}
+
+export function isPlaceholderSlide(slide: SemanticSlideInput) {
+  const text = [
+    slide.title,
+    slide.studentContent?.keyIdea,
+    slide.studentContent?.explanation,
+    slide.studentContent?.question,
+    ...(slide.studentContent?.bullets ?? []),
+    ...(slide.studentContent?.steps ?? [])
+  ].filter(Boolean).join(" ").toLowerCase();
+  const task = learnerTask(slide);
+  const activity = slide.slideType === "guided_practice" ||
+    slide.slideType === "independent_practice" ||
+    slide.slideType === "knowledge_check";
+  if (activity && !task) return true;
+  if (activity && genericActivityText.some((phrase) => task.toLowerCase() === phrase)) return true;
+  if (genericActivityText.some((phrase) => text.trim() === phrase)) return true;
+  if (slide.slideType === "worked_example") {
+    const workedText = clean(
+      [
+        slide.studentContent?.explanation,
+        slide.studentContent?.question,
+        ...(slide.studentContent?.steps ?? [])
+      ].filter(Boolean).join(" "),
+      1200
+    );
+    const hasWorkedContent = Boolean(
+      slide.studentContent?.question ||
+      (slide.studentContent?.steps?.length ?? 0) >= 3 ||
+      /\b(?:find|calculate|determine|given)\b/i.test(workedText) && /\d/.test(workedText) ||
+      slide.visuals?.some((visual) => visual.diagramData?.kind === "circuit_problem" && visual.diagramData.circuit.showSolution)
+    );
+    if (!hasWorkedContent) return true;
+  }
+  return false;
+}
+
+function alignmentFinding(message: string, expectedValue: string, actualValue: string): SlideValidationFinding {
+  return {
+    actualValue,
+    code: "title_visual_mismatch",
+    expectedValue,
+    message,
+    offendingElement: "title/visual",
+    repaired: false,
+    severity: "error"
+  };
+}
+
+export function validateTitleVisualAlignment(
+  title: string,
+  visual: VisualSpec | undefined,
+  slide: SemanticSlideInput
+) {
+  const findings: SlideValidationFinding[] = [];
+  const normalizedTitle = clean(title, 160).toLowerCase();
+  const visualType = visual?.type ?? "none";
+  if (
+    /\bcircuit types?\b|\bvisual comparison\b/.test(normalizedTitle) ||
+    slide.slideType === "comparison" && /\bseries\s+(?:vs|versus|and)\s+parallel\b/.test(normalizedTitle)
+  ) {
+    const hasTwoTypes = visualType === "series_parallel_comparison" ||
+      (visualType === "comparison_table" && (visual?.columns?.length ?? 0) >= 2);
+    if (!hasTwoTypes) findings.push(alignmentFinding("Circuit comparison title requires both series and parallel visuals.", "series_parallel_comparison", visualType));
+  }
+  if (/\bconductors?\b.*\binsulators?\b|\binsulators?\b.*\bconductors?\b/.test(normalizedTitle)) {
+    const titles = (visual?.columns ?? []).map((column) => column.title.toLowerCase());
+    if (visualType !== "comparison_table" || !titles.some((value) => value.includes("conductor")) || !titles.some((value) => value.includes("insulator"))) {
+      findings.push(alignmentFinding("Conductor and insulator title requires a two-category material comparison.", "comparison_table with conductor and insulator columns", visualType));
+    }
+  }
+  if (/\bstep-by-step example\b/.test(normalizedTitle)) {
+    const stepCount = slide.studentContent?.steps?.length ?? visual?.sections?.length ?? 0;
+    if (stepCount < 3) findings.push(alignmentFinding("Step-by-step title requires an actual problem and at least three solution stages.", "three or more solution stages", String(stepCount)));
+  }
+  if (/\bpractice\s*\+\s*quiz\b/.test(normalizedTitle) && !learnerTask(slide)) {
+    findings.push(alignmentFinding("Practice and quiz title requires a specific learner question.", "specific question", "none"));
+  }
+  if (/\bconcepts?\s+and\s+labeled diagram\b/.test(normalizedTitle) && (visual?.labels?.length ?? 0) < 2) {
+    findings.push(alignmentFinding("Labeled-diagram title requires meaningful component labels.", "at least two labels", String(visual?.labels?.length ?? 0)));
+  }
+  return findings;
 }
 
 export function validateAndRepairSlide<T extends SemanticSlideInput>(slide: T): ValidationResult<T> {
@@ -78,9 +183,16 @@ export function validateAndRepairSlide<T extends SemanticSlideInput>(slide: T): 
 
   for (const field of ["explanation", "keyIdea"] as const) {
     const value = content[field];
-    if (value && !/[.!?]$/.test(clean(value))) {
+    if (value && !isCompleteSentence(clean(value))) {
       content[field] = completeSentence(value);
-      findings.push({ code: "incomplete_sentence", message: `${field} was completed with terminal punctuation.`, repaired: true, severity: "warning" });
+      findings.push({
+        automaticCorrection: "Rewrote the fragment as a complete concise sentence.",
+        code: "incomplete_sentence",
+        message: `${field} contained an incomplete sentence and was rewritten.`,
+        offendingElement: field,
+        repaired: true,
+        severity: "warning"
+      });
     }
   }
 
@@ -99,6 +211,31 @@ export function validateAndRepairSlide<T extends SemanticSlideInput>(slide: T): 
       if (visible && visible.toLowerCase().includes(answer.toLowerCase())) {
         content[field] = visible.split(/(?<=[.!?])\s+/).filter((sentence) => !sentence.toLowerCase().includes(answer.toLowerCase())).join(" ") || undefined;
         findings.push({ code: "answer_leakage", message: "A visible answer sentence was moved out of learner-facing content.", repaired: true, severity: "error" });
+      }
+    }
+  }
+
+  const assessmentAnswer = clean(repaired.assessment?.correctAnswer, 500);
+  if (assessmentAnswer && (
+    repaired.slideType === "guided_practice" ||
+    repaired.slideType === "independent_practice" ||
+    repaired.slideType === "knowledge_check"
+  )) {
+    for (const field of ["explanation", "hint", "question"] as const) {
+      const visible = clean(content[field], 900);
+      if (visible && visible.toLowerCase().includes(assessmentAnswer.toLowerCase())) {
+        content[field] = visible
+          .split(/(?<=[.!?])\s+/)
+          .filter((sentence) => !sentence.toLowerCase().includes(assessmentAnswer.toLowerCase()))
+          .join(" ") || undefined;
+        findings.push({
+          automaticCorrection: "Moved the answer to the structured answer key.",
+          code: "answer_leakage",
+          message: `The assessment answer was removed from visible ${field} text.`,
+          offendingElement: field,
+          repaired: true,
+          severity: "error"
+        });
       }
     }
   }
@@ -137,8 +274,65 @@ export function validateAndRepairSlide<T extends SemanticSlideInput>(slide: T): 
       visual.labels = visual.labels?.map((label) => shortenTitle(label, 48));
       findings.push({ code: "visual_label_overflow", message: "Long visual labels were shortened.", repaired: true, severity: "warning" });
     }
+    if (
+      assessmentAnswer &&
+      (repaired.slideType === "guided_practice" ||
+        repaired.slideType === "independent_practice" ||
+        repaired.slideType === "knowledge_check")
+    ) {
+      if (visual.caption?.toLowerCase().includes(assessmentAnswer.toLowerCase())) {
+        visual.caption = undefined;
+        findings.push({
+          automaticCorrection: "Removed the answer-revealing visual caption.",
+          code: "answer_leakage",
+          message: "A visual caption revealed the assessment answer.",
+          offendingElement: `${visual.id ?? "visual"}.caption`,
+          repaired: true,
+          severity: "error"
+        });
+      }
+      visual.steps = visual.steps?.filter((step) => !step.toLowerCase().includes(assessmentAnswer.toLowerCase()));
+    }
     return true;
   });
+
+  if (isPlaceholderSlide(repaired)) {
+    findings.push({
+      code: "placeholder_slide",
+      message: "The slide does not contain a specific instructional task.",
+      offendingElement: "studentContent",
+      repaired: false,
+      severity: "error"
+    });
+  }
+
+  findings.push(...validateTitleVisualAlignment(repaired.title ?? "", repaired.visuals?.[0] as VisualSpec | undefined, repaired));
+  for (const visual of repaired.visuals ?? []) {
+    const layout = (visual as VisualSpec).diagramLayout;
+    if (layout?.collisions.length) {
+      findings.push({
+        actualValue: layout.collisions.map((collision) => `${collision.firstId}/${collision.secondId}`).join(", "),
+        code: "visual_collision",
+        expectedValue: "No overlapping diagram elements",
+        message: "Diagram labels or elements overlap inside the safe region.",
+        offendingElement: "diagramLayout",
+        repaired: false,
+        severity: "error"
+      });
+    }
+    if (layout?.overflowElementIds.length) {
+      findings.push({
+        actualValue: layout.overflowElementIds.join(", "),
+        code: "visual_bounds_overflow",
+        expectedValue: "All elements inside safeBounds",
+        message: "One or more rendered diagram elements cross the slide-safe bounds.",
+        offendingElement: "diagramLayout",
+        repaired: false,
+        severity: "error"
+      });
+    }
+  }
+  findings.push(...validateCircuitSemanticConsistency(repaired as unknown as LessonPlanSlide));
 
   const visibleText = [
     repaired.title,

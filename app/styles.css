@@ -199,6 +199,30 @@ body {
 .ns-trust-strip svg { color: #8dd4b7; height: 23px; width: 23px; }
 .ns-trust-strip strong { color: white; }
 
+.ns-app-band {
+  align-items: center;
+  background: var(--ns-sky);
+  display: grid;
+  gap: clamp(24px, 4vw, 48px);
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  padding: 34px max(24px, calc((100vw - 1180px) / 2));
+}
+
+.ns-app-icon {
+  border: 1px solid rgba(20, 43, 59, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(20, 43, 59, 0.14);
+  height: 112px;
+  object-fit: cover;
+  width: 112px;
+}
+
+.ns-app-copy { max-width: 610px; }
+.ns-app-copy .ns-eyebrow { margin-bottom: 7px; }
+.ns-app-copy h2 { font-size: clamp(1.65rem, 2.6vw, 2.45rem); margin: 0 0 8px; }
+.ns-app-copy p:last-child { line-height: 1.6; margin: 0; }
+.ns-app-actions { align-items: flex-start; display: flex; flex-direction: column; gap: 13px; }
+
 .ns-tutor-proof { padding-bottom: clamp(62px, 7vw, 92px); }
 .ns-tutor-proof .ns-heading-row > p { font-size: 0.88rem; line-height: 1.65; }
 .ns-tutor-proof-grid { display: grid; gap: 18px; grid-template-columns: repeat(2, 1fr); margin-top: 42px; }
@@ -495,6 +519,9 @@ body {
   .ns-trust-strip { grid-template-columns: 1fr; padding: 0 24px; }
   .ns-trust-strip div { border-bottom: 1px solid rgba(255,255,255,0.16); border-right: 0; min-height: 64px; padding: 13px 0; }
   .ns-trust-strip div:last-child { border-bottom: 0; }
+  .ns-app-band { grid-template-columns: 96px 1fr; }
+  .ns-app-icon { height: 96px; width: 96px; }
+  .ns-app-actions { align-items: flex-start; grid-column: 1 / -1; }
   .ns-heading-row { align-items: start; flex-direction: column; gap: 10px; }
   .ns-tutor-proof-grid { grid-template-columns: 1fr; }
   .ns-tutor-review { grid-template-columns: 28px 1fr; }
@@ -553,6 +580,10 @@ body {
   .ns-application-cta { align-items: stretch; flex-direction: column; padding: 45px 18px; }
   .ns-ai-note .ns-button,
   .ns-application-cta .ns-button { width: 100%; }
+  .ns-app-band { grid-template-columns: 82px 1fr; padding: 32px 18px; }
+  .ns-app-icon { height: 82px; width: 82px; }
+  .ns-app-actions { align-items: stretch; grid-column: 1 / -1; }
+  .ns-app-actions .ns-button { width: 100%; }
   .ns-footer { padding-left: 18px; padding-right: 18px; }
   .ns-footer-grid { grid-template-columns: 1fr; }
   .ns-footer-brand { grid-column: auto; }

@@ -9,6 +9,7 @@ import type {
 const deductions: Record<string, Partial<Record<keyof SlideQualityBreakdown, number>>> = {
   answer_leakage: { instructionalUsefulness: 7, contentAccuracy: 3 },
   bullet_too_long: { readability: 2, layoutBalance: 2 },
+  calculation_error: { contentAccuracy: 18, instructionalUsefulness: 4 },
   content_overflow: { readability: 5, layoutBalance: 5 },
   duplicate_content: { instructionalUsefulness: 3, consistency: 2 },
   generic_visual: { visualRelevance: 8, instructionalUsefulness: 3 },
@@ -18,10 +19,15 @@ const deductions: Record<string, Partial<Record<keyof SlideQualityBreakdown, num
   missing_answer_key: { instructionalUsefulness: 10, contentAccuracy: 3 },
   missing_units: { contentAccuracy: 5, readability: 1 },
   missing_visual: { visualRelevance: 10, instructionalUsefulness: 3 },
+  placeholder_slide: { instructionalUsefulness: 12, visualRelevance: 5 },
   repeated_concept: { instructionalUsefulness: 3, consistency: 3 },
+  semantic_value_mismatch: { contentAccuracy: 15, consistency: 4 },
   title_too_long: { readability: 2, layoutBalance: 2 },
+  title_visual_mismatch: { visualRelevance: 12, instructionalUsefulness: 5 },
   too_many_bullets: { readability: 3, layoutBalance: 3 },
   unsupported_claim: { contentAccuracy: 8 },
+  visual_bounds_overflow: { layoutBalance: 12, readability: 5 },
+  visual_collision: { layoutBalance: 10, readability: 5 },
   visual_content_mismatch: { visualRelevance: 12, contentAccuracy: 3 },
   visual_label_overflow: { readability: 2, layoutBalance: 2 }
 };

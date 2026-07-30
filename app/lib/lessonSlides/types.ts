@@ -55,6 +55,80 @@ export type AssessmentKind =
 
 export type AssessmentDifficulty = "recall" | "interpret" | "substitute" | "compare" | "explain" | "apply";
 
+export type CircuitArrangement = "series" | "parallel" | "mixed";
+
+export type CircuitRequestedQuantity = "current" | "voltage" | "resistance" | "power";
+
+export type CircuitComponent = {
+  currentAmps?: number;
+  id: string;
+  powerWatts?: number;
+  resistanceOhms?: number;
+  type: "resistor" | "lamp" | "device" | "battery" | "switch";
+  voltageVolts?: number;
+};
+
+export type CircuitSolution = {
+  componentCurrentAmps?: Record<string, number>;
+  componentVoltageVolts?: Record<string, number>;
+  equivalentResistanceOhms?: number;
+  finalAnswers: string[];
+  powerWatts?: number;
+  resistanceOhms?: number;
+  steps: string[];
+  totalCurrentAmps?: number;
+};
+
+export type CircuitProblem = {
+  arrangement: CircuitArrangement;
+  components: CircuitComponent[];
+  question: string;
+  requestedComponentId?: string;
+  requestedQuantities: CircuitRequestedQuantity[];
+  requestedQuantity?: CircuitRequestedQuantity;
+  showSolution: boolean;
+  solution?: CircuitSolution;
+  sourceCurrentAmps?: number;
+  sourceVoltage?: number;
+};
+
+export type DiagramData =
+  | {
+      circuit: CircuitProblem;
+      kind: "circuit_problem";
+    };
+
+export type DiagramElement = {
+  height: number;
+  id: string;
+  kind: "caption" | "component" | "label" | "line" | "solution";
+  sourceField?: string;
+  text?: string;
+  width: number;
+  x: number;
+  y: number;
+};
+
+export type DiagramBounds = {
+  height: number;
+  width: number;
+  x: number;
+  y: number;
+};
+
+export type DiagramCollision = {
+  firstId: string;
+  overlapArea: number;
+  secondId: string;
+};
+
+export type DiagramLayout = {
+  collisions: DiagramCollision[];
+  elements: DiagramElement[];
+  overflowElementIds: string[];
+  safeBounds: DiagramBounds;
+};
+
 export type AssessmentItem = {
   commonWrongAnswer: string;
   correctAnswer: string;
@@ -99,6 +173,7 @@ export type TextFitResult = {
 export type SlideValidationCode =
   | "answer_leakage"
   | "bullet_too_long"
+  | "calculation_error"
   | "content_overflow"
   | "duplicate_content"
   | "generic_visual"
@@ -108,16 +183,26 @@ export type SlideValidationCode =
   | "missing_answer_key"
   | "missing_units"
   | "missing_visual"
+  | "placeholder_slide"
   | "repeated_concept"
+  | "semantic_value_mismatch"
   | "title_too_long"
+  | "title_visual_mismatch"
   | "too_many_bullets"
   | "unsupported_claim"
+  | "visual_bounds_overflow"
+  | "visual_collision"
   | "visual_content_mismatch"
   | "visual_label_overflow";
 
 export type SlideValidationFinding = {
+  actualValue?: string;
+  automaticCorrection?: string;
   code: SlideValidationCode;
+  expectedValue?: string;
   message: string;
+  offendingElement?: string;
+  problemType?: string;
   repaired: boolean;
   severity: "error" | "warning";
 };
@@ -170,7 +255,11 @@ export type SemanticSlideInput = {
   };
   title?: string;
   visuals?: Array<{
+    caption?: string;
+    diagramData?: DiagramData;
+    id?: string;
     labels?: string[];
+    sections?: Array<{ label: string; text: string }>;
     steps?: string[];
     title?: string;
     type?: string;

@@ -14,6 +14,7 @@ const routes = [
   "/resources",
   "/ai-lesson-generator",
   "/privacy",
+  "/terms",
   "/refund-policy"
 ];
 

@@ -5,25 +5,32 @@ import type {
 } from "../lessonSlidePlan.ts";
 import type { QualityFinding, StructuredFormula } from "../lessonEngine.ts";
 import { assessmentAnswerKey, createAssessmentItem, hideAssessmentAnswer } from "./assessmentGenerator.ts";
+import {
+  bindCircuitProblem,
+  circuitAnswerText,
+  circuitDiagramLabelTexts
+} from "./circuitBinding.ts";
+import { rewriteToFit } from "./contentCompressor.ts";
 import { scoreDeckQuality } from "./deckQualityScorer.ts";
 import { legacyLayoutType, selectPurposeLayout } from "./layoutEngine.ts";
 import { electricityFormulaSet, formatMathExpression } from "./mathRenderer.ts";
 import { classifySlide, slidePurpose } from "./slideClassifier.ts";
-import { validateAndRepairSlide } from "./slideValidator.ts";
+import { isPlaceholderSlide, validateAndRepairSlide } from "./slideValidator.ts";
 import { createSpeakerNotes } from "./speakerNotesGenerator.ts";
+import { createCircuitDiagramLayout } from "./visualLayoutValidator.ts";
 import {
   electricityVisualKind,
+  isElectricityContext,
   isValidConceptNode,
   selectVisualType
 } from "./visualSelector.ts";
 import type {
   AssessmentDifficulty,
   AssessmentItem,
+  CircuitProblem,
   SlideValidationFinding,
   VisualSelectionType
 } from "./types.ts";
-
-const electricityPattern = /\b(electric|electricity|circuit|current|voltage|resistance|resistor|battery|ohm|power|voltmeter)\b/i;
 
 const electricityVocabulary: Record<string, { definition: string; symbol?: string; unit?: string }> = {
   battery: { definition: "An energy source that maintains a potential difference.", symbol: "+ / -" },
@@ -40,7 +47,10 @@ const electricityVocabulary: Record<string, { definition: string; symbol?: strin
 };
 
 function clean(value?: string, max = 600) {
-  return (value ?? "").replace(/\s+/g, " ").trim().slice(0, max);
+  const normalized = (value ?? "").replace(/\s+/g, " ").trim();
+  return normalized.length <= max
+    ? normalized
+    : rewriteToFit(normalized, Math.max(4, Math.floor(max / 7)));
 }
 
 function slideText(slide: LessonPlanSlide) {
@@ -101,13 +111,56 @@ function vocabularyVisual(slide: LessonPlanSlide, topic: string): VisualSpec {
   };
 }
 
-function electricityVisual(slide: LessonPlanSlide): VisualSpec {
+function neutralCircuitProblem(arrangement: CircuitProblem["arrangement"]): CircuitProblem {
+  return {
+    arrangement,
+    components: [
+      { id: "R1", type: "resistor" },
+      { id: "R2", type: "resistor" }
+    ],
+    question: arrangement === "parallel"
+      ? "Compare the two branches in this parallel circuit."
+      : "Trace the single path through this series circuit.",
+    requestedQuantities: [],
+    showSolution: false
+  };
+}
+
+function withCircuitData(base: Omit<VisualSpec, "type">, type: VisualSpec["type"], problem: CircuitProblem) {
+  const diagramLayout = createCircuitDiagramLayout(problem);
+  return {
+    ...base,
+    diagramData: { circuit: problem, kind: "circuit_problem" as const },
+    diagramLayout,
+    labels: circuitDiagramLabelTexts(problem, false).map((label) => label.text),
+    type
+  };
+}
+
+function electricityVisual(slide: LessonPlanSlide, boundProblem?: CircuitProblem): VisualSpec {
   const kind = electricityVisualKind({ ...slide, legacyType: slide.type });
+  const text = slideText(slide).toLowerCase();
+  const question = clean(slide.studentContent.question, 600).toLowerCase();
   const base = {
     accessibilityLabel: `A topic-specific electricity model for ${clean(slide.title, 90)}.`,
     id: `${slide.id}-${kind}`,
     title: slide.title
   };
+  if (
+    /\bcharge\b/.test(question) &&
+    /\bcurrent\b/.test(question) &&
+    (/\b\d+(?:\.\d+)?\s*(?:coulombs?|c)\b/.test(question) || /\bq\s*=/.test(question)) &&
+    (/\b\d+(?:\.\d+)?\s*(?:seconds?|secs?|s)\b/.test(question) || /\bt\s*=/.test(question))
+  ) {
+    return {
+      ...base,
+      accessibilityLabel: "Equation relationship between charge, time, and current.",
+      equation: "I = Q / t",
+      labels: ["I: current in amperes", "Q: charge in coulombs", "t: time in seconds"],
+      steps: ["Use I = Q / t.", "Keep charge in coulombs and time in seconds."],
+      type: "equation_steps"
+    };
+  }
   if (kind === "electric_relationships") {
     return {
       ...base,
@@ -132,13 +185,17 @@ function electricityVisual(slide: LessonPlanSlide): VisualSpec {
     };
   }
   if (kind === "electric_power") {
-    return {
+    const powerBase = {
       ...base,
       equation: "P = V I",
       labels: ["P = power (W)", "V = voltage (V)", "I = current (A)"],
-      steps: ["Given: V = 9 V and I = 0.50 A", "Formula: P = V I", "Substitute: P = 9 V × 0.50 A", "Solve: P = 4.5 W", "Check: V × A = W"],
-      type: "electric_power"
+      steps: boundProblem?.showSolution
+        ? boundProblem.solution?.steps
+        : ["Identify voltage and current.", "Choose the requested formula.", "Keep units with each given value."]
     };
+    return boundProblem
+      ? withCircuitData(powerBase, "electric_power", boundProblem)
+      : { ...powerBase, type: "electric_power" };
   }
   if (kind === "series_parallel_comparison") {
     return {
@@ -157,10 +214,14 @@ function electricityVisual(slide: LessonPlanSlide): VisualSpec {
     return { ...base, labels: ["long plate: +", "short plate: -", "conventional current leaves +"], type: "battery_symbol" };
   }
   if (kind === "series_circuit") {
-    return { ...base, labels: ["9 V battery", "R₁ = 2 Ω", "R₂ = 4 Ω", "I = 1.5 A"], type: "series_circuit" };
+    return withCircuitData(base, "series_circuit", boundProblem ?? neutralCircuitProblem("series"));
   }
   if (kind === "parallel_circuit") {
-    return { ...base, labels: ["9 V battery", "R₁ = 6 Ω", "R₂ = 3 Ω", "branch currents"], type: "parallel_circuit" };
+    return withCircuitData(base, "parallel_circuit", boundProblem ?? neutralCircuitProblem("parallel"));
+  }
+  if (boundProblem) {
+    const type = boundProblem.arrangement === "parallel" ? "parallel_circuit" : "series_circuit";
+    return withCircuitData(base, type, boundProblem);
   }
   return {
     ...base,
@@ -197,15 +258,17 @@ function selectedVisual({
   selection,
   slide,
   subject,
-  topic
+  topic,
+  circuitProblem
 }: {
+  circuitProblem?: CircuitProblem;
   selection: VisualSelectionType;
   slide: LessonPlanSlide;
   subject: string;
   topic: string;
 }): VisualSpec[] {
   const existing = slide.visuals.filter((visual) => visualIsSpecific(visual, topic));
-  const electricity = electricityPattern.test(`${subject} ${topic} ${slideText(slide)}`);
+  const electricity = isElectricityContext(subject, topic);
   if (selection === "no_visual") {
     return slide.slideType === "learning_objectives" || slide.slideType === "next_steps"
       ? []
@@ -221,7 +284,13 @@ function selectedVisual({
     }];
   }
   if (selection === "icon_grid" && slide.slideType === "vocabulary") return [vocabularyVisual(slide, topic)];
-  if (electricity) return [electricityVisual(slide)];
+  if (
+    electricity &&
+    existing.length &&
+    (/\bconductors?\b.*\binsulators?\b|\binsulators?\b.*\bconductors?\b/i.test(slide.title) ||
+      selection === "comparison_table" && existing[0].type === "comparison_table")
+  ) return existing.slice(0, 1);
+  if (electricity) return [electricityVisual(slide, circuitProblem)];
   if (selection === "worked_solution") return [workedSolutionVisual(slide)];
   if (existing.length) return existing.slice(0, 1);
   if (selection === "equation_flow") {
@@ -239,26 +308,40 @@ function selectedVisual({
   return existing.slice(0, 1);
 }
 
-function findingsAsQuality(slideId: string, findings: SlideValidationFinding[]): QualityFinding[] {
+function findingsAsQuality(slideId: string, slideNumber: number, findings: SlideValidationFinding[]): QualityFinding[] {
   return findings.map((finding) => ({
+    actualValue: finding.actualValue,
+    automaticCorrection: finding.automaticCorrection,
     code: finding.code,
+    expectedValue: finding.expectedValue,
     explanation: finding.message,
+    offendingElement: finding.offendingElement,
+    problemType: finding.problemType,
     repair: finding.repaired ? "Automatically repaired before rendering." : "Regenerate or revise this slide.",
     severity: finding.severity,
+    slideNumber,
     slideId
   }));
 }
 
 export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePlan {
   let assessmentIndex = 0;
-  const draftSlides = plan.slides.map((slide) => {
+  const electricityLesson = isElectricityContext(plan.context.subject, plan.context.topic);
+  const sourceSlides = plan.slides.filter((slide) => {
     const slideType = classifySlide({ ...slide, legacyType: slide.type });
-    const formulas = electricityPattern.test(`${plan.context.subject} ${plan.context.topic} ${slideText(slide)}`)
+    return !isPlaceholderSlide({ ...slide, legacyType: slide.type, slideType });
+  });
+  const draftSlides = sourceSlides.map((slide) => {
+    const slideType = classifySlide({ ...slide, legacyType: slide.type });
+    const formulas = electricityLesson
       ? [...(slide.math ?? []), ...electricityFormulaFor(slide)]
         .filter((formula, index, all) => all.findIndex((item) => item.expression === formula.expression) === index)
         .slice(0, slideType === "formula_reference" ? 4 : 2)
       : slide.math;
-    const assessment = slideType === "independent_practice" || slideType === "knowledge_check" || slideType === "guided_practice"
+    const circuitProblem = electricityLesson
+      ? bindCircuitProblem({ ...slide, legacyType: slide.type, slideType })
+      : undefined;
+    let assessment = slideType === "independent_practice" || slideType === "knowledge_check" || slideType === "guided_practice"
       ? createAssessmentItem({
           index: assessmentIndex,
           learningObjectiveId: plan.conceptGraph?.assessmentTargets?.[0] ? "objective-1" : "lesson-objective",
@@ -266,6 +349,14 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
           topic: plan.context.topic
         })
       : undefined;
+    const circuitAnswer = circuitAnswerText(circuitProblem);
+    if (assessment && circuitAnswer) {
+      assessment = {
+        ...assessment,
+        correctAnswer: circuitAnswer,
+        explanation: circuitProblem?.solution?.steps.join(" ") || assessment.explanation
+      };
+    }
     if (assessment) assessmentIndex += 1;
     const safeContent = assessment ? hideAssessmentAnswer({ ...slide, assessment, legacyType: slide.type, slideType }) : slide.studentContent;
     const selection = selectVisualType({
@@ -283,7 +374,13 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
       visualSelection: selection,
       visuals: slide.visuals
     };
-    draft.visuals = selectedVisual({ selection, slide: draft, subject: plan.context.subject, topic: plan.context.topic });
+    draft.visuals = selectedVisual({
+      circuitProblem,
+      selection,
+      slide: draft,
+      subject: plan.context.subject,
+      topic: plan.context.topic
+    });
     draft.layoutType = legacyLayoutType(selectPurposeLayout({ ...draft, legacyType: draft.type }));
     return draft;
   });
@@ -301,12 +398,18 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
     };
     const validation = validateAndRepairSlide(withNotes);
     findingsBySlide.set(slide.id, validation.findings);
-    return validation.repaired as LessonPlanSlide;
+    const repaired = validation.repaired as LessonPlanSlide;
+    repaired.studentContent.bullets = repaired.studentContent.bullets?.map((bullet) =>
+      rewriteToFit(bullet.replace(/[,;:]+\s*([.!?])$/, "$1"), Math.max(4, bullet.split(/\s+/).length))
+    );
+    return repaired;
   });
 
   const answerKey = assessmentAnswerKey(repairedSlides.map((slide) => slide.assessment));
   const deckQuality = scoreDeckQuality(repairedSlides, findingsBySlide);
-  const qualityFindings = repairedSlides.flatMap((slide) => findingsAsQuality(slide.id, findingsBySlide.get(slide.id) ?? []));
+  const qualityFindings = repairedSlides.flatMap((slide, index) =>
+    findingsAsQuality(slide.id, index + 1, findingsBySlide.get(slide.id) ?? [])
+  );
   const slides = repairedSlides.map((slide) => ({
     ...slide,
     qualityScore: deckQuality.slides.find((score) => score.slideId === slide.id)

@@ -4,6 +4,7 @@ import type {
   AssessmentKind,
   SemanticSlideInput
 } from "./types.ts";
+import { rewriteToFit } from "./contentCompressor.ts";
 
 const assessmentSequence: Array<{ difficulty: AssessmentDifficulty; kind: AssessmentKind }> = [
   { difficulty: "recall", kind: "short_answer" },
@@ -15,7 +16,10 @@ const assessmentSequence: Array<{ difficulty: AssessmentDifficulty; kind: Assess
 ];
 
 function clean(value?: string, max = 400) {
-  return (value ?? "").replace(/\s+/g, " ").trim().slice(0, max);
+  const normalized = (value ?? "").replace(/\s+/g, " ").trim();
+  return normalized.length <= max
+    ? normalized
+    : rewriteToFit(normalized, Math.max(4, Math.floor(max / 7)));
 }
 
 function stripAnswerFromQuestion(value?: string) {
@@ -93,6 +97,7 @@ export function hideAssessmentAnswer(slide: SemanticSlideInput) {
     : explanation;
   return {
     ...slide.studentContent,
+    answer: undefined,
     explanation: safeExplanation || undefined,
     question
   };

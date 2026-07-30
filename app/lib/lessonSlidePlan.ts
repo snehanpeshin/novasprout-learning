@@ -7,9 +7,12 @@ import {
 } from "./lessonEngine.ts";
 import { finalizeInstructionalPlan } from "./lessonSlides/lessonPlanner.ts";
 import { classifySlide } from "./lessonSlides/slideClassifier.ts";
+import { rewriteToFit } from "./lessonSlides/contentCompressor.ts";
 import type {
   AssessmentItem,
   DeckQualityScore,
+  DiagramData,
+  DiagramLayout,
   SemanticSlideType,
   SlideQualityScore,
   SpeakerNotes,
@@ -18,7 +21,7 @@ import type {
 
 export const lessonSlidePlanSchemaVersion = "3.0";
 
-export type SubjectKey = "math" | "science" | "ela" | "coding" | "general";
+export type SubjectKey = "math" | "science" | "ela" | "coding" | "social" | "general";
 
 export type SlideType =
   | "answer_explanation"
@@ -87,6 +90,8 @@ export type VisualSpec = {
   accessibilityLabel: string;
   caption?: string;
   columns?: Array<{ items: string[]; title: string }>;
+  diagramData?: DiagramData;
+  diagramLayout?: DiagramLayout;
   equation?: string;
   expectedInsight?: string;
   id: string;
@@ -174,13 +179,14 @@ type LegacyContext = {
 };
 
 export function normalizePlainText(value?: string, maxLength = 900) {
-  return (value ?? "")
+  const normalized = (value ?? "")
     .replace(/-\s*[>¿]/g, " to ")
     .replace(/[→⇒]/g, " to ")
     .replace(/[–—]/g, "-")
     .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, maxLength);
+    .trim();
+  if (normalized.length <= maxLength) return normalized;
+  return rewriteToFit(normalized, Math.max(4, Math.floor(maxLength / 7)));
 }
 
 export function stripDuplicateNumbering(value?: string) {
@@ -206,6 +212,7 @@ function looksLikeTutorProcedure(value?: string) {
 
 export function detectSubjectKey(subject?: string, topic?: string): SubjectKey {
   const normalizedTopic = normalizePlainText(topic, 120).toLowerCase();
+  const normalized = normalizePlainText(subject, 80).toLowerCase();
   if (/\b(digest|biology|cell|organ|organism|ecosystem|photosynthesis|respiration|force|motion|energy|matter|atom|chemical|electric|electricity|circuit|current|voltage|charge|resistance)\b/.test(normalizedTopic)) {
     return "science";
   }
@@ -213,18 +220,26 @@ export function detectSubjectKey(subject?: string, topic?: string): SubjectKey {
     return "math";
   }
 
-  const normalized = normalizePlainText(subject, 80).toLowerCase();
+  if (/\b(computer science|coding|computer|data|robotics|engineering|programming)\b/.test(normalized)) {
+    return "coding";
+  }
   if (/\b(science|biology|chemistry|physics|health|environmental)\b/.test(normalized)) {
     return "science";
   }
   if (/\b(ela|english|language|reading|writing)\b/.test(normalized)) {
     return "ela";
   }
-  if (/\b(coding|computer|data|robotics|engineering|programming)\b/.test(normalized)) {
-    return "coding";
-  }
   if (/\b(math|mathematics|algebra|geometry|statistics|accounting)\b/.test(normalized)) {
     return "math";
+  }
+  if (/\b(social studies|history|geography|civics|government|economics)\b/.test(normalized)) {
+    return "social";
+  }
+  if (/\b(test preparation|test prep|exam preparation)\b/.test(normalized)) {
+    if (/\b(reading|writing|english|language|evidence|passage)\b/.test(normalizedTopic)) return "ela";
+    if (/\b(math|arithmetic|algebra|geometry|percent|equation|calculation)\b/.test(normalizedTopic)) return "math";
+    if (/\b(science|biology|chemistry|physics)\b/.test(normalizedTopic)) return "science";
+    if (/\b(coding|computer|programming)\b/.test(normalizedTopic)) return "coding";
   }
   return "general";
 }
@@ -261,7 +276,7 @@ export function chunkText(value?: string, maxLength = 220, maxChunks = 5) {
     chunks.push(current);
   }
 
-  return chunks.length ? chunks : [text.slice(0, maxLength)];
+  return chunks.length ? chunks : [rewriteToFit(text, Math.max(4, Math.floor(maxLength / 7)))];
 }
 
 function slideTitle(prefix: string, text: string, fallback: string) {
@@ -397,6 +412,9 @@ function vocabularyFor(subjectKey: SubjectKey, topic: string, lesson?: LegacyLes
   if (subjectKey === "math") {
     return ["model", "operation", "variable", "relationship", "strategy", "estimate", "solution", "check"];
   }
+  if (subjectKey === "social") {
+    return ["place", "source", "cause", "effect", "perspective", "government", "evidence", "significance"];
+  }
   return ["main idea", "model", "example", "evidence", "practice", "strategy", "check", "next step"];
 }
 
@@ -471,11 +489,63 @@ function questionVisual(subjectKey: SubjectKey, topic: string, question: string,
       type: "tape_diagram"
     };
   }
+  if (subjectKey === "ela") {
+    const writing = /\b(paragraph|essay|writing|sentence|revision)\b/i.test(`${topic} ${question}`);
+    const steps = writing
+      ? ["Focused idea", "Evidence or detail", "Explanation", "Conclusion"]
+      : ["Read the question", "Make a claim", "Find evidence", "Explain the link"];
+    return {
+      accessibilityLabel: `A literacy reasoning pathway for ${question}.`,
+      expectedInsight: writing
+        ? "Every sentence develops one controlling idea."
+        : "Evidence supports a claim only when reasoning explains the connection.",
+      id,
+      labels: steps,
+      steps,
+      title: writing ? "Build one focused paragraph" : "Connect evidence to the answer",
+      type: "process_sequence"
+    };
+  }
+  if (subjectKey === "coding") {
+    const steps = /\b(if|condition|compare|branch|equals?|>=|<=)\b/i.test(`${topic} ${question}`)
+      ? ["Input", "Test condition", "True or false path", "Output"]
+      : ["Input", "Precise step", "Trace state", "Check output"];
+    return {
+      accessibilityLabel: `A program trace for ${question}.`,
+      expectedInsight: "A precise algorithm makes each state change and decision visible.",
+      id,
+      labels: steps,
+      steps,
+      title: "Trace the algorithm",
+      type: "flowchart"
+    };
+  }
+  if (subjectKey === "social") {
+    const mapTopic = /\b(map|geography|scale|legend|compass)\b/i.test(`${topic} ${question}`);
+    const steps = mapTopic
+      ? ["Orient direction", "Read the legend", "Measure distance", "Apply the scale"]
+      : ["Legislative", "Executive", "Judicial", "Check or balance"];
+    return {
+      accessibilityLabel: mapTopic
+        ? `A map-reading sequence for ${question}.`
+        : `A three-branch government model for ${question}.`,
+      expectedInsight: mapTopic
+        ? "Direction, symbols, and scale work together to interpret a map."
+        : "Separate responsibilities and named checks limit concentrated power.",
+      id,
+      labels: steps,
+      steps: mapTopic ? steps : undefined,
+      title: mapTopic ? "Read the map evidence" : "Connect the branches",
+      type: mapTopic ? "process_sequence" : "concept_map"
+    };
+  }
 
   return {
     accessibilityLabel: `A question model connecting the important ideas in ${question}.`,
+    expectedInsight: `The labeled ideas organize the evidence needed to answer the question about ${topic}.`,
     id,
     labels,
+    mathematicalRelationship: `Each label connects directly to the question about ${topic}.`,
     title: "What connects?",
     type: "concept_map"
   };
@@ -568,13 +638,70 @@ function topicVisual(subjectKey: SubjectKey, topic: string, text: string, id: st
           labels: ["Mouth", "Esophagus", "Stomach", "Small intestine", "Large intestine", "Liver", "Pancreas"],
           title: "Digestive system",
           type: "labeled_system"
-        };
+      };
+  }
+  if (subjectKey === "ela") {
+    const writing = /\b(paragraph|essay|writing|sentence|revision)\b/i.test(combined);
+    const steps = writing
+      ? ["Topic sentence", "Supporting detail", "Explain the connection", "Concluding sentence"]
+      : ["Question", "Claim", "Text evidence", "Reasoning"];
+    return {
+      accessibilityLabel: writing
+        ? "A paragraph structure that connects every supporting sentence to one focus."
+        : "A claim-evidence-reasoning pathway for reading comprehension.",
+      expectedInsight: writing
+        ? "A focused paragraph develops one controlling idea."
+        : "Reasoning explains why selected evidence supports the claim.",
+      id,
+      labels: steps,
+      steps,
+      title: writing ? "Paragraph structure" : "Evidence pathway",
+      type: "process_sequence"
+    };
+  }
+  if (subjectKey === "coding") {
+    const steps = /\b(if|condition|decision|branch)\b/i.test(combined)
+      ? ["Input", "Condition", "True path", "False path", "Output"]
+      : ["Input", "Process", "Output", "Test"];
+    return {
+      accessibilityLabel: `A flowchart showing the algorithmic structure in ${topic}.`,
+      expectedInsight: "Sequence, decisions, and iteration determine how inputs become outputs.",
+      id,
+      labels: steps,
+      steps,
+      title: "Trace the program",
+      type: "flowchart"
+    };
+  }
+  if (subjectKey === "social") {
+    const mapTopic = /\b(map|geography|scale|legend|compass)\b/i.test(combined);
+    const steps = mapTopic
+      ? ["Compass rose", "Legend", "Scale", "Route or feature"]
+      : ["Legislative branch", "Executive branch", "Judicial branch", "Specific checks"];
+    return {
+      accessibilityLabel: mapTopic
+        ? "A map-reading model connecting direction, symbols, scale, and geographic evidence."
+        : "A government model connecting each branch to its responsibility and checks.",
+      expectedInsight: mapTopic
+        ? "Map tools combine to translate marks on a page into geographic meaning."
+        : "Separated powers interact through specific checks and balances.",
+      id,
+      labels: steps,
+      mathematicalRelationship: mapTopic
+        ? undefined
+        : "Legislative, executive, and judicial powers are peers connected by specific checks.",
+      steps: mapTopic ? steps : undefined,
+      title: mapTopic ? "Use every map tool" : "Branches and checks",
+      type: mapTopic ? "process_sequence" : "concept_map"
+    };
   }
 
   return {
     accessibilityLabel: `Visual relationship map for ${topic}.`,
+    expectedInsight: `The labeled ideas show the main relationship in ${topic}.`,
     id,
     labels: visualKeywords(`${topic} ${text}`, [topic, "model", "example", "check"], 5),
+    mathematicalRelationship: `The supporting ideas connect to the central topic, ${topic}.`,
     title: topic,
     type: "concept_map"
   };
@@ -824,33 +951,33 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
       },
       makeSlide(
         "series-circuit",
-        "worked_example",
+        "labeled_diagram",
         "Series Circuit: One Path",
         5,
         {
           keyIdea: "Series resistances add, and the same current passes through every component.",
-          steps: ["GIVEN: V = 9 V, R₁ = 2 Ω, R₂ = 4 Ω.", "FIND: total resistance and current.", "Rₑq = 2 Ω + 4 Ω = 6 Ω.", "I = 9 V / 6 Ω = 1.5 A.", "CHECK: V/Ω gives A."]
+          bullets: ["Follow one continuous path through every component.", "Use Rₑq = R₁ + R₂ when resistor values are provided."]
         },
         [{
-          accessibilityLabel: "Nine-volt series circuit with two resistors, one path, and conventional-current arrows.",
+          accessibilityLabel: "Neutral series circuit with two resistors connected along one path.",
           id: "series-circuit-diagram",
-          labels: ["9 V battery", "R₁ = 2 Ω", "R₂ = 4 Ω", "I = 1.5 A"],
+          labels: ["source", "R₁", "R₂", "one path"],
           type: "series_circuit"
         }]
       ),
       makeSlide(
         "parallel-circuit",
-        "worked_example",
+        "labeled_diagram",
         "Parallel Circuit: Branching Paths",
         5,
         {
           keyIdea: "Each parallel branch has the source voltage, while total current is the sum of branch currents.",
-          steps: ["GIVEN: V = 9 V, R₁ = 6 Ω, R₂ = 3 Ω.", "I₁ = 9 V / 6 Ω = 1.5 A.", "I₂ = 9 V / 3 Ω = 3 A.", "I total = 1.5 A + 3 A = 4.5 A.", "CHECK: branch currents recombine."]
+          bullets: ["Each branch connects across the same two source terminals.", "Use I total = I₁ + I₂ when branch currents are provided."]
         },
         [{
-          accessibilityLabel: "Nine-volt parallel circuit with two resistor branches and labeled branch currents.",
+          accessibilityLabel: "Neutral parallel circuit with two resistor branches.",
           id: "parallel-circuit-diagram",
-          labels: ["9 V battery", "R₁ = 6 Ω", "R₂ = 3 Ω", "I₁", "I₂"],
+          labels: ["source", "R₁ branch", "R₂ branch", "branching paths"],
           type: "parallel_circuit"
         }]
       ),
@@ -888,12 +1015,12 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
       {
         ...makeSlide(
           "electric-power",
-          "worked_example",
+          "concept",
           "Electrical Power",
           4,
           {
             keyIdea: "Power measures how quickly a circuit component transfers energy.",
-            steps: ["GIVEN: V = 9 V and I = 0.50 A.", "FORMULA: P = VI.", "SUBSTITUTE: P = 9 V × 0.50 A.", "SOLVE: P = 4.5 W.", "CHECK: V × A gives W."]
+            bullets: ["Use P = VI when voltage and current describe the same component.", "Volts multiplied by amperes produce watts."]
           },
           [{
             accessibilityLabel: "Power calculation with formula, substitution, units, and highlighted result.",
@@ -902,7 +1029,7 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
             type: "electric_power"
           }]
         ),
-        slideType: "worked_example"
+        slideType: "formula_reference"
       },
       makeSlide(
         "conductors-insulators",
@@ -1402,6 +1529,78 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
     ];
   }
 
+  if (subjectKey === "social") {
+    const mapTopic = /\b(map|geography|scale|legend|compass)\b/.test(lowerTopic);
+    return mapTopic
+      ? [
+          makeSlide(
+            "map-tools",
+            "process",
+            "Read A Map Systematically",
+            4,
+            { keyIdea: "Use direction, legend, and scale before drawing a geographic conclusion." },
+            [{
+              accessibilityLabel: "A four-step map-reading process using compass, legend, measurement, and scale.",
+              expectedInsight: "Map tools work together rather than as isolated decorations.",
+              id: "map-reading-flow",
+              labels: ["Compass rose", "Legend", "Measure", "Apply scale"],
+              steps: ["Orient direction", "Decode symbols", "Measure map distance", "Convert to real distance"],
+              type: "process_sequence"
+            }]
+          ),
+          makeSlide(
+            "map-types",
+            "comparison",
+            "Physical And Political Maps",
+            4,
+            { keyIdea: "Choose a map whose symbols match the question you need to answer." },
+            [{
+              accessibilityLabel: "A comparison of physical and political map purposes.",
+              columns: [
+                { items: ["landforms", "water", "elevation"], title: "Physical map" },
+                { items: ["borders", "cities", "government areas"], title: "Political map" }
+              ],
+              id: "map-type-comparison",
+              type: "comparison_table"
+            }]
+          )
+        ]
+      : [
+          makeSlide(
+            "government-branches",
+            "process",
+            "Three Branches, Different Jobs",
+            4,
+            { keyIdea: "Each branch has a distinct responsibility, and no branch performs every function." },
+            [{
+              accessibilityLabel: "A three-branch government flow showing responsibilities and interaction.",
+              expectedInsight: "Dividing responsibilities limits concentrated power.",
+              id: "three-branch-flow",
+              labels: ["Legislative: makes laws", "Executive: carries out laws", "Judicial: interprets laws"],
+              mathematicalRelationship: "Three peer branches hold distinct responsibilities within one constitutional system.",
+              title: "Constitutional system",
+              type: "concept_map"
+            }]
+          ),
+          makeSlide(
+            "checks-balances",
+            "comparison",
+            "Separation And Checks",
+            4,
+            { keyIdea: "Separation assigns jobs; checks and balances create controlled ways to limit actions." },
+            [{
+              accessibilityLabel: "A comparison between separation of powers and checks and balances.",
+              columns: [
+                { items: ["different responsibilities", "independent authority"], title: "Separation" },
+                { items: ["veto", "override", "review"], title: "Checks and balances" }
+              ],
+              id: "separation-checks-comparison",
+              type: "comparison_table"
+            }]
+          )
+        ];
+  }
+
   return [
     makeSlide(
       "visual-model",
@@ -1580,12 +1779,19 @@ export function legacyLessonToSlidePlan({
       bullets:
         subjectKey === "science" && topic.toLowerCase().includes("digest")
           ? ["Do not confuse where food travels with helper organs that add chemicals.", "Food does not pass through the liver or pancreas."]
+          : subjectKey === "science" && /\b(electric|electricity|circuit|current|voltage|resistance)\b/i.test(topic)
+            ? [
+                "Current is used up as it travels around a circuit.",
+                "Charge continues around a closed path; components transfer energy rather than consume current."
+              ]
           : subjectKey === "math" && /fraction/i.test(topic)
             ? ["Do not change only the numerator or only the denominator.", "Equivalent fractions use the same nonzero factor on both parts."]
           : subjectKey === "math"
             ? ["Do not multiply only one quantity in a ratio.", "Equivalent ratios need the same scale factor on both quantities."]
             : ["Check the exact question before answering.", "Use evidence or steps, not only a guess."],
-      keyIdea: "Mistakes become easier to catch when you know what to look for."
+      keyIdea: subjectKey === "science" && /\b(electric|electricity|circuit|current|voltage|resistance)\b/i.test(topic)
+        ? "Better reasoning: voltage transfers energy per unit charge, while current measures charge flow around a closed path."
+        : "Mistakes become easier to catch when you know what to look for."
     }, [
       {
         accessibilityLabel: `Side-by-side correction of a common misconception about ${topic}.`,
@@ -1594,6 +1800,11 @@ export function legacyLessonToSlidePlan({
               { title: "Incorrect model", items: ["Food passes through liver", "All organs have the same role"] },
               { title: "Accurate model", items: ["Food stays in the digestive tract", "Helper organs add chemicals"] }
             ]
+          : subjectKey === "science" && /\b(electric|electricity|circuit|current|voltage|resistance)\b/i.test(topic)
+            ? [
+                { title: "Common mistake", items: ["Current is used up", "Voltage and current are the same"] },
+                { title: "Better reasoning", items: ["Charge flow continues in a closed path", "Voltage is energy transferred per unit charge"] }
+              ]
           : subjectKey === "math" && /fraction/i.test(topic)
             ? [
                 { title: "Incorrect move", items: ["Change one number", "The value changes"] },

@@ -8,6 +8,80 @@ function sentenceParts(value: string) {
   return normalize(value).split(/(?<=[.!?])\s+/).filter(Boolean);
 }
 
+const danglingEndingPattern =
+  /(?:,\s*|(?:\b(?:and|or|but|because|for|with|using|solve for a|with every|with correct|for two)\b)\.?)$/i;
+
+function balancedParentheses(value: string) {
+  return [...value].reduce((balance, character) => {
+    if (character === "(") return balance + 1;
+    if (character === ")") return balance - 1;
+    return balance;
+  }, 0) === 0;
+}
+
+export function isCompleteSentence(value: string) {
+  const text = normalize(value);
+  if (!text || !/[.!?]$/.test(text)) return false;
+  if (/[,;:]\s*[.!?]$/.test(text)) return false;
+  if (danglingEndingPattern.test(text)) return false;
+  if (!balancedParentheses(text)) return false;
+  if (/[:;]\s*$/.test(text)) return false;
+  return true;
+}
+
+function repairDanglingEnding(value: string) {
+  let repaired = normalize(value)
+    .replace(/[,;:]+\s*([.!?])$/, "$1")
+    .replace(/\bsolve for a\.?$/i, "solve for the requested quantity")
+    .replace(/\bwith every\.?$/i, "with every substituted value")
+    .replace(/\bwith correct\.?$/i, "with correct units")
+    .replace(/\bfor two\.?$/i, "")
+    .replace(/\b(?:and|or|but|because|for|with|using)\.?$/i, "")
+    .replace(/[,;:]+$/, "")
+    .trim();
+  while (repaired.includes("(") && !balancedParentheses(repaired)) {
+    repaired = repaired.replace(/\s*\([^()]*$/, "").trim();
+  }
+  return repaired;
+}
+
+export function rewriteToFit(value: string, targetWords: number) {
+  const text = normalize(value);
+  if (!text) return "";
+  const sentences = sentenceParts(text);
+  const selected: string[] = [];
+  let count = 0;
+  for (const sentence of sentences) {
+    const words = sentence.split(/\s+/).filter(Boolean);
+    if (selected.length && count + words.length > targetWords) break;
+    if (!selected.length && words.length > targetWords) break;
+    selected.push(sentence);
+    count += words.length;
+  }
+  if (selected.length) {
+    const complete = selected.join(" ");
+    if (isCompleteSentence(complete)) return complete;
+    const repaired = repairDanglingEnding(complete);
+    return `${repaired}${/[.!?]$/.test(repaired) ? "" : "."}`;
+  }
+
+  const words = text.split(/\s+/).filter(Boolean);
+  const conciseClause = text.split(/\b(?:using|with|for|so that|because)\b/i)[0]?.replace(/[,;:]+$/, "").trim();
+  if (conciseClause) {
+    const clauseWords = conciseClause.split(/\s+/).filter(Boolean);
+    if (clauseWords.length >= 4 && clauseWords.length <= Math.max(4, targetWords)) {
+      return `${conciseClause}${/[.!?]$/.test(conciseClause) ? "" : "."}`;
+    }
+  }
+  const selectedWords: string[] = [];
+  for (const word of words) {
+    if (selectedWords.length >= Math.max(4, targetWords)) break;
+    selectedWords.push(word);
+  }
+  const repaired = repairDanglingEnding(selectedWords.join(" "));
+  return repaired ? `${repaired}${/[.!?]$/.test(repaired) ? "" : "."}` : "";
+}
+
 function wrapLineCount(text: string, charactersPerLine: number) {
   if (!text) return 0;
   let lines = 1;
@@ -45,14 +119,7 @@ function sentenceBoundaryFit(text: string, characterCapacity: number) {
   }
   if (fitted) return fitted;
 
-  const words = normalize(text).split(/\s+/);
-  let result = "";
-  for (const word of words) {
-    const candidate = result ? `${result} ${word}` : word;
-    if (candidate.length > characterCapacity) break;
-    result = candidate;
-  }
-  return result.replace(/[,;:]$/, "") + (/[.!?]$/.test(result) ? "" : ".");
+  return rewriteToFit(text, Math.max(4, Math.floor(characterCapacity / 7)));
 }
 
 export function fitTextToBox(request: TextFitRequest): TextFitResult {
@@ -65,7 +132,8 @@ export function fitTextToBox(request: TextFitRequest): TextFitResult {
 
   const preferredCharacterCapacity = preferredCapacity.charactersPerLine * preferredCapacity.maxLines;
   const shortened = sentenceBoundaryFit(source, preferredCharacterCapacity);
-  const remainingText = normalize(source.slice(shortened.length));
+  const shortenedWordCount = shortened.split(/\s+/).filter(Boolean).length;
+  const remainingText = normalize(source.split(/\s+/).filter(Boolean).slice(shortenedWordCount).join(" "));
   if (shortened && wrapLineCount(shortened, preferredCapacity.charactersPerLine) <= preferredCapacity.maxLines) {
     return {
       didShorten: shortened !== source,
@@ -86,7 +154,8 @@ export function fitTextToBox(request: TextFitRequest): TextFitResult {
 
   const minimumCapacity = capacityAtFont(request, request.minimumFontSize);
   const fitted = sentenceBoundaryFit(source, minimumCapacity.charactersPerLine * minimumCapacity.maxLines);
-  const remainder = normalize(source.slice(fitted.length));
+  const fittedWordCount = fitted.split(/\s+/).filter(Boolean).length;
+  const remainder = normalize(source.split(/\s+/).filter(Boolean).slice(fittedWordCount).join(" "));
   return {
     didShorten: fitted !== source,
     fits: !remainder,
@@ -109,5 +178,5 @@ export function shortenTitle(value: string, maxCharacters = 52) {
     if (candidate.length > maxCharacters) break;
     result = candidate;
   }
-  return result.replace(/[,:;/-]+$/, "") || withoutPrefix.slice(0, maxCharacters).trim();
+  return result.replace(/[,:;/-]+$/, "") || rewriteToFit(withoutPrefix, 6).replace(/[.!?]$/, "");
 }

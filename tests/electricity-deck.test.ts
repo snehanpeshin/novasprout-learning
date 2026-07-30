@@ -65,8 +65,16 @@ test("electricity deck satisfies the semantic and visual acceptance path", () =>
   assert.ok(plan.slides.every((slide) => (slide.qualityScore?.score ?? 0) >= 75));
   assert.ok((plan.deckQuality?.average ?? 0) >= 85);
   assert.equal(plan.deckQuality?.exportReady, true);
-  assert.match(JSON.stringify(plan), /Rₑq = 2 Ω \+ 4 Ω = 6 Ω/);
-  assert.match(JSON.stringify(plan), /P = 9 V × 0\.50 A/);
+  const workedProblem = plan.slides
+    .find((slide) => slide.id === "worked-example-1")
+    ?.visuals[0]?.diagramData;
+  assert.equal(workedProblem?.kind, "circuit_problem");
+  if (workedProblem?.kind === "circuit_problem") {
+    assert.deepEqual(workedProblem.circuit.components.map((component) => component.resistanceOhms), [2, 4]);
+    assert.equal(workedProblem.circuit.solution?.equivalentResistanceOhms, 6);
+    assert.equal(workedProblem.circuit.solution?.totalCurrentAmps, 1.5);
+  }
+  assert.doesNotMatch(JSON.stringify(plan.slides.filter((slide) => !slide.studentContent.question)), /0\.50 A|4\.5 W/);
   assert.doesNotMatch(JSON.stringify(plan.slides.map((slide) => slide.visuals)), /"What connects\?"|"And"|"Given"|"Find"/);
   for (const slide of plan.slides.filter((item) => item.assessment)) {
     assert.doesNotMatch(slide.studentContent.question ?? "", /\bAnswer\s*:/i);

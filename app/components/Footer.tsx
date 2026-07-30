@@ -1,6 +1,8 @@
 import { Facebook, Instagram, Mail, Phone } from "lucide-react";
 import { contactEmail, contactPhone, contactPhoneHref, subjectTracks } from "../site-data";
 
+const appStoreUrl = "https://apps.apple.com/us/app/novasprout-ai-tutor/id6793519745";
+
 export default function Footer() {
   return (
     <footer className="ns-footer">
@@ -28,11 +30,13 @@ export default function Footer() {
           <a href="/#tutors">Tutor experience</a>
           <a href="/resources">Learning Resources</a>
           <a href="/ai-lesson-generator">AI Study Tool</a>
+          <a href={appStoreUrl} target="_blank" rel="noreferrer">NovaSprout AI Tutor app</a>
         </div>
         <div>
           <h2>Tutors & policies</h2>
           <a href="/become-a-tutor">Become a Tutor</a>
           <a href="/privacy">Privacy Policy</a>
+          <a href="/terms">Terms of Use</a>
           <a href="/refund-policy">Refund Policy</a>
         </div>
         <div>

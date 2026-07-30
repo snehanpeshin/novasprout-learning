@@ -10,6 +10,7 @@ NEXT_PUBLIC_CONTACT_EMAIL=*
 *.xcuserstate
 DerivedData/
 tmp/pdfs/
+tmp/lesson-quality-matrix/
 output/pdf/*.aux
 output/pdf/*.log
 output/pdf/*.nav

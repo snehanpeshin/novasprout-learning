@@ -13,6 +13,7 @@ import {
   MessageCircleQuestion,
   SearchCheck,
   ShieldCheck,
+  Smartphone,
   Sparkles,
   Target,
   Video
@@ -21,6 +22,8 @@ import ContactForm from "./components/ContactForm";
 import Footer from "./components/Footer";
 import SiteHeader from "./components/SiteHeader";
 import { bookingUrl, generalFaqs, subjectTracks } from "./site-data";
+
+const appStoreUrl = "https://apps.apple.com/us/app/novasprout-ai-tutor/id6793519745";
 
 export const metadata: Metadata = {
   title: "Personalized Online Tutoring | NovaSprout Learning",
@@ -64,7 +67,8 @@ export default function Home() {
     parentOrganization: { "@type": "Organization", name: "Karigari Home LLC" },
     sameAs: [
       "https://www.facebook.com/profile.php?id=61591516287177",
-      "https://www.instagram.com/novasprout.learning/"
+      "https://www.instagram.com/novasprout.learning/",
+      appStoreUrl
     ],
     makesOffer: {
       "@type": "Offer",
@@ -77,6 +81,15 @@ export default function Home() {
         provider: { "@id": `${siteUrl}/#organization` }
       }
     }
+  }, {
+    "@context": "https://schema.org",
+    "@type": "MobileApplication",
+    name: "NovaSprout AI Tutor",
+    operatingSystem: "iOS",
+    applicationCategory: "EducationalApplication",
+    url: appStoreUrl,
+    downloadUrl: appStoreUrl,
+    publisher: { "@id": `${siteUrl}/#organization` }
   }, {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -124,6 +137,27 @@ export default function Home() {
         <div><CheckCircle2 aria-hidden="true" /><span><strong>Free Demo Class</strong> before committing</span></div>
         <div><Target aria-hidden="true" /><span>Matching by <strong>subject, level, goals, and schedule</strong></span></div>
         <div><ShieldCheck aria-hidden="true" /><span><strong>First paid-session fit guarantee</strong></span></div>
+      </section>
+
+      <section className="ns-app-band" aria-labelledby="app-title">
+        <Image
+          className="ns-app-icon"
+          src="/novasprout-ai-tutor-app-icon.png"
+          alt="NovaSprout AI Tutor app icon"
+          width={112}
+          height={112}
+        />
+        <div className="ns-app-copy">
+          <p className="ns-eyebrow">Now on the App Store</p>
+          <h2 id="app-title">Meet NovaSprout AI Tutor.</h2>
+          <p>Build personalized lessons, visual slide decks, practice, and timed checks in the NovaSprout iOS app.</p>
+        </div>
+        <div className="ns-app-actions">
+          <a className="ns-button ns-button-primary" href={appStoreUrl} target="_blank" rel="noreferrer">
+            <Smartphone aria-hidden="true" /> View on the App Store
+          </a>
+          <a className="ns-text-link" href="/ai-lesson-generator">Use AI Tutor on the web <ArrowRight aria-hidden="true" /></a>
+        </div>
       </section>
 
       <section className="ns-section ns-tutor-proof" id="tutors" aria-labelledby="tutors-title">
@@ -275,11 +309,6 @@ export default function Home() {
           <a className="ns-text-link" href={bookingUrl} target="_blank" rel="noreferrer">Already shared your details? Choose a demo time <ArrowRight aria-hidden="true" /></a>
         </div>
         <ContactForm />
-      </section>
-
-      <section className="ns-ai-note" aria-label="Optional AI study tool">
-        <div><p className="ns-eyebrow">Optional study tool</p><h2>Looking for a self-guided lesson?</h2><p>The NovaSprout AI lesson generator is available separately from live tutoring.</p></div>
-        <a className="ns-button ns-button-secondary" href="/ai-lesson-generator">Open AI Study Tool</a>
       </section>
 
       <Footer />

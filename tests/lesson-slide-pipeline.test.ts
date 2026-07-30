@@ -1,13 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { legacyLessonToSlidePlan } from "../app/lib/lessonSlidePlan.ts";
+import { detectSubjectKey, legacyLessonToSlidePlan } from "../app/lib/lessonSlidePlan.ts";
 import { createAssessmentItem, hideAssessmentAnswer } from "../app/lib/lessonSlides/assessmentGenerator.ts";
 import { fitTextToBox } from "../app/lib/lessonSlides/contentCompressor.ts";
 import { formatMathExpression, validateFormattedMath } from "../app/lib/lessonSlides/mathRenderer.ts";
 import { classifySlide } from "../app/lib/lessonSlides/slideClassifier.ts";
 import { validateAndRepairSlide } from "../app/lib/lessonSlides/slideValidator.ts";
-import { isValidConceptNode, selectVisualType } from "../app/lib/lessonSlides/visualSelector.ts";
+import {
+  isElectricityContext,
+  isValidConceptNode,
+  selectVisualType
+} from "../app/lib/lessonSlides/visualSelector.ts";
 
 test("fits text deterministically and returns overflow for a second slide", () => {
   const result = fitTextToBox({
@@ -84,6 +88,28 @@ test("selects visual types from purpose and domain", () => {
     slide: { legacyType: "concept", slideType: "concept_explanation", title: "A concise nonvisual definition" },
     subject: "English",
     topic: "Theme"
+  }), "no_visual");
+});
+
+test("routes overlapping subject names to the correct lesson templates", () => {
+  assert.equal(detectSubjectKey("Computer Science", "Algorithms"), "coding");
+  assert.equal(detectSubjectKey("Social Studies", "Checks and balances"), "social");
+  assert.equal(detectSubjectKey("Test Preparation", "Reading question strategy"), "ela");
+  assert.equal(detectSubjectKey("Test Preparation", "Math review and percent"), "math");
+});
+
+test("does not treat civic power or a current problem as electricity", () => {
+  assert.equal(isElectricityContext("Science", "Electricity and circuits"), true);
+  assert.equal(isElectricityContext("Social Studies", "Government power and checks"), false);
+  assert.equal(isElectricityContext("Test Preparation", "Use the current problem"), false);
+  assert.equal(selectVisualType({
+    slide: {
+      legacyType: "concept",
+      slideType: "concept_explanation",
+      studentContent: { explanation: "Each branch holds power and performs a different function." }
+    },
+    subject: "Social Studies",
+    topic: "Government, civics, and checks and balances"
   }), "no_visual");
 });
 

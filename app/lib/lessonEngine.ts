@@ -9,6 +9,7 @@ import {
   validateProcedureChoice,
   type EquationSpec
 } from "./mathValidation.ts";
+import { isCompleteSentence, rewriteToFit } from "./lessonSlides/contentCompressor.ts";
 
 export const lessonEngineVersion = "2.1" as const;
 
@@ -114,10 +115,16 @@ export type StructuredLessonSpec = {
 };
 
 export type QualityFinding = {
+  actualValue?: string;
+  automaticCorrection?: string;
   code: string;
+  expectedValue?: string;
   explanation: string;
+  offendingElement?: string;
+  problemType?: string;
   repair?: string;
   severity: QualitySeverity;
+  slideNumber?: number;
   slideId?: string;
 };
 
@@ -189,7 +196,11 @@ export function normalizeLessonRequest(input: Partial<NormalizedLessonRequest> &
 }
 
 function clean(value: unknown, maxLength = 500) {
-  return typeof value === "string" ? value.replace(/\s+/g, " ").trim().slice(0, maxLength) : "";
+  if (typeof value !== "string") return "";
+  const normalized = value.replace(/\s+/g, " ").trim();
+  return normalized.length <= maxLength
+    ? normalized
+    : rewriteToFit(normalized, Math.max(4, Math.floor(maxLength / 7)));
 }
 
 function slug(value: string) {
@@ -433,7 +444,7 @@ export function fitTextAtSentenceBoundary(value: string, maxCharacters: number) 
     if (candidate.length > maxCharacters) break;
     result = candidate;
   }
-  return result || `${text.slice(0, Math.max(0, maxCharacters - 1)).replace(/\s+\S*$/, "").trim()}.`;
+  return result || rewriteToFit(text, Math.max(4, Math.floor(maxCharacters / 7)));
 }
 
 function slideText(slide: EngineSlide) {
@@ -465,6 +476,9 @@ export function isGenericConceptMap(visual: EngineVisual, topic: string) {
 
 export function recommendTopicVisual({ index, slide, subject, topic }: { index: number; slide: EngineSlide; subject: string; topic: string }): EngineVisual | null {
   const text = `${topic} ${slideText(slide)}`.toLowerCase();
+  const quantitativeContext =
+    /\b(math|mathematics|algebra|geometry|statistics|science|biology|chemistry|physics|data)\b/i.test(subject) ||
+    /\b(math|algebra|geometry|statistics|graph|coordinate|motion|temperature|population)\b/i.test(topic);
   const id = `${slug(slide.id || slide.title || "slide")}-semantic-visual`;
   if (isSamplingStatistics(text)) {
     const title = clean(slide.title, 90).toLowerCase();
@@ -557,7 +571,10 @@ export function recommendTopicVisual({ index, slide, subject, topic }: { index: 
     const chosen = sequence[index % sequence.length];
     return { accessibilityLabel: `${chosen.title}, a topic-specific model for ${topic}.`, id, ...chosen };
   }
-  if (/\b(graph|rate|change|temperature|motion|population|function)\b/.test(text)) {
+  if (
+    quantitativeContext &&
+    /\b(graph|plot|axis|coordinate|temperature|motion|population|rate of change|mathematical function)\b/.test(text)
+  ) {
     return {
       accessibilityLabel: `A labeled graph showing the relationship described on ${slide.title || "this slide"}.`,
       id,
@@ -630,7 +647,13 @@ export function evaluateLessonSlides(slides: EngineSlide[], topic: string, audie
     if (text.length > budget.maxCharacters) {
       findings.push({ code: "content_overflow_risk", explanation: `Slide has ${text.length} characters for a ${budget.maxCharacters}-character layout budget.`, repair: "Split the idea or shorten it at sentence boundaries.", severity: "warning", slideId: id });
     }
-    if (text && /(?:\.{3}|[,;:]|\b(?:and|or|because|which|that))\s*$/.test(text)) {
+    if (
+      text &&
+      (
+        /(?:\.{3}|[,;:]|\b(?:and|or|because|which|that|using|with|for two|with every|solve for a))\s*$/.test(text) ||
+        /[.!?]$/.test(text) && !isCompleteSentence(text)
+      )
+    ) {
       findings.push({ code: "incomplete_sentence", explanation: "Slide content appears to end mid-thought.", repair: "Restore the complete sentence from source content.", severity: "error", slideId: id });
     }
     if (slide.visuals?.some((visual) => isGenericConceptMap(visual, topic))) {

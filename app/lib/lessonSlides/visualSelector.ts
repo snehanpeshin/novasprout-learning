@@ -36,6 +36,17 @@ function slideText(slide: SemanticSlideInput) {
   ].filter(Boolean).join(" ").toLowerCase();
 }
 
+export function isElectricityContext(subject: string, topic: string) {
+  const normalizedSubject = subject.toLowerCase();
+  const normalizedTopic = topic.toLowerCase();
+  const electricityTopic =
+    /\b(electric|electricity|circuit|current|voltage|resistance|resistor|battery|ohm|voltmeter)\b/.test(normalizedTopic);
+  const compatibleSubject =
+    /\b(science|physics|engineering|stem)\b/.test(normalizedSubject) &&
+    !/\b(social|history|civics|government|english|reading|writing|test preparation)\b/.test(normalizedSubject);
+  return electricityTopic && compatibleSubject;
+}
+
 export function selectVisualType({
   slide,
   subject,
@@ -47,7 +58,10 @@ export function selectVisualType({
 }): VisualSelectionType {
   const text = `${subject} ${topic} ${slideText(slide)}`.toLowerCase();
   const type = slide.slideType;
-  const electricity = /\b(electric|electricity|circuit|current|voltage|resistance|resistor|battery|ohm|power|voltmeter)\b/.test(text);
+  const electricity = isElectricityContext(subject, topic);
+  const quantitativeContext =
+    /\b(math|mathematics|algebra|geometry|statistics|data science|science|physics|chemistry)\b/i.test(subject) ||
+    /\b(math|algebra|geometry|statistics|coordinate|graph|motion|temperature)\b/i.test(topic);
 
   if (type === "lesson_cover") return "image_or_illustration";
   if (type === "learning_objectives" || type === "next_steps") return "no_visual";
@@ -61,7 +75,10 @@ export function selectVisualType({
   if (type === "process_or_sequence") return /\b(year|century|era|timeline|chronolog)\b/.test(text) ? "timeline" : "process_flow";
   if (type === "labeled_diagram" || /\b(anatomy|organ|cell|digestive|ecosystem|structure)\b/.test(text)) return "labeled_scientific_diagram";
   if (/\b(number line|integer|fraction position)\b/.test(text)) return "number_line";
-  if (/\b(coordinate|graph|slope|rate of change|function)\b/.test(text)) return "coordinate_graph";
+  if (
+    quantitativeContext &&
+    /\b(coordinate|graph|plot|axis|slope|rate of change|mathematical function|linear function)\b/.test(text)
+  ) return "coordinate_graph";
   if (type === "concept_explanation" && /\b(cycle|stages|pathway|sequence|process)\b/.test(text)) return "process_flow";
   if (type === "concept_explanation" && /\b(relationship|system|connects to|causes|depends on)\b/.test(text)) return "concept_map";
   return "no_visual";
@@ -69,6 +86,7 @@ export function selectVisualType({
 
 export function electricityVisualKind(slide: SemanticSlideInput) {
   const text = slideText(slide);
+  if (/\bcircuit types?\b|\bvisual comparison\b/.test(text)) return "series_parallel_comparison";
   if (/\bseries\b.*\bparallel\b|\bparallel\b.*\bseries\b/.test(text)) return "series_parallel_comparison";
   if (/\bcurrent\b/.test(text) && /\bvoltage\b/.test(text) && /\bresistance\b/.test(text) && /\bpower\b/.test(text)) return "electric_relationships";
   if (/\bvoltmeter|voltage drop|across (?:the|a) component\b/.test(text)) return "voltmeter_circuit";
@@ -76,6 +94,7 @@ export function electricityVisualKind(slide: SemanticSlideInput) {
   if (/\bohm|v\s*=\s*i\s*r|resistance.*current.*voltage/.test(text)) return "ohms_law";
   if (/\bparallel\b/.test(text)) return "parallel_circuit";
   if (/\bseries\b/.test(text)) return "series_circuit";
+  if (/\bwhat does (?:a|the) battery provide\b|\bbattery terminals?\b/.test(text)) return "battery_symbol";
   if (/\bbattery symbol|long plate|short plate|positive terminal|negative terminal/.test(text)) return "battery_symbol";
   return "circuit_diagram";
 }
