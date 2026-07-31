@@ -16,6 +16,7 @@ import { legacyLayoutType, selectPurposeLayout } from "./layoutEngine.ts";
 import { electricityFormulaSet, formatMathExpression } from "./mathRenderer.ts";
 import { classifySlide, slidePurpose } from "./slideClassifier.ts";
 import { runSlideDoctor } from "./slideDoctor.ts";
+import { runSemanticAccuracyGate } from "./semanticAccuracy.ts";
 import { isPlaceholderSlide, validateAndRepairSlide } from "./slideValidator.ts";
 import { createSpeakerNotes } from "./speakerNotesGenerator.ts";
 import { createCircuitDiagramLayout } from "./visualLayoutValidator.ts";
@@ -463,13 +464,27 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
     return repaired;
   });
 
-  const slideDoctor = runSlideDoctor({
+  const semanticAccuracy = runSemanticAccuracyGate({
     conceptGraph: plan.conceptGraph,
     slides: repairedSlides,
+    subject: plan.context.subject,
+    subjectKey: plan.context.subjectKey,
+    topic: plan.context.topic
+  });
+  const slideDoctor = runSlideDoctor({
+    conceptGraph: plan.conceptGraph,
+    slides: semanticAccuracy.slides,
     topic: plan.context.topic
   });
   const finalSlides = slideDoctor.slides;
-  const finalFindingsBySlide = slideDoctor.findingsBySlide;
+  const finalFindingsBySlide = new Map<string, SlideValidationFinding[]>();
+  finalSlides.forEach((slide) => {
+    finalFindingsBySlide.set(slide.id, [
+      ...(findingsBySlide.get(slide.id) ?? []),
+      ...(semanticAccuracy.findingsBySlide.get(slide.id) ?? []),
+      ...(slideDoctor.findingsBySlide.get(slide.id) ?? [])
+    ]);
+  });
   const answerKey = assessmentAnswerKey(finalSlides.map((slide) => slide.assessment));
   const deckQuality = scoreDeckQuality(finalSlides, finalFindingsBySlide);
   const qualityFindings = finalSlides.flatMap((slide, index) =>
@@ -485,6 +500,7 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
     answerKey,
     deckQuality,
     qualityFindings,
+    semanticAccuracy: semanticAccuracy.summary,
     slideDoctor: slideDoctor.summary,
     slides,
     validationWarnings: [

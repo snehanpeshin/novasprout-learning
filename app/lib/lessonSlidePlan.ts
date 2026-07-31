@@ -19,6 +19,7 @@ import type {
   VisualSelectionType
 } from "./lessonSlides/types.ts";
 import type { SlideDoctorSummary } from "./lessonSlides/slideDoctor.ts";
+import type { SemanticAccuracySummary } from "./lessonSlides/semanticAccuracy.ts";
 
 export const lessonSlidePlanSchemaVersion = "3.0";
 
@@ -152,6 +153,7 @@ export type LessonSlidePlan = {
   engineVersion?: string;
   qualityFindings?: QualityFinding[];
   schemaVersion: typeof lessonSlidePlanSchemaVersion;
+  semanticAccuracy?: SemanticAccuracySummary;
   slideDoctor?: SlideDoctorSummary;
   slides: LessonPlanSlide[];
   title: string;
@@ -436,58 +438,72 @@ function makeSlide(
 const topicVocabulary = [
   {
     pattern: /\b(sampling distribution|standard error|z-?scores?|confidence interval|sample mean|central limit|statistics?)\b/i,
+    subjects: ["math"] as SubjectKey[],
     terms: ["population", "random sample", "parameter", "statistic", "sample mean", "sampling distribution", "standard error", "sample size", "z-score", "confidence interval"]
   },
   {
     pattern: /\b(digest\w*|stomachs?|intestines?|enzymes?|bile|food)\b/i,
+    subjects: ["science"] as SubjectKey[],
     terms: ["mouth", "esophagus", "stomach", "small intestine", "large intestine", "enzyme", "bile", "absorption", "villi", "waste"]
   },
   {
     pattern: /\b(electric|circuit|current|voltage|charge|resistance|battery)\b/i,
+    subjects: ["science"] as SubjectKey[],
     terms: ["electric charge", "current", "voltage", "circuit", "battery", "conductor", "insulator", "resistance", "switch", "energy transfer"]
   },
   {
     pattern: /\b(force|motion|speed|velocity|acceleration|friction|gravity)\b/i,
+    subjects: ["science"] as SubjectKey[],
     terms: ["force", "motion", "speed", "velocity", "acceleration", "friction", "gravity", "balanced force", "unbalanced force"]
   },
   {
     pattern: /\b(cell|cells|tissue|organ|organism|microscope)\b/i,
+    subjects: ["science"] as SubjectKey[],
     terms: ["cell", "tissue", "organ", "organ system", "nucleus", "membrane", "cytoplasm", "function", "structure"]
   },
   {
     pattern: /\b(ecosystem|food chain|habitat|population|community)\b/i,
+    subjects: ["science"] as SubjectKey[],
     terms: ["ecosystem", "habitat", "population", "community", "producer", "consumer", "decomposer", "food chain", "energy flow"]
   },
   {
     pattern: /\b(ratios?|proportions?|unit rates?|scale factors?)\b/i,
+    subjects: ["math"] as SubjectKey[],
     terms: ["ratio", "unit rate", "equivalent ratio", "proportion", "scale factor", "constant of proportionality", "table", "graph"]
   },
   {
     pattern: /\b(fractions?|decimals?|percent(?:age)?s?|numerators?|denominators?)\b/i,
+    subjects: ["math"] as SubjectKey[],
     terms: ["fraction", "numerator", "denominator", "equivalent fraction", "decimal", "percent", "benchmark", "simplify"]
   },
   {
     pattern: /\b(equation|algebra|variable|expression|inequality)\b/i,
+    subjects: ["math"] as SubjectKey[],
     terms: ["variable", "expression", "equation", "coefficient", "constant", "solution", "inverse operation", "balance"]
   },
   {
     pattern: /\b(geometry|angle|triangle|area|perimeter|volume|solid|polyhedron|prism|pyramid|cube|cuboid|cylinder|cone|sphere|three-dimensional|3d)\b/i,
+    subjects: ["math"] as SubjectKey[],
     terms: ["vertex", "edge", "face", "base", "height", "net", "surface area", "volume", "cross-section", "coordinate"]
   },
   {
     pattern: /\b(reading|main idea|inference|evidence|comprehension)\b/i,
+    subjects: ["ela"] as SubjectKey[],
     terms: ["main idea", "detail", "inference", "evidence", "context clue", "theme", "summary", "author's purpose"]
   },
   {
     pattern: /\b(essay|paragraph|writing|grammar|sentence)\b/i,
+    subjects: ["ela"] as SubjectKey[],
     terms: ["claim", "topic sentence", "evidence", "explanation", "transition", "conclusion", "revision", "grammar"]
   },
   {
     pattern: /\b(python|scratch|javascript|html|algorithm|code|program)\b/i,
+    subjects: ["coding"] as SubjectKey[],
     terms: ["input", "output", "algorithm", "variable", "condition", "loop", "debug", "function", "test case"]
   },
   {
     pattern: /\b(map|geography|history|civics|government|economics)\b/i,
+    subjects: ["social"] as SubjectKey[],
     terms: ["context", "cause", "effect", "perspective", "evidence", "timeline", "map scale", "source", "significance"]
   }
 ];
@@ -504,7 +520,7 @@ function vocabularyFor(subjectKey: SubjectKey, topic: string, lesson?: LegacyLes
   ].filter(Boolean).join(" "), 5000);
   const dictionaryMatch =
     topicVocabulary.find((entry) => entry.pattern.test(lowerTopic)) ??
-    topicVocabulary.find((entry) => entry.pattern.test(lessonText));
+    topicVocabulary.find((entry) => entry.subjects.includes(subjectKey) && entry.pattern.test(lessonText));
   if (dictionaryMatch) {
     return dictionaryMatch.terms.slice(0, 8);
   }
@@ -521,7 +537,11 @@ function vocabularyFor(subjectKey: SubjectKey, topic: string, lesson?: LegacyLes
     return ["model", "operation", "variable", "relationship", "strategy", "estimate", "solution", "check"];
   }
   if (subjectKey === "social") {
-    return ["place", "source", "cause", "effect", "perspective", "government", "evidence", "significance"];
+    const kind = socialTopicKind(topic);
+    if (kind === "geography") return ["place", "region", "location", "scale", "map", "environment", "movement", "evidence"];
+    if (kind === "civics") return ["government", "authority", "rights", "responsibility", "law", "citizen", "checks", "evidence"];
+    if (kind === "economics") return ["scarcity", "choice", "opportunity cost", "incentive", "resource", "market", "tradeoff", "evidence"];
+    return ["context", "source", "cause", "effect", "perspective", "chronology", "evidence", "significance"];
   }
   return ["main idea", "model", "example", "evidence", "practice", "strategy", "check", "next step"];
 }
@@ -543,6 +563,85 @@ function visualKeywords(value: string, fallback: string[], maxItems = 5) {
     .slice(0, maxItems);
 
   return selected.map((word) => word.replace(/\b\w/g, (letter) => letter.toUpperCase()));
+}
+
+type SocialTopicKind = "civics" | "economics" | "geography" | "history" | "society";
+
+function socialTopicKind(value: string): SocialTopicKind {
+  const normalized = value.toLowerCase();
+  if (/\b(map|geograph|latitude|longitude|scale|legend|compass|region|climate|topograph|landform)\b/.test(normalized)) {
+    return "geography";
+  }
+  if (/\b(civic|government|constitution|legislative|executive|judicial|checks? and balances|separation of powers|federalism|election|citizenship)\b/.test(normalized)) {
+    return "civics";
+  }
+  if (/\b(economic|economy|supply|demand|market|scarcity|opportunity cost|inflation|trade|resource|consumer|producer)\b/.test(normalized)) {
+    return "economics";
+  }
+  if (/\b(history|historical|ancient|medieval|revolution|war|empire|civilization|century|colonization|industrialization|migration)\b/.test(normalized)) {
+    return "history";
+  }
+  return "society";
+}
+
+function socialVisual(value: string, id: string): VisualSpec {
+  const kind = socialTopicKind(value);
+  if (kind === "geography") {
+    const steps = ["Orient direction", "Read the legend", "Measure distance", "Use geographic evidence"];
+    return {
+      accessibilityLabel: "A map-reading sequence connecting direction, symbols, scale, and geographic evidence.",
+      expectedInsight: "Direction, symbols, scale, and location must be interpreted together.",
+      id,
+      labels: steps,
+      steps,
+      title: "Read the map evidence",
+      type: "process_sequence"
+    };
+  }
+  if (kind === "civics") {
+    return {
+      accessibilityLabel: "A civics model connecting government responsibilities, limits, and checks.",
+      expectedInsight: "Government structures distribute authority and define specific limits on power.",
+      id,
+      labels: ["Legislative role", "Executive role", "Judicial role", "Specific check"],
+      mathematicalRelationship: "Distinct responsibilities are connected through defined constitutional checks.",
+      title: "Responsibilities and limits",
+      type: "concept_map"
+    };
+  }
+  if (kind === "economics") {
+    const steps = ["Limited resources", "Choice", "Opportunity cost", "Outcome"];
+    return {
+      accessibilityLabel: "An economics sequence showing how scarcity leads to choices, tradeoffs, and outcomes.",
+      expectedInsight: "Every choice uses limited resources and gives up the next-best alternative.",
+      id,
+      labels: steps,
+      steps,
+      title: "Choice and tradeoff",
+      type: "process_sequence"
+    };
+  }
+  if (kind === "history") {
+    const steps = ["Historical context", "Cause", "Event or change", "Consequence", "Source evidence"];
+    return {
+      accessibilityLabel: "A historical reasoning sequence connecting context, causes, change, consequences, and source evidence.",
+      expectedInsight: "Historical claims should connect chronology and causation to evidence from sources.",
+      id,
+      labels: steps,
+      steps,
+      title: "Trace change through evidence",
+      type: "process_sequence"
+    };
+  }
+  return {
+    accessibilityLabel: "A social-studies reasoning model connecting a source, perspective, evidence, and interpretation.",
+    expectedInsight: "Interpretations become stronger when perspective and source evidence are made explicit.",
+    id,
+    labels: ["Source", "Context", "Perspective", "Evidence", "Interpretation"],
+    steps: ["Identify the source", "Place it in context", "Consider perspective", "Support an interpretation"],
+    title: "Source to interpretation",
+    type: "process_sequence"
+  };
 }
 
 function questionVisual(subjectKey: SubjectKey, topic: string, question: string, id: string): VisualSpec {
@@ -689,23 +788,7 @@ function questionVisual(subjectKey: SubjectKey, topic: string, question: string,
     };
   }
   if (subjectKey === "social") {
-    const mapTopic = /\b(map|geography|scale|legend|compass)\b/i.test(`${topic} ${question}`);
-    const steps = mapTopic
-      ? ["Orient direction", "Read the legend", "Measure distance", "Apply the scale"]
-      : ["Legislative", "Executive", "Judicial", "Check or balance"];
-    return {
-      accessibilityLabel: mapTopic
-        ? `A map-reading sequence for ${question}.`
-        : `A three-branch government model for ${question}.`,
-      expectedInsight: mapTopic
-        ? "Direction, symbols, and scale work together to interpret a map."
-        : "Separate responsibilities and named checks limit concentrated power.",
-      id,
-      labels: steps,
-      steps: mapTopic ? steps : undefined,
-      title: mapTopic ? "Read the map evidence" : "Connect the branches",
-      type: mapTopic ? "process_sequence" : "concept_map"
-    };
+    return socialVisual(`${topic} ${question}`, id);
   }
 
   return {
@@ -864,26 +947,7 @@ function topicVisual(subjectKey: SubjectKey, topic: string, text: string, id: st
     };
   }
   if (subjectKey === "social") {
-    const mapTopic = /\b(map|geography|scale|legend|compass)\b/i.test(combined);
-    const steps = mapTopic
-      ? ["Compass rose", "Legend", "Scale", "Route or feature"]
-      : ["Legislative branch", "Executive branch", "Judicial branch", "Specific checks"];
-    return {
-      accessibilityLabel: mapTopic
-        ? "A map-reading model connecting direction, symbols, scale, and geographic evidence."
-        : "A government model connecting each branch to its responsibility and checks.",
-      expectedInsight: mapTopic
-        ? "Map tools combine to translate marks on a page into geographic meaning."
-        : "Separated powers interact through specific checks and balances.",
-      id,
-      labels: steps,
-      mathematicalRelationship: mapTopic
-        ? undefined
-        : "Legislative, executive, and judicial powers are peers connected by specific checks.",
-      steps: mapTopic ? steps : undefined,
-      title: mapTopic ? "Use every map tool" : "Branches and checks",
-      type: mapTopic ? "process_sequence" : "concept_map"
-    };
+    return socialVisual(combined, id);
   }
 
   return {
@@ -1796,8 +1860,8 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
   }
 
   if (subjectKey === "social") {
-    const mapTopic = /\b(map|geography|scale|legend|compass)\b/.test(lowerTopic);
-    return mapTopic
+    const kind = socialTopicKind(lowerTopic);
+    return kind === "geography"
       ? [
           makeSlide(
             "map-tools",
@@ -1831,7 +1895,8 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
             }]
           )
         ]
-      : [
+      : kind === "civics"
+        ? [
           makeSlide(
             "government-branches",
             "process",
@@ -1864,7 +1929,64 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
               type: "comparison_table"
             }]
           )
-        ];
+          ]
+        : kind === "economics"
+          ? [
+              makeSlide(
+                "scarcity-choice",
+                "process",
+                "Scarcity Creates Choices",
+                4,
+                { keyIdea: "Because resources are limited, choosing one option creates an opportunity cost." },
+                [socialVisual(topic, "scarcity-choice-model")]
+              ),
+              makeSlide(
+                "economic-evidence",
+                "comparison",
+                "Compare Economic Outcomes",
+                4,
+                { keyIdea: "Compare costs, benefits, incentives, and evidence before judging an economic choice." },
+                [{
+                  accessibilityLabel: "A comparison of the costs, benefits, incentives, and evidence for two economic choices.",
+                  columns: [
+                    { items: ["cost", "benefit", "incentive"], title: "Choice A" },
+                    { items: ["cost", "benefit", "incentive"], title: "Choice B" }
+                  ],
+                  id: "economic-outcome-comparison",
+                  type: "comparison_table"
+                }]
+              )
+            ]
+          : [
+              makeSlide(
+                "social-evidence",
+                "process",
+                kind === "history" ? "Trace Historical Change" : "Build An Evidence-Based Interpretation",
+                4,
+                {
+                  keyIdea: kind === "history"
+                    ? "Connect context, causes, events, and consequences to evidence from reliable sources."
+                    : "Use context and perspective to explain what source evidence supports."
+                },
+                [socialVisual(topic, "social-evidence-model")]
+              ),
+              makeSlide(
+                "source-comparison",
+                "comparison",
+                "Compare Sources And Perspectives",
+                4,
+                { keyIdea: "Sources can describe the same issue differently because their context, purpose, and perspective differ." },
+                [{
+                  accessibilityLabel: "A source comparison organized by context, purpose, perspective, and evidence.",
+                  columns: [
+                    { items: ["context", "purpose", "evidence"], title: "Source A" },
+                    { items: ["context", "purpose", "evidence"], title: "Source B" }
+                  ],
+                  id: "source-perspective-comparison",
+                  type: "comparison_table"
+                }]
+              )
+            ];
   }
 
   return [

@@ -96,6 +96,11 @@ const subjectTemplates = {
     color: "EF6F61",
     icon: "\\Large\\textbf{Aa}"
   },
+  general: {
+    accent: "Explore",
+    color: "0F766E",
+    icon: "\\Large\\textbf{?}"
+  },
   math: {
     accent: "Solve",
     color: "4A90E2",
@@ -105,6 +110,11 @@ const subjectTemplates = {
     accent: "Explore",
     color: "18A67A",
     icon: "$\\Delta$"
+  },
+  social: {
+    accent: "Connect",
+    color: "B45309",
+    icon: "\\Large\\textbf{SS}"
   }
 };
 
@@ -217,12 +227,14 @@ function getSubjectTemplate(subject?: string, topic?: string) {
     return subjectTemplates.science;
   }
   if (/\b(ela|english|language|reading|writing|social|history|geography|civics|economics)\b/.test(normalized)) {
-    return subjectTemplates.ela;
+    return /\b(social|history|geography|civics|government|economics)\b/.test(normalized)
+      ? subjectTemplates.social
+      : subjectTemplates.ela;
   }
   if (/\b(coding|computer|data|robotics|engineering|programming)\b/.test(normalized)) {
     return subjectTemplates.coding;
   }
-  return subjectTemplates.math;
+  return subjectTemplates.general;
 }
 
 function assetSlideNumber(placement?: string) {
@@ -2385,6 +2397,7 @@ async function compileDeckRequest(request: Request) {
     `Visual-design score ${semanticPlan.deckQuality?.designAverage ?? 0}/100 across contrast, whitespace, hierarchy, simplicity, consistency, scale, and typography.`,
     `${semanticPlan.answerKey?.length ?? 0} student answer${semanticPlan.answerKey?.length === 1 ? "" : "s"} stored outside learner-facing slides.`,
     `${semanticPlan.conceptGraph?.nodes.length ?? 0} concept nodes and ${semanticPlan.conceptGraph?.relationships.length ?? 0} explicit relationships validated.`,
+    `Semantic accuracy gate inspected ${semanticPlan.semanticAccuracy?.inspectedSlides ?? compiledSlideBodies.length} slides: ${semanticPlan.semanticAccuracy?.subjectAlignmentPercent ?? 0}% subject alignment, ${semanticPlan.semanticAccuracy?.traceabilityPercent ?? 0}% concept traceability, ${semanticPlan.semanticAccuracy?.repairedMismatches ?? 0} mismatches repaired, and ${semanticPlan.semanticAccuracy?.unresolvedErrors ?? 0} unresolved semantic errors.`,
     `Slide Doctor inspected ${semanticPlan.slideDoctor?.inspectedSlides ?? compiledSlideBodies.length} slides in ${semanticPlan.slideDoctor?.passes ?? 0} repair passes; ${semanticPlan.slideDoctor?.repairedSlides ?? 0} slides rebuilt or reset and ${semanticPlan.slideDoctor?.unresolvedErrors ?? 0} unresolved errors remain.`,
     `${compiledSlideBodies.length} Beamer slides generated.`,
     `${programmaticVisualCount} built-in diagram/table visual${programmaticVisualCount === 1 ? "" : "s"} rendered from the lesson plan.`,
@@ -2429,6 +2442,7 @@ async function compileDeckRequest(request: Request) {
         "Structured LessonSlidePlan v3 semantic renderer active.",
         `Deck quality score ${semanticPlan.deckQuality?.average ?? 0}/100; minimum slide score ${semanticPlan.deckQuality?.minimum ?? 0}/100.`,
         `Visual-design score ${semanticPlan.deckQuality?.designAverage ?? 0}/100 across contrast, whitespace, hierarchy, simplicity, consistency, scale, and typography.`,
+        `Semantic accuracy gate inspected ${semanticPlan.semanticAccuracy?.inspectedSlides ?? fallbackSlideBodies.length} slides: ${semanticPlan.semanticAccuracy?.subjectAlignmentPercent ?? 0}% subject alignment, ${semanticPlan.semanticAccuracy?.traceabilityPercent ?? 0}% concept traceability, ${semanticPlan.semanticAccuracy?.repairedMismatches ?? 0} mismatches repaired, and ${semanticPlan.semanticAccuracy?.unresolvedErrors ?? 0} unresolved semantic errors.`,
         `Slide Doctor inspected ${semanticPlan.slideDoctor?.inspectedSlides ?? fallbackSlideBodies.length} slides in ${semanticPlan.slideDoctor?.passes ?? 0} repair passes; ${semanticPlan.slideDoctor?.repairedSlides ?? 0} slides rebuilt or reset and ${semanticPlan.slideDoctor?.unresolvedErrors ?? 0} unresolved errors remain.`,
         `${fallbackSlideBodies.length} Beamer slides generated.`,
         `${fallbackProgrammaticVisualCount} built-in diagram/table visual${fallbackProgrammaticVisualCount === 1 ? "" : "s"} rendered from the lesson plan.`,

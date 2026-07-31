@@ -919,6 +919,9 @@ For a full lesson, produce enough source material for 24-32 useful slides: 4 com
 Give each fullLessonSegment a short topic-specific title and 3-5 sentences of actual teaching content. Write the explanation the learner needs to read; do not describe what a future slide, image, teacher, or tutor should show.
 Make guidedExample a real example with a concrete situation, labeled steps, reasoning at each step, and a final check. Never return planning language such as "visuals to show", "include a diagram", or "find the requested quantity" as lesson content.
 Use conceptModel.nodes to define 6-10 essential terms in clear grade-appropriate language. Include the physical or causal relationships needed to create an accurate diagram, especially for anatomy, processes, maps, experiments, and spatial topics.
+Before returning the JSON, silently perform a complete accuracy pass. Check every factual claim against the selected subject and topic, solve every quantitative example again, verify every answer and distractor, confirm formulas and units are dimensionally consistent, and confirm each visual description uses only the objects and relationships defined in conceptModel.
+Do not invent dates, quotations, people, laws, scientific mechanisms, citations, or numerical values. If an exact fact is uncertain or unnecessary, omit it or state the stable concept without false precision. Keep terminology consistent across the concept model, explanation, worked example, practice, and assessment.
+For interdisciplinary lessons, name the connection explicitly, but never replace the requested topic with a familiar example from another subject. A history topic must not silently become a U.S. civics lesson; an economics topic must not inherit a three-branch-government diagram; and a general topic must not inherit a ratio lesson.
 
 Student context:
 - Grade or level: ${grade}
@@ -960,6 +963,7 @@ For geometry, spatial reasoning, object-shape, or 3D-coordinate topics, name eac
 Make guidedExample include clear steps and a final check.
 Make practiceQuestions self-contained and include a short hint and answer/explanation in plain text, for example: "Try: ... Hint: ... Answer: ... Why: ..."
 Make quickAssessment include answerable questions with brief answer/explanation text when possible.
+Independently verify that each question has one defensible answer, that its answer follows from the lesson content, and that multiple-choice distractors are clearly wrong without being absurd or ambiguous.
 Avoid teacher-only wording such as "whole-class", "tutor-guided move", "teacher should", or "ask the student to" in student-facing explanation fields.
 Use ASCII arrows as "to" instead of "->".
 Use plain text in prose fields. LaTeX is allowed only in conceptModel.formulas.expression. Avoid markdown, code fences, comments, or explanatory text outside the JSON.
