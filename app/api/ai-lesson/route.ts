@@ -809,7 +809,7 @@ async function requestOpenAiLesson({
   const body = {
     background: true,
     input: prompt,
-    max_output_tokens: 6000,
+    max_output_tokens: 8000,
     model: openAiLessonModel,
     text: {
       format: {
@@ -909,7 +909,12 @@ You are an experienced online tutor and curriculum designer for NovaSprout Learn
 
 Create a personalized tutoring output using original content, aligned to common U.S. learning expectations without copying any school syllabus, textbook, worksheet, or proprietary curriculum.
 Create a large pool of student-facing lesson content first: explanations, examples, vocabulary, misconceptions, visual descriptions, practice, quiz items, and next steps. The website will distribute that content into private timed slides, so do not write tutor instructions or a separate slide deck outline.
+Write for a clear visual lesson system: one main idea at a time, concise sentence-case headings, short text blocks, and only details that support the learning objective. Preserve hierarchy, simplicity, whitespace, readable type scale, and consistent terminology. Never rely on color alone to communicate meaning; describe every important visual relationship in words so the renderer can maintain strong contrast and accessibility.
 Every major content field should teach, not label. Avoid one-line placeholders. Use 2-4 clear student-facing sentences for concept explanations, guided examples, and fullLessonSegments whenever the output type is not a quick explanation.
+For a full lesson, produce enough source material for 24-32 useful slides: 4 complete learning objectives, 8-12 concept sentences, one 5-8 step worked example, 5-7 content-rich lesson segments, 6 practice questions, and 3-5 assessment checks. Each objective must preserve the complete skill and context in about 10-18 words.
+Give each fullLessonSegment a short topic-specific title and 3-5 sentences of actual teaching content. Write the explanation the learner needs to read; do not describe what a future slide, image, teacher, or tutor should show.
+Make guidedExample a real example with a concrete situation, labeled steps, reasoning at each step, and a final check. Never return planning language such as "visuals to show", "include a diagram", or "find the requested quantity" as lesson content.
+Use conceptModel.nodes to define 6-10 essential terms in clear grade-appropriate language. Include the physical or causal relationships needed to create an accurate diagram, especially for anatomy, processes, maps, experiments, and spatial topics.
 
 Student context:
 - Grade or level: ${grade}

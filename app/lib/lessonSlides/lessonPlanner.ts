@@ -46,6 +46,36 @@ const electricityVocabulary: Record<string, { definition: string; symbol?: strin
   voltage: { definition: "Potential difference that transfers energy per unit charge.", symbol: "V", unit: "volt (V)" }
 };
 
+const lessonVocabulary: Record<string, string> = {
+  absorption: "Movement of digested nutrients across the intestine wall into blood or lymph.",
+  algorithm: "A precise sequence of steps used to solve a problem or complete a task.",
+  bile: "A digestive fluid that emulsifies fat into smaller droplets so lipase can act faster.",
+  capillary: "A tiny blood vessel that receives simple sugars and amino acids from a villus.",
+  claim: "A focused answer or position supported by relevant evidence and reasoning.",
+  condition: "A true-or-false test that decides which program path runs next.",
+  evidence: "Specific information used to support a claim or conclusion.",
+  enzyme: "A protein that speeds a chemical reaction, including the breakdown of food molecules.",
+  esophagus: "A muscular tube that moves a swallowed bolus from the mouth to the stomach.",
+  gallbladder: "A small organ that stores concentrated bile and releases it into the small intestine.",
+  input: "Information supplied to a program before it processes and produces an output.",
+  lacteal: "A small lymph vessel inside a villus that receives most absorbed fat products.",
+  "large intestine": "The organ that recovers water and electrolytes and compacts remaining waste.",
+  lipase: "An enzyme that breaks triglycerides into fatty acids and glycerol.",
+  liver: "An organ that makes bile and processes many absorbed nutrients.",
+  loop: "A programming structure that repeats instructions while a condition or count requires it.",
+  microvilli: "Microscopic folds on intestinal cells that add even more absorptive surface area.",
+  mouth: "The entry to the digestive tract, where chewing and salivary amylase begin digestion.",
+  output: "The information or action produced after a program processes its input.",
+  pancreas: "A helper organ that releases digestive enzymes and bicarbonate into the small intestine.",
+  peristalsis: "Wave-like muscle contractions that move food through the digestive tract.",
+  relationship: "A rule or pattern describing how two or more quantities or ideas are connected.",
+  resistance: "Opposition to electric current in a component.",
+  "small intestine": "The organ where most chemical digestion and nutrient absorption occur.",
+  stomach: "A muscular organ that mixes food with acid and enzymes to form chyme.",
+  variable: "A symbol or named storage location whose value can change.",
+  villi: "Finger-like folds that increase small-intestine surface area and contain capillaries and lacteals."
+};
+
 function clean(value?: string, max = 600) {
   const normalized = (value ?? "").replace(/\s+/g, " ").trim();
   return normalized.length <= max
@@ -89,15 +119,21 @@ function electricityFormulaFor(slide: LessonPlanSlide): StructuredFormula[] {
   }));
 }
 
-function vocabularyVisual(slide: LessonPlanSlide, topic: string): VisualSpec {
+function vocabularyVisual(
+  slide: LessonPlanSlide,
+  topic: string,
+  conceptDefinitions: Map<string, string>
+): VisualSpec {
   const terms = (slide.studentContent.bullets ?? []).slice(0, 6);
   const columns = terms.map((term) => {
     const normalized = clean(term, 60).toLowerCase();
     const entry = electricityVocabulary[normalized];
+    const definition = entry?.definition || conceptDefinitions.get(normalized) || lessonVocabulary[normalized];
     return {
-      items: entry
-        ? [entry.definition, [entry.symbol ? `Symbol: ${entry.symbol}` : "", entry.unit ? `Unit: ${entry.unit}` : ""].filter(Boolean).join(" | ")]
-        : [`A key term used to reason about ${topic}.`],
+      items: [
+        definition || `${clean(term, 40)} names a specific idea used to explain ${topic}.`,
+        entry ? [entry.symbol ? `Symbol: ${entry.symbol}` : "", entry.unit ? `Unit: ${entry.unit}` : ""].filter(Boolean).join(" | ") : ""
+      ].filter(Boolean),
       title: clean(term, 32)
     };
   });
@@ -259,9 +295,11 @@ function selectedVisual({
   slide,
   subject,
   topic,
-  circuitProblem
+  circuitProblem,
+  conceptDefinitions
 }: {
   circuitProblem?: CircuitProblem;
+  conceptDefinitions: Map<string, string>;
   selection: VisualSelectionType;
   slide: LessonPlanSlide;
   subject: string;
@@ -283,7 +321,7 @@ function selectedVisual({
       type: "cover_illustration"
     }];
   }
-  if (selection === "icon_grid" && slide.slideType === "vocabulary") return [vocabularyVisual(slide, topic)];
+  if (selection === "icon_grid" && slide.slideType === "vocabulary") return [vocabularyVisual(slide, topic, conceptDefinitions)];
   if (
     electricity &&
     existing.length &&
@@ -291,7 +329,20 @@ function selectedVisual({
       selection === "comparison_table" && existing[0].type === "comparison_table")
   ) return existing.slice(0, 1);
   if (electricity) return [electricityVisual(slide, circuitProblem)];
-  if (selection === "worked_solution") return [workedSolutionVisual(slide)];
+  if (selection === "worked_solution") {
+    const domainVisual = existing.find((visual) =>
+      visual.type !== "concept_map" &&
+      visual.type !== "cover_illustration" &&
+      visual.type !== "icon_grid" &&
+      visual.type !== "labeled_cards"
+    );
+    if (domainVisual) return [domainVisual];
+    const quantitativeExample = /\b(math|mathematics|algebra|geometry|statistics|physics)\b/i.test(subject) ||
+      Boolean(slide.math?.length) ||
+      /\b(?:calculate|compute|solve|equation|formula)\b/i.test(slideText(slide)) && /\d/.test(slideText(slide));
+    if (!quantitativeExample && existing.length) return existing.slice(0, 1);
+    return [workedSolutionVisual(slide)];
+  }
   if (existing.length) return existing.slice(0, 1);
   if (selection === "equation_flow") {
     const steps = (slide.math ?? []).map((formula) => formatMathExpression(formula.expression));
@@ -327,6 +378,11 @@ function findingsAsQuality(slideId: string, slideNumber: number, findings: Slide
 export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePlan {
   let assessmentIndex = 0;
   const electricityLesson = isElectricityContext(plan.context.subject, plan.context.topic);
+  const conceptDefinitions = new Map(
+    (plan.conceptGraph?.nodes ?? [])
+      .map((node) => [clean(node.label, 80).toLowerCase(), clean(node.definition, 260)] as const)
+      .filter(([label, definition]) => label && definition)
+  );
   const sourceSlides = plan.slides.filter((slide) => {
     const slideType = classifySlide({ ...slide, legacyType: slide.type });
     return !isPlaceholderSlide({ ...slide, legacyType: slide.type, slideType });
@@ -376,6 +432,7 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
     };
     draft.visuals = selectedVisual({
       circuitProblem,
+      conceptDefinitions,
       selection,
       slide: draft,
       subject: plan.context.subject,

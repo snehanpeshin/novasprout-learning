@@ -1646,6 +1646,107 @@ h3 {
   white-space: pre-wrap;
 }
 
+.lesson-preview {
+  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 18px 0;
+}
+
+.lesson-preview-heading {
+  align-items: center;
+  display: flex;
+  gap: 11px;
+}
+
+.lesson-preview-heading > svg {
+  color: var(--blue);
+  flex: 0 0 auto;
+}
+
+.lesson-preview-heading h4 {
+  font-size: 1.05rem;
+  margin: 2px 0 0;
+}
+
+.lesson-preview-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.lesson-preview-facts span {
+  align-items: center;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 0.86rem;
+  font-weight: 700;
+  gap: 7px;
+}
+
+.lesson-preview-facts svg {
+  color: var(--mint-dark);
+}
+
+.lesson-preview-big-idea,
+.lesson-preview-example {
+  background: #f8fbff;
+  border-left: 4px solid var(--blue);
+  padding: 13px 15px;
+}
+
+.lesson-preview strong {
+  display: block;
+  font-size: 0.92rem;
+  margin-bottom: 7px;
+}
+
+.lesson-preview p,
+.lesson-preview li {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.lesson-preview p {
+  margin: 0;
+}
+
+.lesson-preview-grid {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+}
+
+.lesson-preview-grid ul,
+.lesson-preview-grid ol {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding-left: 19px;
+}
+
+.lesson-preview-grid ol {
+  list-style: decimal;
+}
+
+.lesson-preview-grid li span {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.lesson-preview-grid li small {
+  display: block;
+  font-size: 0.76rem;
+  margin-top: 1px;
+}
+
+.lesson-preview-example {
+  border-left-color: var(--mint);
+}
+
 .lesson-launch-card {
   align-items: center;
   background:
@@ -3399,6 +3500,7 @@ footer div span:first-child {
   }
 
   .lesson-launch-card,
+  .lesson-preview-grid,
   .student-deck-slide,
   .subject-learning-card,
   .lesson-player-body {

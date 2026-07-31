@@ -2382,6 +2382,7 @@ async function compileDeckRequest(request: Request) {
   const qualityChecks = [
     "Structured LessonSlidePlan v3 semantic renderer active.",
     `Deck quality score ${semanticPlan.deckQuality?.average ?? 0}/100; minimum slide score ${semanticPlan.deckQuality?.minimum ?? 0}/100.`,
+    `Visual-design score ${semanticPlan.deckQuality?.designAverage ?? 0}/100 across contrast, whitespace, hierarchy, simplicity, consistency, scale, and typography.`,
     `${semanticPlan.answerKey?.length ?? 0} student answer${semanticPlan.answerKey?.length === 1 ? "" : "s"} stored outside learner-facing slides.`,
     `${semanticPlan.conceptGraph?.nodes.length ?? 0} concept nodes and ${semanticPlan.conceptGraph?.relationships.length ?? 0} explicit relationships validated.`,
     `${compiledSlideBodies.length} Beamer slides generated.`,
@@ -2426,6 +2427,7 @@ async function compileDeckRequest(request: Request) {
       remoteQualityChecks = [
         "Structured LessonSlidePlan v3 semantic renderer active.",
         `Deck quality score ${semanticPlan.deckQuality?.average ?? 0}/100; minimum slide score ${semanticPlan.deckQuality?.minimum ?? 0}/100.`,
+        `Visual-design score ${semanticPlan.deckQuality?.designAverage ?? 0}/100 across contrast, whitespace, hierarchy, simplicity, consistency, scale, and typography.`,
         `${fallbackSlideBodies.length} Beamer slides generated.`,
         `${fallbackProgrammaticVisualCount} built-in diagram/table visual${fallbackProgrammaticVisualCount === 1 ? "" : "s"} rendered from the lesson plan.`,
         `${fallbackCoverage.visualSlideCount} of ${fallbackSlideBodies.length} slides (${fallbackCoverage.percent}%) contain a topic-specific diagram, model, or data display.`,

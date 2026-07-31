@@ -222,14 +222,29 @@ export type SlideQualityBreakdown = {
   visualRelevance: number;
 };
 
+export type DesignPrincipleScores = {
+  consistency: number;
+  contrast: number;
+  hierarchy: number;
+  scale: number;
+  simplicity: number;
+  typography: number;
+  whitespace: number;
+};
+
 export type SlideQualityScore = {
   breakdown: SlideQualityBreakdown;
+  designNotes: string[];
+  designPrinciples: DesignPrincipleScores;
+  designScore: number;
   score: number;
   slideId: string;
 };
 
 export type DeckQualityScore = {
   average: number;
+  designAverage: number;
+  designPrinciples: DesignPrincipleScores;
   exportReady: boolean;
   minimum: number;
   reasons: string[];
@@ -237,9 +252,11 @@ export type DeckQualityScore = {
 };
 
 export type SemanticSlideInput = {
+  accessibilityLabel?: string;
   assessment?: AssessmentItem;
   estimatedMinutes?: number;
   id?: string;
+  layoutType?: "equation-focus" | "full-visual" | "text-focus" | "text-visual";
   legacyType?: string;
   math?: Array<{ expression: string; meaning?: string; units?: string }>;
   slideType?: SemanticSlideType;

@@ -78,7 +78,7 @@ export function isPlaceholderSlide(slide: SemanticSlideInput) {
     );
     const hasWorkedContent = Boolean(
       slide.studentContent?.question ||
-      (slide.studentContent?.steps?.length ?? 0) >= 3 ||
+      (slide.studentContent?.steps?.length ?? 0) >= 2 ||
       /\b(?:find|calculate|determine|given)\b/i.test(workedText) && /\d/.test(workedText) ||
       slide.visuals?.some((visual) => visual.diagramData?.kind === "circuit_problem" && visual.diagramData.circuit.showSolution)
     );
@@ -152,15 +152,15 @@ export function validateAndRepairSlide<T extends SemanticSlideInput>(slide: T): 
   }
   content.bullets = deduplicatedBullets.slice(0, 6).map((bullet) => {
     const fitted = fitTextToBox({
-      boxHeight: 0.55,
-      boxWidth: 5.6,
-      maxLines: 2,
-      minimumFontSize: 16,
-      preferredFontSize: 18,
+      boxHeight: 0.9,
+      boxWidth: 6,
+      maxLines: 3,
+      minimumFontSize: 15,
+      preferredFontSize: 17,
       text: completeSentence(bullet)
     });
     if (fitted.didShorten || !fitted.fits) {
-      findings.push({ code: "bullet_too_long", message: "A long bullet was fitted to a two-line budget.", repaired: true, severity: "warning" });
+      findings.push({ code: "bullet_too_long", message: "A long bullet was fitted to a three-line budget.", repaired: true, severity: "warning" });
     }
     return fitted.text;
   });

@@ -194,7 +194,7 @@ export function stripDuplicateNumbering(value?: string) {
 }
 
 function removeTutorInstructionLanguage(value?: string, maxLength = 900) {
-  return normalizePlainText(value, maxLength)
+  const normalized = normalizePlainText(value, maxLength)
     .replace(/\b(?:tutor|teacher|instructor)\s+(?:explains?|presents?|asks?|models?|introduces?|gives?|checks?|confirms?|notes?|guides?)\b/gi, "Study")
     .replace(/\b(?:ask|tell|have)\s+the\s+student\s+to\b/gi, "Try to")
     .replace(/\bthe\s+student\s+(?:responds?|works?|solves?|explains?)\b/gi, "You work")
@@ -203,6 +203,12 @@ function removeTutorInstructionLanguage(value?: string, maxLength = 900) {
     .replace(/\bteacher should\b/gi, "focus on")
     .replace(/\btutor should\b/gi, "focus on")
     .replace(/\s+/g, " ")
+    .trim();
+
+  return normalized
+    .split(/(?<=[.!?])\s+/)
+    .filter((sentence) => !/^(?:visuals?|images?|diagrams?)\s+to\s+show\s*:/i.test(sentence.trim()))
+    .join(" ")
     .trim();
 }
 
@@ -277,6 +283,106 @@ export function chunkText(value?: string, maxLength = 220, maxChunks = 5) {
   }
 
   return chunks.length ? chunks : [rewriteToFit(text, Math.max(4, Math.floor(maxLength / 7)))];
+}
+
+function conceptSlideTitle(subjectKey: SubjectKey, topic: string, chunk: string, index: number) {
+  const text = `${topic} ${chunk}`.toLowerCase();
+  if (subjectKey === "science" && /\bdigest/.test(text)) {
+    if (/\bvilli|microvilli|surface area|capillar|lacteal|absorb/.test(chunk.toLowerCase())) {
+      return "How Nutrients Are Absorbed";
+    }
+    if (/\bbile|pancrea|small intestine|enzyme|bicarbonate/.test(chunk.toLowerCase())) {
+      return "Digestion In The Small Intestine";
+    }
+    if (/\bmouth|esophagus|stomach|peristalsis|salivary/.test(chunk.toLowerCase())) {
+      return "From Mouth To Stomach";
+    }
+    return index === 0 ? "The Digestive System's Main Job" : "How Digestion Works";
+  }
+  if (subjectKey === "math" && /\bformula|equation|relationship/.test(chunk.toLowerCase())) {
+    return "Connect The Quantities";
+  }
+  if (subjectKey === "ela" && /\bevidence|claim|reason/.test(chunk.toLowerCase())) {
+    return "Connect Evidence To The Claim";
+  }
+  if (subjectKey === "coding" && /\bcondition|branch|loop|iteration/.test(chunk.toLowerCase())) {
+    return "Trace The Program's Decision";
+  }
+  return slideTitle("Understand", chunk, `Key Idea ${index + 1}`);
+}
+
+type GuidedExamplePart = {
+  explanation?: string;
+  steps?: string[];
+  title: string;
+};
+
+function guidedExampleTitle(subjectKey: SubjectKey, topic: string, steps: string[], index: number) {
+  const text = `${topic} ${steps.join(" ")}`.toLowerCase();
+  if (subjectKey === "science" && /\bdigest/.test(text)) {
+    if (/\bmouth\b/.test(text) && /\besophagus\b/.test(text)) return "A Bite Enters The Digestive Tract";
+    if (/\bstomach\b/.test(text) && /\bsmall intestine\b/.test(text)) return "A Bite Becomes Chyme And Nutrients";
+    if (/\babsorption|capillar|lacteal|final check/.test(text)) return "Where Each Nutrient Goes";
+  }
+  return `Worked Example ${index + 1}`;
+}
+
+function questionSlideTitle(
+  prefix: "Check" | "Practice",
+  subjectKey: SubjectKey,
+  topic: string,
+  question: string,
+  index: number
+) {
+  const text = `${topic} ${question}`.toLowerCase();
+  if (subjectKey === "science" && /\bdigest/.test(text)) {
+    if (/\bspeed|rate|distance|time|v\s*=|d\s*\/\s*t/.test(question.toLowerCase())) return `${prefix}: Estimate Transit Speed`;
+    if (/\bbile|gallbladder|emulsif|lipase/.test(question.toLowerCase())) return `${prefix}: Bile And Fat Digestion`;
+    if (/\bvilli|villus|capillar|lacteal|absorption/.test(question.toLowerCase())) return `${prefix}: Nutrient Absorption`;
+    if (/\bamylase|mouth|starch|saliva/.test(question.toLowerCase())) return `${prefix}: Digestion In The Mouth`;
+    if (/\blarge intestine|water|waste/.test(question.toLowerCase())) return `${prefix}: The Large Intestine`;
+  }
+  return slideTitle(prefix, question, `${prefix} ${index + 1}`);
+}
+
+function guidedExampleParts(
+  value: string | undefined,
+  subjectKey: SubjectKey,
+  topic: string
+): GuidedExamplePart[] {
+  const text = removeTutorInstructionLanguage(value, 3200);
+  if (!text) return [];
+
+  const sections = text
+    .split(/(?=\bStep\s*\d+\s*:|\bFinal check\s*:)/i)
+    .map((section) => normalizePlainText(section, 700))
+    .filter(Boolean);
+  const hasNumberedSequence = sections.filter((section) => /^Step\s*\d+\s*:/i.test(section)).length >= 2;
+  if (!hasNumberedSequence) {
+    return chunkText(text, 300, 6).map((chunk, index) => ({
+      explanation: chunk,
+      steps: chunk
+        .split(/;\s*/)
+        .map((item) => normalizePlainText(item, 180))
+        .filter(Boolean)
+        .slice(0, 4),
+      title: `Worked Example ${index + 1}`
+    }));
+  }
+
+  const introduction = /^Step\s*\d+\s*:|^Final check\s*:/i.test(sections[0]) ? "" : sections.shift() ?? "";
+  const parts: GuidedExamplePart[] = [];
+  for (let index = 0; index < sections.length; index += 2) {
+    const steps = sections
+      .slice(index, index + 2)
+      .map((section) => section.replace(/^Step\s*(\d+)\s*:\s*/i, "Step $1: ").replace(/^Final check\s*:\s*/i, "Final check: "));
+    parts.push({
+      explanation: index === 0 ? introduction : undefined,
+      steps,
+      title: guidedExampleTitle(subjectKey, topic, steps, parts.length)
+    });
+  }
+  return parts;
 }
 
 function slideTitle(prefix: string, text: string, fallback: string) {
@@ -440,6 +546,66 @@ function visualKeywords(value: string, fallback: string[], maxItems = 5) {
 function questionVisual(subjectKey: SubjectKey, topic: string, question: string, id: string): VisualSpec {
   const labels = visualKeywords(question, [topic, "given", "find", "check"], 5);
   const geometryQuestion = /\b(net|fold|unfold|surface area|cube|cuboid|rectangular prism|prism|pyramid|cylinder|cone|sphere|solid|volume|face|edge|vertex|vertices)\b/i.test(question);
+  if (subjectKey === "science" && /\bdigest|stomach|intestine|villi|bile|pancrea/i.test(`${topic} ${question}`)) {
+    if (/\b(speed|rate|distance|time|v\s*=|d\s*\/\s*t)\b/i.test(question)) {
+      return {
+        accessibilityLabel: "Transit-speed calculation showing distance divided by time with units.",
+        equation: "v = d/t = 6\\,\\mathrm{m}/14{,}400\\,\\mathrm{s}",
+        id,
+        labels: ["distance = 6 m", "time = 4 h = 14,400 s", "speed = 0.000417 m/s"],
+        steps: ["Convert 4 hours to 14,400 seconds.", "Substitute into v = d/t.", "Divide and check the speed unit."],
+        title: "Estimate transit speed",
+        type: "equation_steps"
+      };
+    }
+    if (/\bbile|fat|emulsif|lipase|gallbladder/.test(question.toLowerCase())) {
+      return {
+        accessibilityLabel: "Fat digestion sequence showing bile breaking one large fat droplet into smaller droplets before lipase acts.",
+        expectedInsight: "Emulsification increases exposed surface area without chemically digesting the fat.",
+        id,
+        labels: ["Gallbladder releases bile", "Large fat droplet", "Many small droplets", "Lipase acts faster"],
+        steps: ["Bile enters the small intestine", "Large droplet becomes many droplets", "Lipase reaches more surface", "Fat molecules are digested"],
+        title: "How bile helps lipase",
+        type: "process_sequence"
+      };
+    }
+    if (/\bvilli|villus|capillar|lacteal|amino acid|simple sugar|fatty acid/.test(question.toLowerCase())) {
+      return {
+        accessibilityLabel: "Villus cross-section comparing nutrients entering blood capillaries with fats entering a lacteal.",
+        columns: [
+          { items: ["simple sugars", "amino acids", "blood capillaries"], title: "To blood" },
+          { items: ["fatty acids", "chylomicrons", "lacteal and lymph"], title: "To lymph" }
+        ],
+        expectedInsight: "Water-soluble nutrients enter capillaries, while most absorbed fats enter lacteals.",
+        id,
+        title: "Two absorption routes",
+        type: "structure_function"
+      };
+    }
+    if (/\bamylase|mouth|starch|saliva/.test(question.toLowerCase())) {
+      return {
+        accessibilityLabel: "Mouth digestion sequence showing chewing and salivary amylase beginning starch breakdown.",
+        id,
+        labels: ["Food enters mouth", "Teeth break pieces", "Amylase meets starch", "Smaller sugars begin to form"],
+        steps: ["Chew", "Mix with saliva", "Amylase acts on starch", "Swallow the bolus"],
+        title: "Digestion starts in the mouth",
+        type: "process_sequence"
+      };
+    }
+    if (/\blarge intestine|water|waste|stool|feces/.test(question.toLowerCase())) {
+      return {
+        accessibilityLabel: "Large-intestine structure-function model showing water recovery and waste compaction.",
+        columns: [
+          { items: ["remaining material", "water and electrolytes", "gut microbes"], title: "What enters" },
+          { items: ["water returns to body", "waste is compacted", "stool moves to rectum"], title: "What happens" }
+        ],
+        id,
+        title: "The large intestine's role",
+        type: "structure_function"
+      };
+    }
+    return topicVisual(subjectKey, topic, question, id);
+  }
   if (subjectKey === "math" && /\b(net|fold|unfold|surface area)\b/i.test(question)) {
     return {
       accessibilityLabel: `A net showing how the faces and matching edges in ${question} fold into a solid.`,
@@ -621,12 +787,34 @@ function topicVisual(subjectKey: SubjectKey, topic: string, text: string, id: st
     };
   }
   if (subjectKey === "science" && /\bdigest|stomach|intestine|absorb|villi/i.test(combined)) {
-    return /\bvilli|absorb|surface area/i.test(text)
+    if (/\bbile|fat|emulsif|lipase|gallbladder/i.test(text)) {
+      return {
+        accessibilityLabel: "Fat digestion pathway showing bile emulsification followed by lipase action and absorption into a lacteal.",
+        expectedInsight: "Bile changes droplet size; lipase performs the chemical digestion.",
+        id,
+        labels: ["Large fat droplet", "Bile emulsifies", "Lipase splits fat", "Fat products enter lacteal"],
+        steps: ["Large droplet", "Many small droplets", "Fatty acids and glycerol", "Lacteal and lymph"],
+        title: "From fat droplet to absorption",
+        type: "process_sequence"
+      };
+    }
+    if (/\bperistalsis|esophagus|wave-like|muscle contraction/i.test(text)) {
+      return {
+        accessibilityLabel: "Sequence showing wave-like muscle contractions moving a food bolus through the esophagus.",
+        expectedInsight: "Peristalsis moves food by coordinated muscle contractions rather than gravity alone.",
+        id,
+        labels: ["Muscle contracts behind bolus", "Muscle relaxes ahead", "Bolus moves downward"],
+        steps: ["Contract", "Push", "Relax", "Repeat"],
+        title: "Peristalsis moves food",
+        type: "process_sequence"
+      };
+    }
+    return /\bvilli|absorb|surface area|capillar|lacteal/i.test(text)
       ? {
-          accessibilityLabel: "Magnified villus showing a thin surface and nearby blood vessels for nutrient absorption.",
+          accessibilityLabel: "Magnified villus showing a thin surface, blood capillaries, and a central lacteal for nutrient absorption.",
           columns: [
-            { items: ["Finger-like fold", "Thin surface", "Large surface area"], title: "Villus structure" },
-            { items: ["Nutrients cross", "Capillaries collect", "Blood transports"], title: "Absorption" }
+            { items: ["finger-like fold", "one-cell-thick surface", "microvilli add area"], title: "Villus structure" },
+            { items: ["sugars and amino acids to capillaries", "fats to lacteal", "blood and lymph carry nutrients"], title: "Absorption routes" }
           ],
           id,
           title: "Villi increase absorption",
@@ -857,6 +1045,31 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
         ]
       ),
       makeSlide(
+        "bile-and-lipase",
+        "process",
+        "How Bile And Lipase Digest Fat",
+        5,
+        {
+          bullets: [
+            "Bile made by the liver and stored in the gallbladder emulsifies one large fat droplet into many small droplets.",
+            "Pancreatic lipase can then contact more fat surface and split triglycerides into fatty acids and glycerol.",
+            "Bile is not an enzyme: it changes droplet size but does not break chemical bonds."
+          ],
+          keyIdea: "Emulsification increases surface area, which lets lipase work faster."
+        },
+        [
+          {
+            accessibilityLabel: "Fat digestion sequence from a large droplet through bile emulsification, lipase action, and absorption.",
+            expectedInsight: "Bile changes the physical droplet size before lipase performs chemical digestion.",
+            id: "fat-digestion-pathway",
+            labels: ["Large fat droplet", "Bile emulsifies", "Lipase splits triglycerides", "Fat products enter a lacteal"],
+            steps: ["One large droplet", "Many small droplets", "Fatty acids and glycerol", "Lacteal and lymph"],
+            title: "Fat digestion pathway",
+            type: "process_sequence"
+          }
+        ]
+      ),
+      makeSlide(
         "villi-structure",
         "concept",
         "Why The Small Intestine Has Villi",
@@ -875,6 +1088,57 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
             id: "villi-structure-function",
             title: "Structure supports function",
             type: "structure_function"
+          }
+        ]
+      ),
+      makeSlide(
+        "absorption-routes",
+        "comparison",
+        "Blood Or Lymph?",
+        4,
+        {
+          bullets: [
+            "Simple sugars and amino acids cross the villus surface into blood capillaries.",
+            "Most digested fats are packaged into chylomicrons and enter the central lacteal.",
+            "Both routes carry nutrients away, but they use different transport vessels."
+          ],
+          keyIdea: "The nutrient's properties determine whether it enters blood or lymph first."
+        },
+        [
+          {
+            accessibilityLabel: "Side-by-side comparison of nutrient absorption into blood capillaries and lymphatic lacteals.",
+            columns: [
+              { items: ["simple sugars", "amino acids", "blood capillaries"], title: "Blood route" },
+              { items: ["fat products", "chylomicrons", "lacteal and lymph"], title: "Lymph route" }
+            ],
+            id: "blood-lymph-absorption",
+            title: "Two routes out of a villus",
+            type: "structure_function"
+          }
+        ]
+      ),
+      makeSlide(
+        "large-intestine-role",
+        "concept",
+        "What The Large Intestine Does",
+        4,
+        {
+          bullets: [
+            "Water and electrolytes are absorbed from the remaining material.",
+            "Gut microbes ferment some fiber and produce useful substances.",
+            "The remaining waste is compacted and moved toward the rectum."
+          ],
+          keyIdea: "The large intestine recovers water and prepares waste for removal."
+        },
+        [
+          {
+            accessibilityLabel: "Structure-function sequence showing water recovery, microbial activity, and waste compaction in the large intestine.",
+            expectedInsight: "The large intestine mainly manages water and waste rather than absorbing most nutrients.",
+            id: "large-intestine-function",
+            labels: ["Remaining material", "Water recovered", "Microbes act on fiber", "Waste compacted"],
+            steps: ["Material enters colon", "Water returns to body", "Waste becomes more solid", "Stool moves to rectum"],
+            title: "From remaining material to waste",
+            type: "process_sequence"
           }
         ]
       )
@@ -1711,9 +1975,9 @@ export function legacyLessonToSlidePlan({
 
   chunkText(removeTutorInstructionLanguage(lesson?.conceptExplanation, 3200), 220, 7).forEach((chunk, index) => {
     slides.push(
-      makeSlide(`concept-${index + 1}`, "concept", `Key Idea ${index + 1}`, 4, {
+      makeSlide(`concept-${index + 1}`, "concept", conceptSlideTitle(subjectKey, topic, chunk, index), 4, {
         explanation: chunk,
-        keyIdea: index === 0 ? "Understand the idea before memorizing details." : undefined
+        keyIdea: index === 0 ? `Connect each organ or process to its role in ${topic}.` : undefined
       }, [
         topicVisual(subjectKey, topic, chunk, `concept-card-${index + 1}`)
       ], "medium")
@@ -1722,9 +1986,10 @@ export function legacyLessonToSlidePlan({
 
   slides.push(...subjectVisualSlides(subjectKey, topic));
 
-  chunkText(removeTutorInstructionLanguage(lesson?.guidedExample, 3200), 220, 6).forEach((chunk, index) => {
-    const exampleSteps = chunk.split(/(?:Step\s*\d+:|;\s*)/i).map((item) => normalizePlainText(item, 120)).filter(Boolean).slice(0, 4);
-    const equationSteps = subjectKey === "math" ? fractionEquationSteps(chunk) : [];
+  guidedExampleParts(lesson?.guidedExample, subjectKey, topic).forEach((part, index) => {
+    const exampleText = [part.explanation, ...(part.steps ?? [])].filter(Boolean).join(" ");
+    const exampleSteps = (part.steps ?? []).map((item) => normalizePlainText(item, 220)).filter(Boolean).slice(0, 4);
+    const equationSteps = subjectKey === "math" ? fractionEquationSteps(exampleText) : [];
     const exampleVisual: VisualSpec = equationSteps.length
       ? {
           accessibilityLabel: "Worked example steps.",
@@ -1733,7 +1998,7 @@ export function legacyLessonToSlidePlan({
           type: "equation_steps"
         }
       : subjectKey === "math" || subjectKey === "science"
-        ? topicVisual(subjectKey, topic, chunk, `worked-example-model-${index + 1}`)
+        ? topicVisual(subjectKey, topic, exampleText, `worked-example-model-${index + 1}`)
         : {
           accessibilityLabel: "Worked example learning steps.",
           id: `worked-example-process-${index + 1}`,
@@ -1741,9 +2006,9 @@ export function legacyLessonToSlidePlan({
           type: "process_sequence"
         };
     slides.push(
-      makeSlide(`worked-example-${index + 1}`, "worked_example", subjectKey === "math" ? slideTitle("Example", chunk, `Worked Example ${index + 1}`) : `Worked Example ${index + 1}`, 4, {
-        explanation: chunk,
-        steps: exampleSteps.length > 1 ? exampleSteps : undefined
+      makeSlide(`worked-example-${index + 1}`, "worked_example", subjectKey === "math" ? slideTitle("Example", exampleText, `Worked Example ${index + 1}`) : part.title, 4, {
+        explanation: part.explanation,
+        steps: exampleSteps.length ? exampleSteps : undefined
       }, [exampleVisual], "medium")
     );
   });
@@ -1754,8 +2019,10 @@ export function legacyLessonToSlidePlan({
       return;
     }
     const segmentTitle = normalizePlainText(segment.title, 80) || `Content ${index + 1}`;
+    const containsLearnerTask = /\b(?:calculate|compare|decide|estimate|explain|identify|predict|question|solve|try)\b/i.test(activity) &&
+      /[?]|\b(?:calculate|estimate|predict|solve|try)\b/i.test(activity);
     slides.push(
-      makeSlide(`content-${index + 1}`, looksLikeTutorProcedure(segment.activity) ? "concept" : "guided_practice", segmentTitle, 4, {
+      makeSlide(`content-${index + 1}`, looksLikeTutorProcedure(segment.activity) || !containsLearnerTask ? "concept" : "guided_practice", segmentTitle, 4, {
         explanation: activity,
         keyIdea: segmentTitle
       }, [
@@ -1766,7 +2033,7 @@ export function legacyLessonToSlidePlan({
 
   (lesson?.practiceQuestions ?? []).map(splitQuestionParts).filter((item) => item.question).slice(0, 6).forEach((item, index) => {
     slides.push(
-      makeSlide(`practice-${index + 1}`, "independent_practice", `Practice ${index + 1}`, 3, {
+      makeSlide(`practice-${index + 1}`, "independent_practice", questionSlideTitle("Practice", subjectKey, topic, item.question, index), 3, {
         answer: item.answer || item.why,
         hint: item.hint || "Use the model from the previous slide.",
         question: item.question
@@ -1828,7 +2095,7 @@ export function legacyLessonToSlidePlan({
 
   (lesson?.quickAssessment ?? []).map(splitQuestionParts).filter((item) => item.question).slice(0, 4).forEach((item, index) => {
     slides.push(
-      makeSlide(`check-${index + 1}`, "answer_explanation", index === 0 ? "Show What You Know" : `Check ${index + 1}`, 2, {
+      makeSlide(`check-${index + 1}`, "answer_explanation", questionSlideTitle("Check", subjectKey, topic, item.question, index), 2, {
         answer: item.answer || item.why,
         hint: item.hint,
         question: item.question

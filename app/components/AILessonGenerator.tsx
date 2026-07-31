@@ -403,6 +403,80 @@ function ListBlock({ items }: { items?: string[] }) {
   );
 }
 
+function previewSentences(value?: string, maximum = 3) {
+  return (value ?? "")
+    .split(/(?<=[.!?])\s+/)
+    .filter(Boolean)
+    .slice(0, maximum)
+    .join(" ");
+}
+
+function LessonPlanPreview({ lesson }: { lesson: GeneratedLesson }) {
+  const objectives = (lesson.learningObjectives ?? []).filter(Boolean).slice(0, 4);
+  const roadmap = (lesson.fullLessonSegments ?? []).filter((segment) => segment.title).slice(0, 6);
+  const practiceCount = lesson.practiceQuestions?.length ?? 0;
+  const quizCount = lesson.timedExam?.questions?.length ?? lesson.quickAssessment?.length ?? 0;
+
+  return (
+    <section className="lesson-preview" aria-label="Lesson preview">
+      <div className="lesson-preview-heading">
+        <BookOpenCheck aria-hidden="true" size={22} />
+        <div>
+          <p className="eyebrow">Lesson preview</p>
+          <h4>Review what the AI tutor prepared</h4>
+        </div>
+      </div>
+      <div className="lesson-preview-facts">
+        <span>
+          <Clock aria-hidden="true" size={16} />
+          {lesson.duration ?? "Guided lesson"}
+        </span>
+        <span>
+          <CheckCircle2 aria-hidden="true" size={16} />
+          {practiceCount} practice questions
+        </span>
+        <span>
+          <Trophy aria-hidden="true" size={16} />
+          {quizCount} scored quiz questions
+        </span>
+      </div>
+      {lesson.conceptExplanation ? (
+        <div className="lesson-preview-big-idea">
+          <strong>Big idea</strong>
+          <p>{previewSentences(lesson.conceptExplanation)}</p>
+        </div>
+      ) : null}
+      <div className="lesson-preview-grid">
+        <div>
+          <strong>What you will learn</strong>
+          <ListBlock items={objectives} />
+        </div>
+        <div>
+          <strong>Lesson route</strong>
+          {roadmap.length ? (
+            <ol>
+              {roadmap.map((segment) => (
+                <li key={`${segment.time}-${segment.title}`}>
+                  <span>{segment.title}</span>
+                  {segment.time ? <small>{segment.time}</small> : null}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p>Warm-up, clear explanation, worked example, practice, and a scored quiz.</p>
+          )}
+        </div>
+      </div>
+      {lesson.guidedExample ? (
+        <div className="lesson-preview-example">
+          <strong>Example you will work through</strong>
+          <p>{previewSentences(lesson.guidedExample, 2)}</p>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 function SubjectLearningCard({
   children,
   label,
@@ -1920,16 +1994,17 @@ Interested in: Free trial / Paid AI-generated lessons
               {lesson?.studentFit ? <p>{lesson.studentFit}</p> : null}
               {lesson ? (
                 <>
+                <LessonPlanPreview lesson={lesson} />
                 <div className="lesson-launch-card">
                   <div>
                     <p className="eyebrow">Ready to learn</p>
-                    <h4>Your private lesson is ready to build.</h4>
-                    <p>Open it for the visual PDF, lesson timer, and scored quiz.</p>
+                    <h4>Build the visual private lesson.</h4>
+                    <p>The next step creates the illustrated slide deck, lesson timer, and scored quiz.</p>
                   </div>
                   <div className="lesson-launch-actions">
                     <button className="button primary" onClick={() => setIsDeckOpen(true)} type="button">
                       <Images aria-hidden="true" size={18} />
-                      Open Private Lesson
+                      Build Private Lesson
                     </button>
                     <a className="button secondary" href={liveTutorRequestHref} target="_blank" rel="noreferrer">
                       Request a Live Tutor
