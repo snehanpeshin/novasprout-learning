@@ -15,6 +15,7 @@ import { scoreDeckQuality } from "./deckQualityScorer.ts";
 import { legacyLayoutType, selectPurposeLayout } from "./layoutEngine.ts";
 import { electricityFormulaSet, formatMathExpression } from "./mathRenderer.ts";
 import { classifySlide, slidePurpose } from "./slideClassifier.ts";
+import { runSlideDoctor } from "./slideDoctor.ts";
 import { isPlaceholderSlide, validateAndRepairSlide } from "./slideValidator.ts";
 import { createSpeakerNotes } from "./speakerNotesGenerator.ts";
 import { createCircuitDiagramLayout } from "./visualLayoutValidator.ts";
@@ -462,12 +463,19 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
     return repaired;
   });
 
-  const answerKey = assessmentAnswerKey(repairedSlides.map((slide) => slide.assessment));
-  const deckQuality = scoreDeckQuality(repairedSlides, findingsBySlide);
-  const qualityFindings = repairedSlides.flatMap((slide, index) =>
-    findingsAsQuality(slide.id, index + 1, findingsBySlide.get(slide.id) ?? [])
+  const slideDoctor = runSlideDoctor({
+    conceptGraph: plan.conceptGraph,
+    slides: repairedSlides,
+    topic: plan.context.topic
+  });
+  const finalSlides = slideDoctor.slides;
+  const finalFindingsBySlide = slideDoctor.findingsBySlide;
+  const answerKey = assessmentAnswerKey(finalSlides.map((slide) => slide.assessment));
+  const deckQuality = scoreDeckQuality(finalSlides, finalFindingsBySlide);
+  const qualityFindings = finalSlides.flatMap((slide, index) =>
+    findingsAsQuality(slide.id, index + 1, finalFindingsBySlide.get(slide.id) ?? [])
   );
-  const slides = repairedSlides.map((slide) => ({
+  const slides = finalSlides.map((slide) => ({
     ...slide,
     qualityScore: deckQuality.slides.find((score) => score.slideId === slide.id)
   }));
@@ -477,6 +485,7 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
     answerKey,
     deckQuality,
     qualityFindings,
+    slideDoctor: slideDoctor.summary,
     slides,
     validationWarnings: [
       ...plan.validationWarnings,

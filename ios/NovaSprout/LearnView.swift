@@ -151,11 +151,11 @@ struct LearnView: View {
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.sentences)
                     .onChange(of: viewModel.request.topic) { _, newValue in
-                        if newValue.count > 90 {
-                            viewModel.request.topic = String(newValue.prefix(90))
+                        if newValue.count > 180 {
+                            viewModel.request.topic = String(newValue.prefix(180))
                         }
                     }
-                Text("Use a school topic that matches the selected subject and grade.")
+                Text("Any safe school, college, career, enrichment, or interdisciplinary topic is welcome.")
                     .font(.caption)
                     .foregroundStyle(NovaPalette.muted)
             }
@@ -299,7 +299,7 @@ private struct PurchaseOptionsView: View {
                         Text("Unlock AI Tutor")
                             .font(.title2.weight(.bold))
                             .foregroundStyle(NovaPalette.navy)
-                        Text("Create curriculum-checked visual lessons with a timed quiz.")
+                        Text("Create personalized visual lessons with a timed quiz.")
                             .foregroundStyle(NovaPalette.muted)
                     }
 

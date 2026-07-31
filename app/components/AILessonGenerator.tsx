@@ -163,7 +163,8 @@ const subjects = [
   "English",
   "Social Studies",
   "Computer Science",
-  "Test Preparation"
+  "Test Preparation",
+  "Other / Interdisciplinary"
 ];
 const levels = ["Start from the basics", "Give me some support", "Teach at my grade level", "Challenge me"];
 const goals = [
@@ -202,12 +203,13 @@ const lessonIncludes = [
   "Live tutor option"
 ];
 const topicSuggestionsBySubject: Record<string, string[]> = {
-  Mathematics: ["Fractions", "Ratios and proportions", "Equations", "Geometry", "Graphing", "Probability", "Statistics", "Word problems"],
-  Science: ["Digestive system", "Electricity", "Forces and motion", "Cells", "Ecosystems", "Matter", "Solar system", "Scientific method"],
-  English: ["Reading comprehension", "Grammar", "Paragraph writing", "Essay writing", "Vocabulary", "Storytelling", "Main idea", "Evidence"],
-  "Social Studies": ["Maps and geography", "Ancient civilizations", "Government", "Civics", "Economics", "World history", "Culture", "Current events"],
-  "Computer Science": ["Computer basics", "Scratch", "Python", "HTML and CSS", "Algorithms", "AI basics", "Robotics", "Game development"],
-  "Test Preparation": ["Timed practice", "Reading questions", "Math review", "Science review", "Essay planning", "Test strategy"]
+  Mathematics: ["Number and operations", "Algebraic reasoning", "Functions", "Geometry", "Measurement", "Statistics and probability", "Mathematical modeling", "Calculus foundations"],
+  Science: ["Physical science", "Life science", "Earth and space science", "Engineering design", "Environmental science", "Anatomy and health", "Chemistry", "Physics"],
+  English: ["Foundational reading", "Literature", "Informational text", "Writing", "Speaking and listening", "Grammar and language", "Media literacy", "Research"],
+  "Social Studies": ["Civics", "Economics", "Geography", "U.S. history", "World history", "Culture and society", "Source analysis", "Current events"],
+  "Computer Science": ["Algorithms", "Programming", "Data and analysis", "Computing systems", "Networks", "Cybersecurity", "AI and emerging technology", "Impacts and ethics"],
+  "Test Preparation": ["Timed practice", "Reading questions", "Math review", "Science review", "Essay planning", "Test strategy"],
+  "Other / Interdisciplinary": ["Psychology", "Business", "Accounting", "Health", "World languages", "Art and design", "Music", "Study skills"]
 };
 
 function getSubjectTheme(subject: string): SubjectTheme {
@@ -227,7 +229,7 @@ function getSubjectTheme(subject: string): SubjectTheme {
     };
   }
 
-  if (["English", "Languages", "Social Studies", "History", "Geography", "Civics", "Economics", "Psychology"].includes(subject)) {
+  if (["English", "Languages", "Social Studies", "History", "Geography", "Civics", "Economics", "Psychology", "Other / Interdisciplinary"].includes(subject)) {
     return {
       accent: "Read",
       deckLabel: "Study Skills Deck",
@@ -1821,7 +1823,7 @@ Interested in: Free trial / Paid AI-generated lessons
             </select>
           </label>
           <label>
-            Subject
+            Subject area (choose the closest)
             <select
               onChange={(event) => {
                 const nextSubject = event.target.value;
@@ -1841,9 +1843,9 @@ Interested in: Free trial / Paid AI-generated lessons
           <label>
             Topic
             <input
-              maxLength={90}
+              maxLength={180}
               onChange={(event) => setTopic(event.target.value)}
-              placeholder="Example: equivalent fractions"
+              placeholder="Any school, college, career, or enrichment topic"
               required
               value={topic}
             />
@@ -1860,6 +1862,7 @@ Interested in: Free trial / Paid AI-generated lessons
               </button>
             ))}
           </div>
+          <p className="generator-note">Interdisciplinary and advanced topics are welcome. The lesson adapts to the selected level.</p>
           <label>
             Student level
             <select onChange={(event) => setLevel(event.target.value)} value={level}>

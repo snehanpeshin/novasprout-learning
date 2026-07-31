@@ -18,6 +18,7 @@ import type {
   SpeakerNotes,
   VisualSelectionType
 } from "./lessonSlides/types.ts";
+import type { SlideDoctorSummary } from "./lessonSlides/slideDoctor.ts";
 
 export const lessonSlidePlanSchemaVersion = "3.0";
 
@@ -151,6 +152,7 @@ export type LessonSlidePlan = {
   engineVersion?: string;
   qualityFindings?: QualityFinding[];
   schemaVersion: typeof lessonSlidePlanSchemaVersion;
+  slideDoctor?: SlideDoctorSummary;
   slides: LessonPlanSlide[];
   title: string;
   validationWarnings: string[];

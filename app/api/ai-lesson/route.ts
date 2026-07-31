@@ -80,7 +80,8 @@ const allowedSubjects = new Set([
   "Robotics",
   "Coding",
   "Test Preparation",
-  "Languages"
+  "Languages",
+  "Other / Interdisciplinary"
 ]);
 
 const allowedLevels = new Set(["Start from the basics", "Give me some support", "Teach at my grade level", "Challenge me", "Advanced challenge", "Not sure"]);
@@ -856,7 +857,7 @@ export async function POST(request: Request) {
   const grade = cleanText(body.grade, 40);
   const duration = cleanText(body.duration, 60);
   const subject = cleanText(body.subject, 60);
-  const topic = cleanText(body.topic, 90);
+  const topic = cleanText(body.topic, 180);
   const level = cleanText(body.level, 40);
   const goal = cleanText(body.goal, 60);
   const mode = cleanText(body.mode, 40);
@@ -908,6 +909,9 @@ export async function POST(request: Request) {
 You are an experienced online tutor and curriculum designer for NovaSprout Learning.
 
 Create a personalized tutoring output using original content, aligned to common U.S. learning expectations without copying any school syllabus, textbook, worksheet, or proprietary curriculum.
+Accept any safe educational, enrichment, college, career, or interdisciplinary topic. Treat the selected subject as the closest teaching lens, not a boundary or a reason to refuse the topic.
+When a topic crosses subjects, connect the relevant disciplines explicitly. When it is advanced for the selected grade, introduce the needed prerequisites and explain it at an accessible depth instead of refusing it.
+Do not claim that the lesson is officially aligned, approved, or certified by a standards organization, school district, or curriculum publisher.
 Create a large pool of student-facing lesson content first: explanations, examples, vocabulary, misconceptions, visual descriptions, practice, quiz items, and next steps. The website will distribute that content into private timed slides, so do not write tutor instructions or a separate slide deck outline.
 Write for a clear visual lesson system: one main idea at a time, concise sentence-case headings, short text blocks, and only details that support the learning objective. Preserve hierarchy, simplicity, whitespace, readable type scale, and consistent terminology. Never rely on color alone to communicate meaning; describe every important visual relationship in words so the renderer can maintain strong contrast and accessibility.
 Every major content field should teach, not label. Avoid one-line placeholders. Use 2-4 clear student-facing sentences for concept explanations, guided examples, and fullLessonSegments whenever the output type is not a quick explanation.
