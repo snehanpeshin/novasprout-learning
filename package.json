@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "quality:lesson-matrix": "node --experimental-strip-types --experimental-specifier-resolution=node scripts/lesson-quality-matrix.ts",
+    "quality:comprehensive": "node --experimental-strip-types --experimental-specifier-resolution=node scripts/comprehensive-qa-matrix.ts",
     "test:lesson-engine": "node --experimental-strip-types --experimental-specifier-resolution=node --test tests/*.test.ts"
   },
   "dependencies": {

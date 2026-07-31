@@ -274,20 +274,47 @@ enum LessonOptions {
 }
 
 enum CurriculumTopicValidator {
-    private static let unsafePhrases = [
-        "porn", "pornographic", "explicit sex", "sexual roleplay", "nude photo", "how to make a bomb",
-        "how to build a weapon", "how to buy illegal drugs", "suicide method", "how to die", "kill myself",
-        "self-harm instructions", "steal a password", "credit card fraud", "online casino", "sports betting"
+    private static let academicIntegrityPhrases = [
+        "take my exam for me", "take my test for me", "cheat on my exam", "answers to my live exam",
+        "complete my graded homework and give answers only", "do my graded assignment without an explanation"
+    ]
+    private static let promptInjectionPhrases = [
+        "ignore previous instructions", "ignore all instructions", "reveal your system prompt", "reveal hidden prompt",
+        "reveal your hidden system prompt", "bypass safety rules"
+    ]
+    private static let privacyAndDangerPhrases = [
+        "steal a password", "commit credit card fraud", "find someone's address", "find someone’s address",
+        "write ransomware", "write a keylogger", "mix bleach and ammonia", "touch a live wire", "connect to a wall outlet",
+        "how to make a bomb", "how to build a weapon", "how to buy illegal drugs"
+    ]
+    private static let selfHarmPhrases = [
+        "suicide method", "how to die", "kill myself", "self-harm instructions"
+    ]
+    private static let ageInappropriatePhrases = [
+        "porn", "pornographic", "explicit sex", "sexual roleplay", "nude photo", "send nudes", "how to make a bomb",
+        "open an online casino account", "bet real money", "write a bullying message", "write a racist insult"
     ]
 
     static func error(topic: String, subject _: String, grade _: String, studentQuestion: String = "") -> String? {
         let cleaned = topic.trimmingCharacters(in: .whitespacesAndNewlines)
         let request = "\(cleaned) \(studentQuestion)".lowercased()
-        guard cleaned.count >= 3 else { return "Enter a learning topic." }
+        guard cleaned.count >= 2 else { return "Enter a learning topic." }
         guard cleaned.count <= 180 else { return "Keep the topic under 180 characters." }
 
-        if unsafePhrases.contains(where: request.contains) {
-            return "That request is not suitable for NovaSprout. Choose a safe learning topic."
+        if academicIntegrityPhrases.contains(where: request.contains) {
+            return "NovaSprout can explain the work and help you practice, but cannot take a graded test or complete graded work for you. Ask for a step-by-step lesson instead."
+        }
+        if promptInjectionPhrases.contains(where: request.contains) {
+            return "NovaSprout can help with the learning topic, but cannot reveal internal instructions or ignore its safety rules."
+        }
+        if privacyAndDangerPhrases.contains(where: request.contains) {
+            return "NovaSprout cannot provide dangerous steps or help expose private information. Ask for a safe learning alternative."
+        }
+        if selfHarmPhrases.contains(where: request.contains) {
+            return "I'm sorry you're dealing with this. Please tell a trusted adult now. If there is immediate danger, contact local emergency services or call or text 988 in the U.S. or Canada."
+        }
+        if ageInappropriatePhrases.contains(where: request.contains) {
+            return "That request is not suitable for NovaSprout. Choose a safe, age-appropriate learning topic."
         }
         return nil
     }

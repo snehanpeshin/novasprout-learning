@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../../lib/aiAccess";
 import { extractAiLessonOutputText, parseAiLessonJson } from "../../../lib/aiLessonResponse";
+import { validateGeneratedLesson } from "../../../lib/aiLessonValidation";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -67,6 +68,17 @@ export async function GET(request: Request) {
       if (!lesson) {
         return NextResponse.json(
           { error: "The AI lesson finished but returned incomplete content. Please generate it again." },
+          { status: 422 }
+        );
+      }
+
+      const validation = validateGeneratedLesson(lesson);
+      if (!validation.valid) {
+        return NextResponse.json(
+          {
+            error: `The AI lesson did not pass NovaSprout's content check: ${validation.issues.slice(0, 3).join(" ")}`,
+            validationErrors: validation.issues
+          },
           { status: 422 }
         );
       }
