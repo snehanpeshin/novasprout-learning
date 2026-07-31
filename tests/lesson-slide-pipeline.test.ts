@@ -133,6 +133,7 @@ test("detects and repairs overflow, long titles, and visible answers", () => {
     studentContent: {
       answer: "It stays off.",
       bullets: Array.from({ length: 8 }, (_, index) => `A long repeated bullet ${index} that contains more detail than one slide label should carry because it keeps going.`),
+      explanation: "Apply the circuit rule to this case. Answer: It stays off.",
       question: "What happens? Answer: It stays off."
     },
     title: "This title is much too long for a professional NovaSprout lesson slide and should be shortened automatically",
@@ -143,6 +144,7 @@ test("detects and repairs overflow, long titles, and visible answers", () => {
   assert.ok(codes.has("too_many_bullets"));
   assert.ok(codes.has("answer_leakage"));
   assert.equal(result.repaired.studentContent?.bullets?.length, 6);
+  assert.equal(result.repaired.studentContent?.explanation, "Apply the circuit rule to this case.");
 });
 
 test("scores all seven presentation design principles", () => {
@@ -191,6 +193,55 @@ test("design gate flags dense, weakly structured slides", () => {
   assert.ok(design.scores.typography < 75);
   assert.equal(deck.exportReady, false);
   assert.match(deck.reasons.join(" "), /design|Whitespace|Simplicity|Typography/i);
+});
+
+test("quality scoring does not penalize the same repaired issue more than once", () => {
+  const slide = {
+    accessibilityLabel: "A clear visual model for equivalent ratios.",
+    id: "repaired-slide",
+    layoutType: "text-visual" as const,
+    slideType: "concept_explanation" as const,
+    studentContent: { keyIdea: "Equivalent ratios describe the same relationship." },
+    title: "Equivalent Ratios",
+    visuals: [{
+      accessibilityLabel: "Two equivalent ratio models.",
+      id: "ratio-model",
+      labels: ["2:3", "4:6"],
+      type: "ratio_table" as const
+    }]
+  };
+  const repairedFinding = {
+    code: "placeholder_slide" as const,
+    message: "A placeholder was replaced with teaching content.",
+    repaired: true,
+    severity: "warning" as const
+  };
+  const oneFinding = scoreDeckQuality([slide], new Map([[slide.id, [repairedFinding]]]));
+  const repeatedFinding = scoreDeckQuality(
+    [slide],
+    new Map([[slide.id, [repairedFinding, { ...repairedFinding }, { ...repairedFinding }]]])
+  );
+  assert.equal(repeatedFinding.minimum, oneFinding.minimum);
+  assert.equal(repeatedFinding.exportReady, true);
+});
+
+test("quality scoring still blocks an unresolved accuracy error", () => {
+  const slide = {
+    accessibilityLabel: "A worked equation.",
+    id: "accuracy-error",
+    layoutType: "equation-focus" as const,
+    slideType: "worked_example" as const,
+    studentContent: { keyIdea: "Substitute each value before calculating." },
+    title: "Check The Calculation"
+  };
+  const deck = scoreDeckQuality([slide], new Map([[slide.id, [{
+    code: "calculation_error",
+    message: "The displayed result does not match the calculation.",
+    repaired: false,
+    severity: "error"
+  }]]]));
+  assert.equal(deck.exportReady, false);
+  assert.match(deck.reasons.join(" "), /unresolved validation error/i);
 });
 
 test("all finalized slides carry explicit semantic types", () => {
@@ -267,6 +318,32 @@ test("turns a digestive-system lesson into complete, topic-specific teaching sli
   assert.ok(plan.slides.some((slide) => slide.title === "How Bile And Lipase Digest Fat"));
   assert.ok(plan.slides.some((slide) => slide.title === "Blood Or Lymph?"));
   assert.match(allText, /lacteal/i);
+});
+
+test("builds a chemistry lesson with verified periodic-table teaching visuals", () => {
+  const plan = legacyLessonToSlidePlan({
+    context: { grade: "Grade 7", subject: "Science", topic: "Periodic table and atomic structure" },
+    lesson: {
+      conceptExplanation: "The periodic table organizes elements by increasing atomic number. Atomic number equals proton count, while mass number equals protons plus neutrons. Neutral atoms have equal numbers of protons and electrons; ions form when electrons are gained or lost.",
+      guidedExample: "For chlorine-35, atomic number 17 gives 17 protons. Neutrons equal 35 minus 17, or 18. Neutral chlorine has 17 electrons, while chloride has gained one electron and has 18.",
+      learningObjectives: [
+        "Read an element square and identify atomic number, symbol, name, and average atomic mass.",
+        "Calculate proton, neutron, and electron counts for atoms and simple ions."
+      ],
+      practiceQuestions: [
+        "How many neutrons are in sodium-23 if its atomic number is 11? Answer: 12. Why: 23 - 11 = 12."
+      ],
+      quickAssessment: [
+        "Does forming a chloride ion change the proton count? Answer: No. Why: Ion formation changes electrons."
+      ],
+      title: "Periodic table and atomic structure"
+    }
+  });
+  const expectedSlides = ["read-element-square", "groups-and-periods", "count-atomic-particles", "periodic-trends"];
+  assert.ok(expectedSlides.every((id) => plan.slides.some((slide) => slide.id === id)));
+  assert.ok(plan.slides.some((slide) => slide.math?.some((formula) => /N\s*=\s*A\s*-\s*Z/.test(formula.expression))));
+  assert.equal(plan.deckQuality?.exportReady, true);
+  assert.equal(plan.semanticAccuracy?.unresolvedErrors, 0);
 });
 
 test("applies the shared content and design safeguards across subjects", () => {

@@ -11,7 +11,7 @@ import {
   circuitDiagramLabelTexts
 } from "./circuitBinding.ts";
 import { rewriteToFit } from "./contentCompressor.ts";
-import { scoreDeckQuality } from "./deckQualityScorer.ts";
+import { deduplicateSlideFindings, scoreDeckQuality } from "./deckQualityScorer.ts";
 import { legacyLayoutType, selectPurposeLayout } from "./layoutEngine.ts";
 import { electricityFormulaSet, formatMathExpression } from "./mathRenderer.ts";
 import { classifySlide, slidePurpose } from "./slideClassifier.ts";
@@ -479,11 +479,11 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
   const finalSlides = slideDoctor.slides;
   const finalFindingsBySlide = new Map<string, SlideValidationFinding[]>();
   finalSlides.forEach((slide) => {
-    finalFindingsBySlide.set(slide.id, [
+    finalFindingsBySlide.set(slide.id, deduplicateSlideFindings([
       ...(findingsBySlide.get(slide.id) ?? []),
       ...(semanticAccuracy.findingsBySlide.get(slide.id) ?? []),
       ...(slideDoctor.findingsBySlide.get(slide.id) ?? [])
-    ]);
+    ]));
   });
   const answerKey = assessmentAnswerKey(finalSlides.map((slide) => slide.assessment));
   const deckQuality = scoreDeckQuality(finalSlides, finalFindingsBySlide);

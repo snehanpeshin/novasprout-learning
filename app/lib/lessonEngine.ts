@@ -713,7 +713,7 @@ export function enhanceLessonPlan(plan: EnginePlan, audienceMode: AudienceMode =
     const shouldReplace = existingVisuals.length === 0 || existingVisuals.some(
       (visual) => isGenericConceptMap(visual, plan.context.topic) || !isVisualCompatibleWithTopic(visual, plan.context.topic)
     );
-    const formulas = conceptGraph.formulas.filter((formula) => {
+    const inferredFormulas = conceptGraph.formulas.filter((formula) => {
       const text = slideText(slide).toLowerCase();
       if (isSamplingStatistics(`${plan.context.topic} ${text}`)) {
         if (/confidence|interval/.test(text)) return /pm1\.96/.test(formula.expression);
@@ -723,7 +723,13 @@ export function enhanceLessonPlan(plan: EnginePlan, audienceMode: AudienceMode =
         return slide.type === "worked_example";
       }
       return text.includes("entropy") || text.includes("heat capacity") || text.includes("absolute zero") || text.includes("equation");
-    }).slice(0, slide.type === "worked_example" ? 2 : 1);
+    });
+    const formulas = [...(slide.math ?? []), ...inferredFormulas]
+      .filter((formula) => validateStructuredFormula(formula).valid)
+      .filter((formula, formulaIndex, all) =>
+        all.findIndex((candidate) => candidate.expression === formula.expression) === formulaIndex
+      )
+      .slice(0, slide.type === "worked_example" ? 2 : 1);
     const hasVisual = Boolean((shouldReplace && replacement) || existingVisuals.length);
     const layoutType = formulas.length ? "equation-focus" : hasVisual ? "text-visual" : "text-focus";
     const budget = contentBudget(layoutType, hasVisual);

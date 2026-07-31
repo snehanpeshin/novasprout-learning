@@ -130,7 +130,6 @@ function deterministicAssetPlan({
   topic: string;
 }) {
   const normalizedTopic = topic.toLowerCase();
-  const normalizedSubject = subject.toLowerCase();
 
   if (normalizedTopic.includes("digest")) {
     return [
@@ -145,23 +144,6 @@ function deterministicAssetPlan({
         placement: placementForSlide(slideTitles, /digestive system map/i, 8, "rb"),
         prompt:
           `${grade} accurate simplified cutaway educational illustration of the human digestive system in a front-facing human torso. Show the mouth connected to the esophagus, stomach below the diaphragm, liver above and beside the stomach, pancreas beneath the stomach, coiled small intestine enclosed by the large intestine. Make the physical arrangement anatomically coherent and the food pathway easy to trace. Modern classroom textbook style, deep navy outlines, growth green, sky blue, warm yellow and coral accents, off-white background, no text, no labels, no decorative objects`,
-        type: "image"
-      }
-    ];
-  }
-
-  if (normalizedSubject.includes("science")) {
-    return [
-      {
-        assetId: "science-concept-image",
-        alt: `Student-friendly science diagram for ${topic}.`,
-        aspectRatio: "1:1",
-        caption: "A visual model for the science idea.",
-        educationalPurpose: `Helps students visualize ${topic}.`,
-        filename: "science-concept-image.png",
-        latex: "",
-        placement: placementForSlide(slideTitles, /visual|model|understand/i, 6, "rb"),
-        prompt: `${grade} accurate simplified educational science illustration for ${topic}. Show the real structure, spatial relationship, process, or experiment setup that a student must understand. Use a clear focal subject, meaningful cause-and-effect or directional cues where scientifically appropriate, and generous negative space for slide annotations. Modern classroom textbook style, deep navy outlines, growth green, sky blue, warm yellow and coral accents, off-white background, no words, no labels, no decoration`,
         type: "image"
       }
     ];

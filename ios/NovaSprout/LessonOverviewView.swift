@@ -68,7 +68,12 @@ struct LessonOverviewView: View {
                                 }
                             }
                         } label: {
-                            Label(viewModel.isBuildingDeck ? "Preparing Private Lesson" : "Start Private Lesson", systemImage: "play.rectangle.fill")
+                            Label(
+                                viewModel.isBuildingDeck
+                                    ? "Preparing Private Lesson"
+                                    : viewModel.errorMessage.isEmpty ? "Start Private Lesson" : "Retry Private Lesson",
+                                systemImage: "play.rectangle.fill"
+                            )
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent)

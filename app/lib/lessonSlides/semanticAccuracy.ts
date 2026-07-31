@@ -33,6 +33,12 @@ type DomainRule = {
 
 const domainRules: DomainRule[] = [
   {
+    context: /\b(periodic table|atom|atomic number|mass number|isotope|ion|proton|neutron|electron)\b/i,
+    name: "atomic structure",
+    signature: /\b(atomic number|mass number|proton|neutron|electron|isotope|ion charge|periodic table)\b/gi,
+    visualTypes: new Set()
+  },
+  {
     context: /\b(electric(?:ity|al)?|circuit|current|voltage|charge|resistance|ohm|battery|series|parallel)\b/i,
     name: "electricity",
     signature: /\b(battery|circuit|voltage|current|resistor|ohm|series circuit|parallel circuit)\b/gi,

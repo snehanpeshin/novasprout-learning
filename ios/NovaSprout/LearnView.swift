@@ -212,7 +212,7 @@ struct LearnView: View {
                     .lineLimit(2...4)
             }
 
-            if !viewModel.errorMessage.isEmpty {
+            if !viewModel.errorMessage.isEmpty && !viewModel.showOverview {
                 Label(viewModel.errorMessage, systemImage: "exclamationmark.circle.fill")
                     .font(.footnote)
                     .foregroundStyle(NovaPalette.coral)

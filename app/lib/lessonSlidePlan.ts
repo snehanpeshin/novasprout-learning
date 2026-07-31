@@ -437,6 +437,11 @@ function makeSlide(
 
 const topicVocabulary = [
   {
+    pattern: /\b(periodic table|elements?|atoms?|atomic number|mass number|isotopes?|ions?|protons?|neutrons?|electrons?)\b/i,
+    subjects: ["science"] as SubjectKey[],
+    terms: ["element", "atomic number", "mass number", "proton", "neutron", "electron", "isotope", "ion", "group", "period"]
+  },
+  {
     pattern: /\b(sampling distribution|standard error|z-?scores?|confidence interval|sample mean|central limit|statistics?)\b/i,
     subjects: ["math"] as SubjectKey[],
     terms: ["population", "random sample", "parameter", "statistic", "sample mean", "sampling distribution", "standard error", "sample size", "z-score", "confidence interval"]
@@ -1036,6 +1041,116 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
         id: "z-t-comparison",
         type: "comparison_table"
       }])
+    ];
+  }
+  if (subjectKey === "science" && /\b(periodic|element|atom|atomic|isotope|ion|proton|neutron|electron)\b/.test(lowerTopic)) {
+    const particleSlide = makeSlide(
+      "count-atomic-particles",
+      "worked_example",
+      "Count Particles In An Atom",
+      5,
+      {
+        keyIdea: "Atomic number gives protons. Mass number minus atomic number gives neutrons. Charge reveals any electron gain or loss.",
+        steps: [
+          "For chlorine-35, atomic number 17 means 17 protons.",
+          "Neutrons = 35 - 17 = 18.",
+          "A neutral atom has 17 electrons.",
+          "A chloride ion, Cl-, has gained one electron, so it has 18 electrons."
+        ]
+      },
+      [{
+        accessibilityLabel: "Four-step particle count for chlorine-35 and a chloride ion.",
+        expectedInsight: "Changing charge changes electrons, not the number of protons that identifies the element.",
+        id: "chlorine-particle-count",
+        labels: ["17 protons", "18 neutrons", "17 electrons neutral", "18 electrons in Cl-"],
+        steps: ["Read Z = 17", "Compute 35 - 17", "Neutral: e = p", "Cl-: add one e"],
+        title: "Chlorine-35 particle count",
+        type: "process_sequence"
+      }]
+    );
+    particleSlide.math = [
+      {
+        expression: "N=A-Z",
+        meaning: "neutron number equals mass number minus atomic number",
+        variables: [
+          { definition: "neutron number", symbol: "N" },
+          { definition: "mass number", symbol: "A" },
+          { definition: "atomic number", symbol: "Z" }
+        ]
+      }
+    ];
+    return [
+      makeSlide(
+        "read-element-square",
+        "labeled_diagram",
+        "Read An Element Square",
+        4,
+        {
+          keyIdea: "Each element square connects a unique atomic number to a symbol, name, and average atomic mass.",
+          bullets: [
+            "Atomic number = number of protons.",
+            "The chemical symbol is a short name for the element.",
+            "Average atomic mass reflects the natural mixture of isotopes."
+          ]
+        },
+        [{
+          accessibilityLabel: "A chlorine element square labeled with atomic number 17, symbol Cl, name chlorine, and average atomic mass 35.45.",
+          expectedInsight: "The atomic number identifies chlorine because every chlorine atom has 17 protons.",
+          id: "chlorine-element-square",
+          labels: ["17 atomic number", "Cl symbol", "Chlorine name", "35.45 average atomic mass"],
+          title: "Chlorine element square",
+          type: "labeled_cards"
+        }]
+      ),
+      makeSlide(
+        "groups-and-periods",
+        "comparison",
+        "Groups And Periods",
+        4,
+        {
+          keyIdea: "Groups run vertically and often share chemical behavior; periods run horizontally and show occupied electron-shell levels.",
+          bullets: [
+            "Group 1 contains reactive alkali metals.",
+            "Group 17 contains halogens such as chlorine.",
+            "Period 3 runs from sodium to argon."
+          ]
+        },
+        [{
+          accessibilityLabel: "Comparison of vertical groups and horizontal periods in the periodic table.",
+          columns: [
+            { title: "Group: vertical", items: ["Similar valence pattern", "Often similar reactions", "Example: Group 17"] },
+            { title: "Period: horizontal", items: ["Same occupied shell count", "Properties change across", "Example: Period 3"] }
+          ],
+          expectedInsight: "Chlorine is in Group 17 and Period 3, and each location conveys different information.",
+          id: "groups-periods-comparison",
+          title: "Two ways to locate an element",
+          type: "comparison_table"
+        }]
+      ),
+      particleSlide,
+      makeSlide(
+        "periodic-trends",
+        "concept",
+        "Read General Periodic Trends",
+        5,
+        {
+          keyIdea: "Across a period, effective nuclear attraction generally increases; down a group, additional electron shells generally increase atomic size.",
+          bullets: [
+            "Atomic radius generally decreases from left to right.",
+            "Atomic radius generally increases from top to bottom.",
+            "Ionization energy generally changes in the opposite direction, with known exceptions."
+          ]
+        },
+        [{
+          accessibilityLabel: "A concept map of the general directions of atomic-radius and ionization-energy trends.",
+          expectedInsight: "Periodic trends are broad patterns with exceptions, not rules that replace element data.",
+          id: "periodic-trends-map",
+          labels: ["Across a period", "Stronger attraction", "Smaller radius", "Higher ionization energy", "Down a group"],
+          mathematicalRelationship: "Across generally means smaller radius and higher ionization energy; down generally means larger radius and lower ionization energy.",
+          title: "General trend directions",
+          type: "concept_map"
+        }]
+      )
     ];
   }
   if (subjectKey === "science" && lowerTopic.includes("digest")) {
@@ -2170,6 +2285,11 @@ export function legacyLessonToSlidePlan({
       bullets:
         subjectKey === "science" && topic.toLowerCase().includes("digest")
           ? ["Do not confuse where food travels with helper organs that add chemicals.", "Food does not pass through the liver or pancreas."]
+          : subjectKey === "science" && /\b(periodic|element|atom|atomic|isotope|ion|proton|neutron|electron)\b/i.test(topic)
+            ? [
+                "Do not round average atomic mass and treat it as the neutron count.",
+                "Use a stated isotope mass number for protons plus neutrons; ion charge changes electrons, not protons."
+              ]
           : subjectKey === "science" && /\b(electric|electricity|circuit|current|voltage|resistance)\b/i.test(topic)
             ? [
                 "Current is used up as it travels around a circuit.",
@@ -2180,9 +2300,11 @@ export function legacyLessonToSlidePlan({
           : subjectKey === "math"
             ? ["Do not multiply only one quantity in a ratio.", "Equivalent ratios need the same scale factor on both quantities."]
             : ["Check the exact question before answering.", "Use evidence or steps, not only a guess."],
-      keyIdea: subjectKey === "science" && /\b(electric|electricity|circuit|current|voltage|resistance)\b/i.test(topic)
-        ? "Better reasoning: voltage transfers energy per unit charge, while current measures charge flow around a closed path."
-        : "Mistakes become easier to catch when you know what to look for."
+      keyIdea: subjectKey === "science" && /\b(periodic|element|atom|atomic|isotope|ion|proton|neutron|electron)\b/i.test(topic)
+        ? "Keep identity, isotope, and charge separate: protons identify the element, neutrons set the isotope, and electrons set the ion charge."
+        : subjectKey === "science" && /\b(electric|electricity|circuit|current|voltage|resistance)\b/i.test(topic)
+          ? "Better reasoning: voltage transfers energy per unit charge, while current measures charge flow around a closed path."
+          : "Mistakes become easier to catch when you know what to look for."
     }, [
       {
         accessibilityLabel: `Side-by-side correction of a common misconception about ${topic}.`,
@@ -2191,6 +2313,11 @@ export function legacyLessonToSlidePlan({
               { title: "Incorrect model", items: ["Food passes through liver", "All organs have the same role"] },
               { title: "Accurate model", items: ["Food stays in the digestive tract", "Helper organs add chemicals"] }
             ]
+          : subjectKey === "science" && /\b(periodic|element|atom|atomic|isotope|ion|proton|neutron|electron)\b/i.test(topic)
+            ? [
+                { title: "Do not mix", items: ["Average mass is not neutron count", "Ion charge does not change protons"] },
+                { title: "Use instead", items: ["N = isotope mass number - Z", "Charge compares protons and electrons"] }
+              ]
           : subjectKey === "science" && /\b(electric|electricity|circuit|current|voltage|resistance)\b/i.test(topic)
             ? [
                 { title: "Common mistake", items: ["Current is used up", "Voltage and current are the same"] },

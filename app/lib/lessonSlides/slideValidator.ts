@@ -145,6 +145,40 @@ export function validateAndRepairSlide<T extends SemanticSlideInput>(slide: T): 
   }
 
   const content = repaired.studentContent;
+  if (repaired.slideType !== "worked_example") {
+    for (const field of ["explanation", "keyIdea"] as const) {
+      const visible = clean(content[field], 1200);
+      const withoutAnswer = visible.replace(/\b(?:Answer|Solution|Correct answer)\s*:\s*[^]*$/i, "").trim();
+      if (visible && withoutAnswer !== visible) {
+        content[field] = withoutAnswer || undefined;
+        findings.push({
+          automaticCorrection: "Moved the answer out of learner-facing slide text.",
+          code: "answer_leakage",
+          message: `A visible answer was removed from ${field}.`,
+          offendingElement: `studentContent.${field}`,
+          repaired: true,
+          severity: "error"
+        });
+      }
+    }
+    for (const field of ["bullets", "steps"] as const) {
+      const original = content[field] ?? [];
+      const withoutAnswers = original
+        .map((item) => clean(item, 700).replace(/\b(?:Answer|Solution|Correct answer)\s*:\s*[^]*$/i, "").trim())
+        .filter(Boolean);
+      if (withoutAnswers.some((item, index) => item !== clean(original[index], 700)) || withoutAnswers.length !== original.length) {
+        content[field] = withoutAnswers;
+        findings.push({
+          automaticCorrection: "Moved embedded answers out of learner-facing list items.",
+          code: "answer_leakage",
+          message: `A visible answer was removed from ${field}.`,
+          offendingElement: `studentContent.${field}`,
+          repaired: true,
+          severity: "error"
+        });
+      }
+    }
+  }
   const originalBullets = content.bullets ?? [];
   const deduplicatedBullets = uniqueStrings(originalBullets);
   if (deduplicatedBullets.length !== originalBullets.length) {

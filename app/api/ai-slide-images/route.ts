@@ -91,20 +91,28 @@ export async function POST(request: Request) {
         const imageQuality = ["low", "medium", "high"].includes(configuredQuality ?? "")
           ? configuredQuality
           : "medium";
-        const response = await fetch("https://api.openai.com/v1/images/generations", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: imageModel,
-            n: 1,
-            prompt: `${asset.prompt}. This is the dominant instructional visual on a NovaSprout lesson slide. Prioritize subject accuracy, clear spatial relationships, one obvious focal point, accessible contrast, clean edges, and generous negative space. Do not add embedded words, letters, labels, watermarks, frames, or decorative classroom objects.`,
-            quality: imageModel === "dall-e-3" ? "standard" : imageQuality,
-            size: "1024x1024"
-          })
-        });
+        const controller = new AbortController();
+        const deadline = setTimeout(() => controller.abort(), 22_000);
+        let response: Response;
+        try {
+          response = await fetch("https://api.openai.com/v1/images/generations", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              model: imageModel,
+              n: 1,
+              prompt: `${asset.prompt}. This is the dominant instructional visual on a NovaSprout lesson slide. Prioritize subject accuracy, clear spatial relationships, one obvious focal point, accessible contrast, clean edges, and generous negative space. Do not add embedded words, letters, labels, watermarks, frames, or decorative classroom objects.`,
+              quality: imageModel === "dall-e-3" ? "standard" : imageQuality,
+              size: "1024x1024"
+            }),
+            signal: controller.signal
+          });
+        } finally {
+          clearTimeout(deadline);
+        }
 
         const payload = await readJsonResponse(response);
 
@@ -151,7 +159,7 @@ export async function POST(request: Request) {
             ? `Could not reach the AI image service: ${error.message}`
             : "Could not reach the AI image service."
       },
-      { status: 500 }
+      { status: error instanceof Error && error.name === "AbortError" ? 503 : 500 }
     );
   }
 }

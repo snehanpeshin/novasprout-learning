@@ -271,6 +271,33 @@ const scenarios: Scenario[] = [
   },
   {
     assessments: [
+      "How many neutrons are in sodium-23 with atomic number 11? Answer: 12.",
+      "What changes when chlorine becomes Cl-? Answer: it gains one electron; its proton count stays 17."
+    ],
+    concepts: [
+      "The periodic table is ordered by atomic number, which equals the number of protons.",
+      "Mass number equals protons plus neutrons for one isotope.",
+      "Neutral atoms have equal proton and electron counts; ions form when electrons are gained or lost.",
+      "Groups are vertical families, periods are horizontal rows, and periodic trends are general patterns with exceptions."
+    ],
+    example: "For chlorine-35, atomic number 17 gives 17 protons. Neutrons = 35 - 17 = 18. Neutral chlorine has 17 electrons; Cl- has gained one electron and has 18 electrons.",
+    grade: "Grades 6-8",
+    id: "science-periodic-table",
+    keywords: ["atomic number", "mass number", "proton", "neutron", "electron"],
+    misconception: "Average atomic mass is not the neutron count, and ion formation changes electrons rather than protons.",
+    practices: [
+      "Try: Oxygen-16 has atomic number 8. Count protons and neutrons. Answer: 8 protons and 8 neutrons.",
+      "Try: Magnesium has 12 protons and forms Mg2+. Count electrons. Answer: 10 electrons.",
+      "Try: Locate chlorine by group and period. Answer: Group 17, Period 3."
+    ],
+    subject: "Science",
+    title: "Periodic Table and Atomic Structure",
+    topic: "Periodic table, atoms, isotopes, and ions",
+    visual: "Use a labeled element square, a group-versus-period comparison, and a particle-counting sequence with checked arithmetic.",
+    warmUp: "Which particle count determines the identity of an element?"
+  },
+  {
+    assessments: [
       "What is the difference between claim and evidence? Answer: a claim is an interpretation; evidence is a text detail.",
       "Why is a quotation alone incomplete? Answer: reasoning must connect it to the claim."
     ],

@@ -2340,10 +2340,18 @@ async function compileDeckRequest(request: Request) {
 
   const semanticPlan = legacyLessonToSlidePlan({ context: body.context, lesson: body.lesson });
   if (semanticPlan.deckQuality && !semanticPlan.deckQuality.exportReady) {
+    const unresolvedFindings = (semanticPlan.qualityFindings ?? [])
+      .filter((finding) => finding.severity === "error" && finding.repair !== "Automatically repaired before rendering.")
+      .slice(0, 2)
+      .map((finding) => `Slide ${finding.slideNumber ?? "?"}: ${finding.explanation}`);
+    const qualityDetails = [
+      ...unresolvedFindings,
+      ...semanticPlan.deckQuality.reasons.slice(0, Math.max(0, 3 - unresolvedFindings.length))
+    ];
     return NextResponse.json(
       {
         compilerStatus: "quality_gate_failed",
-        error: "The lesson did not pass the instructional-design quality gate, so it was not exported.",
+        error: `The lesson needs one more quality pass before export. ${qualityDetails.join(" ") || "Please retry the private lesson."}`,
         qualityFindings: semanticPlan.qualityFindings,
         qualityScore: semanticPlan.deckQuality,
         qualityWarnings: semanticPlan.deckQuality.reasons

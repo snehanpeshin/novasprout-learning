@@ -51,6 +51,25 @@ function clampScore(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
+export function deduplicateSlideFindings(findings: SlideValidationFinding[]) {
+  const unique = new Map<string, SlideValidationFinding>();
+  for (const finding of findings) {
+    const key = [
+      finding.code,
+      finding.offendingElement ?? "",
+      finding.expectedValue ?? "",
+      finding.actualValue ?? "",
+      finding.message
+    ].join("|");
+    const previous = unique.get(key);
+    if (!previous || (previous.repaired && !finding.repaired) ||
+      (previous.severity === "warning" && finding.severity === "error")) {
+      unique.set(key, finding);
+    }
+  }
+  return [...unique.values()];
+}
+
 /**
  * Assesses the presentation principles that can be measured before rendering.
  * Contrast starts from the accessible NovaSprout theme contract; the remaining
@@ -157,7 +176,7 @@ export function scoreSlideQuality(
     readability: 15,
     visualRelevance: 20
   };
-  for (const finding of findings) {
+  for (const finding of deduplicateSlideFindings(findings)) {
     const rule = deductions[finding.code] ?? {};
     const repairMultiplier = finding.repaired ? 0.25 : 1;
     for (const [category, amount] of Object.entries(rule)) {
@@ -203,7 +222,9 @@ export function scoreDeckQuality(
   for (const key of designPrincipleKeys) {
     if (designPrinciples[key] < 75) reasons.push(`${key[0].toUpperCase()}${key.slice(1)} is below the 75 design threshold (${designPrinciples[key]}).`);
   }
-  const unresolvedErrors = [...findingsBySlide.values()].flat().filter((finding) => finding.severity === "error" && !finding.repaired);
+  const unresolvedErrors = [...findingsBySlide.values()]
+    .flatMap((findings) => deduplicateSlideFindings(findings))
+    .filter((finding) => finding.severity === "error" && !finding.repaired);
   if (unresolvedErrors.length) reasons.push(`${unresolvedErrors.length} unresolved validation error${unresolvedErrors.length === 1 ? "" : "s"} remain.`);
   return {
     average,

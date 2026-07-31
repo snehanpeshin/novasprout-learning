@@ -1078,7 +1078,6 @@ function StudentSlideDeck({
     "Visual planning skipped": "Planning visuals"
   };
   const activeBuildStage = stageAliases[deckStage] ?? deckStage;
-  const shouldRequireGeneratedImage = context.subject === "Science" || context.topic.toLowerCase().includes("digest");
 
   async function readDeckResponse<T>(response: Response, fallbackMessage: string) {
     const responseText = await response.text();
@@ -1121,9 +1120,6 @@ function StudentSlideDeck({
       throw new Error(`Only ${embeddedImageCount} of ${plannedImageCount} generated image assets were embedded in the PDF.`);
     }
 
-    if (shouldRequireGeneratedImage && embeddedImageCount < 1) {
-      throw new Error("This topic needs at least one generated visual, but no generated image was embedded in the PDF.");
-    }
   }
 
   async function planSlideAssets() {
@@ -1150,9 +1146,6 @@ function StudentSlideDeck({
         "Could not create the slide asset plan."
       );
       const plannedAssets = data.assets ?? [];
-      if (shouldRequireGeneratedImage && !plannedAssets.some((asset) => asset.type === "image")) {
-        throw new Error("Visual planning did not produce a generated image asset for this science lesson.");
-      }
       await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.visuals);
       setAssets(plannedAssets);
       setDeckStage("Visual plan ready");
@@ -1212,11 +1205,7 @@ function StudentSlideDeck({
     } catch (error) {
       await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.images);
       const message = error instanceof Error ? error.message : "Could not generate slide images.";
-      setAssetError(
-        shouldRequireGeneratedImage
-          ? `Required visual generation failed: ${message}`
-          : `Generated images skipped: ${message}`
-      );
+      setAssetError(`Generated image skipped; the built-in lesson diagrams will be used instead. ${message}`);
       setDeckStage("Images skipped");
       return null;
     } finally {
@@ -1294,19 +1283,12 @@ function StudentSlideDeck({
       setDeckStage("Generating LaTeX");
       await sleep(minimumBuildStageMs.latex);
       const plannedAssets = await planSlideAssets();
-      if (!plannedAssets && shouldRequireGeneratedImage) {
-        return;
-      }
       const safePlannedAssets = plannedAssets ?? [];
 
       const assetsWithImages = safePlannedAssets.some((asset) => asset.type === "image")
         ? await generateSlideImages(safePlannedAssets)
         : safePlannedAssets;
-      if (!assetsWithImages && safePlannedAssets.some((asset) => asset.type === "image")) {
-        return;
-      }
-
-      const safeAssetsWithImages = assetsWithImages ?? safePlannedAssets;
+      const safeAssetsWithImages = assetsWithImages ?? safePlannedAssets.filter((asset) => asset.type !== "image");
 
       await compileLatexDeck(safeAssetsWithImages);
     } finally {
