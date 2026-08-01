@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { POST as planAssets } from "../app/api/ai-slide-assets/route.ts";
 import { assetsFromAiVisualPlan } from "../app/lib/aiSlideAssets.ts";
 
 test("turns the lesson AI's visual decisions directly into renderable assets", () => {
@@ -53,4 +54,36 @@ test("does not create a decorative asset when the AI says no visual", () => {
   });
 
   assert.deepEqual(assets, []);
+});
+
+test("returns AI-directed assets without a second AI request or supplied slide titles", async () => {
+  const previousToken = process.env.AI_LESSON_ACCESS_TOKEN;
+  process.env.AI_LESSON_ACCESS_TOKEN = "asset-test-token";
+  try {
+    const response = await planAssets(new Request("http://localhost/api/ai-slide-assets", {
+      body: JSON.stringify({
+        context: { grade: "Grade 5", subject: "Science", topic: "Plant transport" },
+        lesson: {
+          title: "Plant Transport",
+          visualPlan: [{
+            anchor: "concept",
+            description: "A plant cutaway showing roots, xylem, stem, and leaves.",
+            educationalPurpose: "Trace water through the whole plant.",
+            labels: ["roots", "xylem", "stem", "leaves"],
+            targetTitle: "Water Pathway",
+            visualType: "labeled anatomy cutaway"
+          }]
+        }
+      }),
+      headers: { "content-type": "application/json", "x-ai-access-token": "asset-test-token" },
+      method: "POST"
+    }));
+    const payload = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(payload.assets.length, 1);
+    assert.equal(payload.assets[0].placement, "2rb");
+  } finally {
+    if (previousToken === undefined) delete process.env.AI_LESSON_ACCESS_TOKEN;
+    else process.env.AI_LESSON_ACCESS_TOKEN = previousToken;
+  }
 });

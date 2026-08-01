@@ -189,6 +189,24 @@ export async function POST(request: Request) {
     .map((item) => cleanText(item, 80))
     .filter(Boolean)
     .slice(0, 60);
+  const visualPlan = body.lesson?.visualPlan ?? [];
+
+  if (!grade || !subject || !topic || !title) {
+    return NextResponse.json({ error: "Missing lesson or context." }, { status: 400 });
+  }
+
+  if (visualPlan.length) {
+    const directSlideTitles = providedSlideTitles.length
+      ? providedSlideTitles
+      : [
+          title,
+          ...visualPlan.map((direction) => cleanText(direction.targetTitle, 80)).filter(Boolean)
+        ].slice(0, 60);
+    return NextResponse.json({
+      assets: assetsFromAiVisualPlan({ grade, slideTitles: directSlideTitles, subject, topic, visualPlan })
+    });
+  }
+
   const slideTitles = providedSlideTitles.length
     ? providedSlideTitles
     : legacyLessonToSlidePlan({
@@ -196,21 +214,11 @@ export async function POST(request: Request) {
         lesson: body.lesson
       }).slides.map((slide) => slide.title).slice(0, 60);
 
-  if (!grade || !subject || !topic || !title || !slideTitles.length) {
+  if (!slideTitles.length) {
     return NextResponse.json({ error: "Missing lesson or context." }, { status: 400 });
   }
 
   const deterministicAssets = deterministicAssetPlan({ grade, slideTitles, subject, topic });
-  const aiDirectedAssets = assetsFromAiVisualPlan({
-    grade,
-    slideTitles,
-    subject,
-    topic,
-    visualPlan: body.lesson?.visualPlan ?? []
-  });
-  if (body.lesson?.visualPlan?.length) {
-    return NextResponse.json({ assets: aiDirectedAssets });
-  }
   const useAiAssetPlanner = process.env.ENABLE_AI_ASSET_PLANNER?.trim().toLowerCase() !== "false";
   if (!useAiAssetPlanner) {
     return NextResponse.json({ assets: deterministicAssets });
