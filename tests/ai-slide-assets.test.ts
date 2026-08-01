@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { POST as planAssets } from "../app/api/ai-slide-assets/route.ts";
 import { assetsFromAiVisualPlan } from "../app/lib/aiSlideAssets.ts";
+import { bridgeVisualPlanIntoLesson } from "../app/lib/visualPlanBridge.ts";
 
 test("turns the lesson AI's visual decisions directly into renderable assets", () => {
   const assets = assetsFromAiVisualPlan({
@@ -115,6 +116,42 @@ test("returns AI-directed assets without a second AI request or supplied slide t
     assert.equal(response.status, 200);
     assert.equal(payload.assets.length, 1);
     assert.equal(payload.assets[0].placement, "2rb");
+  } finally {
+    if (previousToken === undefined) delete process.env.AI_LESSON_ACCESS_TOKEN;
+    else process.env.AI_LESSON_ACCESS_TOKEN = previousToken;
+  }
+});
+
+test("restores AI-directed assets from a released App Store lesson payload", async () => {
+  const previousToken = process.env.AI_LESSON_ACCESS_TOKEN;
+  process.env.AI_LESSON_ACCESS_TOKEN = "asset-bridge-test-token";
+  try {
+    const bridged = bridgeVisualPlanIntoLesson({
+      conceptModel: { relationships: [] },
+      title: "Plant Transport",
+      visualPlan: [{
+        anchor: "cover",
+        description: "A whole plant cutaway showing roots, xylem, stem, and leaves.",
+        educationalPurpose: "Trace water through the connected plant structures.",
+        labels: ["roots", "xylem", "stem", "leaves"],
+        targetTitle: "Plant Transport",
+        visualType: "labeled anatomy cutaway"
+      }]
+    });
+    const oldAppLesson = { ...bridged, visualPlan: undefined };
+    const response = await planAssets(new Request("http://localhost/api/ai-slide-assets", {
+      body: JSON.stringify({
+        context: { grade: "Grade 5", subject: "Science", topic: "Plant transport" },
+        lesson: oldAppLesson
+      }),
+      headers: { "content-type": "application/json", "x-ai-access-token": "asset-bridge-test-token" },
+      method: "POST"
+    }));
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.assets.length, 1);
+    assert.equal(payload.assets[0].placement, "1rb");
   } finally {
     if (previousToken === undefined) delete process.env.AI_LESSON_ACCESS_TOKEN;
     else process.env.AI_LESSON_ACCESS_TOKEN = previousToken;

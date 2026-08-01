@@ -3,6 +3,7 @@ import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess.ts";
 import type { ConceptGraph } from "../../lib/lessonEngine.ts";
 import { legacyLessonToSlidePlan, type AiVisualDirection } from "../../lib/lessonSlidePlan.ts";
 import { assetsFromAiVisualPlan } from "../../lib/aiSlideAssets.ts";
+import { restoreVisualPlanFromLesson } from "../../lib/visualPlanBridge.ts";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -179,6 +180,10 @@ export async function POST(request: Request) {
     body = (await request.json()) as SlideAssetRequest;
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  if (body.lesson) {
+    body = { ...body, lesson: restoreVisualPlanFromLesson(body.lesson) };
   }
 
   const grade = cleanText(body.context?.grade, 40);

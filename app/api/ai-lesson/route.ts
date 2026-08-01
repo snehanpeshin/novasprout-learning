@@ -3,6 +3,7 @@ import { checkCurriculumTopic, checkKidSafeContent } from "../../lib/curriculumG
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 import { extractAiLessonOutputText, parseAiLessonJson } from "../../lib/aiLessonResponse";
 import { validateGeneratedLesson } from "../../lib/aiLessonValidation";
+import { bridgeVisualPlanIntoLesson } from "../../lib/visualPlanBridge";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -1053,7 +1054,7 @@ Keep claims cautious. Do not promise grades, test scores, admissions results, di
           { status: 422 }
         );
       }
-      return NextResponse.json({ lesson, status: "completed" });
+      return NextResponse.json({ lesson: bridgeVisualPlanIntoLesson(lesson), status: "completed" });
     }
 
     if (responseId && ["queued", "in_progress"].includes(generationStatus)) {

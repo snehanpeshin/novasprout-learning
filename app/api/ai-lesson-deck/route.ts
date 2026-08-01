@@ -19,6 +19,7 @@ import { rewriteToFit, shortenTitle } from "../../lib/lessonSlides/contentCompre
 import { speakerNotesText } from "../../lib/lessonSlides/speakerNotesGenerator.ts";
 import type { CircuitProblem, SemanticSlideType } from "../../lib/lessonSlides/types.ts";
 import { diagramElementPosition } from "../../lib/lessonSlides/visualLayoutValidator.ts";
+import { restoreVisualPlanFromLesson } from "../../lib/visualPlanBridge.ts";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -2350,6 +2351,10 @@ async function compileDeckRequest(request: Request) {
     body = (await request.json()) as LessonDeckRequest;
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  if (body.lesson) {
+    body = { ...body, lesson: restoreVisualPlanFromLesson(body.lesson) };
   }
 
   if (!body.lesson?.title || !body.context?.grade || !body.context?.subject || !body.context?.topic) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../../lib/aiAccess";
 import { extractAiLessonOutputText, parseAiLessonJson } from "../../../lib/aiLessonResponse";
 import { validateGeneratedLesson } from "../../../lib/aiLessonValidation";
+import { bridgeVisualPlanIntoLesson } from "../../../lib/visualPlanBridge";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -84,7 +85,7 @@ export async function GET(request: Request) {
       }
 
       return NextResponse.json(
-        { lesson, responseId, status },
+        { lesson: bridgeVisualPlanIntoLesson(lesson), responseId, status },
         { headers: { "Cache-Control": "no-store" } }
       );
     }
