@@ -210,8 +210,19 @@ function nearlyEqual(first: number, second: number) {
   return Math.abs(first - second) <= scale * 0.0005;
 }
 
-function arithmeticErrors(value: string) {
-  const errors: string[] = [];
+type ArithmeticIssue = {
+  correction?: string;
+  expression: string;
+  index: number;
+  message: string;
+};
+
+function formattedNumber(value: number) {
+  return String(Number(value.toFixed(6)));
+}
+
+function arithmeticIssues(value: string) {
+  const issues: ArithmeticIssue[] = [];
   const calculation = /(-?\d+(?:\.\d+)?)\s*(\+|-|x|\*|\/|÷)\s*(-?\d+(?:\.\d+)?)\s*=\s*(-?\d+(?:\.\d+)?)(?:\s*(\/|÷)\s*(-?\d+(?:\.\d+)?))?/gi;
   for (const match of value.matchAll(calculation)) {
     const left = Number(match[1]);
@@ -231,8 +242,20 @@ function arithmeticErrors(value: string) {
         : operator === "/" || operator === "÷"
           ? right === 0 ? Number.NaN : left / right
           : left * right;
-    if (Number.isFinite(expected) && !nearlyEqual(expected, stated)) {
-      errors.push(`${match[0]} should equal ${Number(expected.toFixed(6))}.`);
+    if (!Number.isFinite(expected)) {
+      issues.push({
+        expression: match[0],
+        index: match.index ?? 0,
+        message: `${match[0]} is undefined because division by zero is not allowed.`
+      });
+    } else if (!nearlyEqual(expected, stated)) {
+      const result = formattedNumber(expected);
+      issues.push({
+        correction: `${match[1]} ${match[2]} ${match[3]} = ${result}`,
+        expression: match[0],
+        index: match.index ?? 0,
+        message: `${match[0]} should equal ${result}.`
+      });
     }
   }
 
@@ -241,10 +264,84 @@ function arithmeticErrors(value: string) {
     const expected = (Number(match[1]) / 100) * Number(match[2]);
     const stated = Number(match[3]);
     if (!nearlyEqual(expected, stated)) {
-      errors.push(`${match[0]} should equal ${Number(expected.toFixed(6))}.`);
+      const result = formattedNumber(expected);
+      issues.push({
+        correction: `${match[1]}% of ${match[2]} = ${result}`,
+        expression: match[0],
+        index: match.index ?? 0,
+        message: `${match[0]} should equal ${result}.`
+      });
     }
   }
-  return [...new Set(errors)];
+  return [...new Map(issues.map((issue) => [`${issue.index}:${issue.message}`, issue])).values()];
+}
+
+const intentionalErrorContext = /\b(?:incorrect|wrong|false|mistake|misconception|error|not true|find|identify|spot|evaluate|decide whether|which equality|which equation)\b/i;
+
+function isIntentionalErrorExample(value: string, issue: ArithmeticIssue) {
+  const start = Math.max(0, issue.index - 90);
+  const end = Math.min(value.length, issue.index + issue.expression.length + 90);
+  return intentionalErrorContext.test(value.slice(start, end));
+}
+
+function repairArithmeticField(value: string | undefined, field: string) {
+  if (!value) return { findings: [] as SlideValidationFinding[], repairCount: 0, value };
+  let repaired = value;
+  const findings: SlideValidationFinding[] = [];
+  let repairCount = 0;
+
+  for (let pass = 0; pass < 3; pass += 1) {
+    const actionable = arithmeticIssues(repaired).filter((issue) => !isIntentionalErrorExample(repaired, issue));
+    if (!actionable.length) break;
+    let changed = false;
+    for (const issue of actionable) {
+      if (!issue.correction) continue;
+      repaired = repaired.replace(issue.expression, issue.correction);
+      repairCount += 1;
+      changed = true;
+      findings.push(finding(
+        "calculation_error",
+        `A numeric equality was recomputed in ${field}: ${issue.message}`,
+        true,
+        "warning",
+        `Replaced "${issue.expression}" with "${issue.correction}" and checked the field again.`
+      ));
+    }
+    if (!changed) break;
+  }
+
+  for (const issue of arithmeticIssues(repaired).filter((item) => !isIntentionalErrorExample(repaired, item))) {
+    findings.push(finding(
+      "calculation_error",
+      `A numeric equality remains unresolved in ${field}: ${issue.message}`,
+      false,
+      "error"
+    ));
+  }
+  return { findings, repairCount, value: repaired };
+}
+
+function reviewAndRepairArithmetic(slide: LessonPlanSlide) {
+  const findings: SlideValidationFinding[] = [];
+  let repairCount = 0;
+  const repair = (value: string | undefined, field: string) => {
+    const result = repairArithmeticField(value, field);
+    findings.push(...result.findings);
+    repairCount += result.repairCount;
+    return result.value;
+  };
+  const content = slide.studentContent;
+  content.answer = repair(content.answer, "answer");
+  content.hint = repair(content.hint, "hint");
+  content.keyIdea = repair(content.keyIdea, "key idea");
+  content.explanation = repair(content.explanation, "explanation");
+  content.bullets = content.bullets?.map((item, index) => repair(item, `bullet ${index + 1}`) ?? item);
+  content.examples = content.examples?.map((item, index) => repair(item, `example ${index + 1}`) ?? item);
+  content.steps = content.steps?.map((item, index) => repair(item, `step ${index + 1}`) ?? item);
+  if (slide.assessment) {
+    slide.assessment.explanation = repair(slide.assessment.explanation, "answer explanation") ?? "";
+  }
+  return { findings, repairCount };
 }
 
 function assessmentFindings(slide: LessonPlanSlide) {
@@ -300,14 +397,11 @@ export function runSemanticAccuracyGate({
     const findings: SlideValidationFinding[] = assessmentFindings(slide);
     let aligned = true;
 
-    for (const error of arithmeticErrors(`${visibleText(slide)} ${slide.assessment?.explanation ?? ""}`)) {
-      findings.push(finding(
-        "calculation_error",
-        `A numeric equality failed recomputation: ${error}`,
-        false,
-        "error"
-      ));
-    }
+    // Questions may intentionally contain a false equality. Asserted content
+    // is recomputed, repaired, and checked again before the quality decision.
+    const arithmeticReview = reviewAndRepairArithmetic(slide);
+    findings.push(...arithmeticReview.findings);
+    repairedMismatches += arithmeticReview.repairCount;
 
     for (const rule of domainRules) {
       if (contextSupportsRule(context, rule)) continue;

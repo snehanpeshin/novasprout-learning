@@ -138,7 +138,7 @@ test("interdisciplinary topics do not inherit ratio lesson content", () => {
   assert.equal(plan.context.subjectKey, "general");
 });
 
-test("recomputes simple arithmetic and blocks an incorrect equality", () => {
+test("recomputes, repairs, and rechecks an incorrect asserted equality", () => {
   const result = runSemanticAccuracyGate({
     slides: [slide({
       studentContent: { keyIdea: "A 25 percent discount on 80 is found by calculating 0.25 x 80 = 25." },
@@ -148,8 +148,11 @@ test("recomputes simple arithmetic and blocks an incorrect equality", () => {
     subjectKey: "math",
     topic: "Percent discounts"
   });
-  assert.equal(result.summary.unresolvedErrors, 1);
-  assert.ok(result.findingsBySlide.get("lesson-slide")?.some((finding) => finding.code === "calculation_error"));
+  assert.equal(result.summary.unresolvedErrors, 0);
+  assert.match(result.slides[0].studentContent.keyIdea ?? "", /0\.25 x 80 = 20/);
+  assert.ok(result.findingsBySlide.get("lesson-slide")?.some((finding) =>
+    finding.code === "calculation_error" && finding.repaired
+  ));
 });
 
 test("accepts mathematically equivalent fraction equalities", () => {
@@ -171,7 +174,7 @@ test("accepts mathematically equivalent fraction equalities", () => {
   ));
 });
 
-test("still rejects unequal fractions written as equivalent", () => {
+test("allows an intentionally false equality inside misconception context", () => {
   const result = runSemanticAccuracyGate({
     slides: [slide({
       studentContent: { keyIdea: "This claim is incorrect: 6/9 = 3/4." },
@@ -182,8 +185,46 @@ test("still rejects unequal fractions written as equivalent", () => {
     topic: "Ratios and proportions"
   });
 
+  assert.equal(result.summary.unresolvedErrors, 0);
+  assert.match(result.slides[0].studentContent.keyIdea ?? "", /6\/9 = 3\/4/);
+  assert.ok(!result.findingsBySlide.get("lesson-slide")?.some((finding) =>
+    finding.code === "calculation_error" && !finding.repaired
+  ));
+});
+
+test("blocks an arithmetic statement that cannot be repaired safely", () => {
+  const result = runSemanticAccuracyGate({
+    slides: [slide({
+      studentContent: { keyIdea: "The quotient is shown as 4 / 0 = 2." },
+      title: "Division check"
+    })],
+    subject: "Mathematics",
+    subjectKey: "math",
+    topic: "Division"
+  });
+
   assert.equal(result.summary.unresolvedErrors, 1);
   assert.ok(result.findingsBySlide.get("lesson-slide")?.some((finding) =>
+    finding.code === "calculation_error" && !finding.repaired
+  ));
+});
+
+test("allows a false equality when the learner is explicitly asked to evaluate it", () => {
+  const result = runSemanticAccuracyGate({
+    slides: [slide({
+      studentContent: {
+        question: "Which equality is false: 4 + 2 = 7 or 4 + 2 = 6?"
+      },
+      title: "Find the incorrect equality",
+      type: "answer_explanation"
+    })],
+    subject: "Mathematics",
+    subjectKey: "math",
+    topic: "Linear equations"
+  });
+
+  assert.equal(result.summary.unresolvedErrors, 0);
+  assert.ok(!result.findingsBySlide.get("lesson-slide")?.some((finding) =>
     finding.code === "calculation_error"
   ));
 });
