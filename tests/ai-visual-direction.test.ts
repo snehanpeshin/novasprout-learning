@@ -123,3 +123,37 @@ test("routes a free-form worked-example direction to a renderable visual", () =>
   assert.equal(example?.visuals[0]?.sections?.length, 6);
   assert.equal(example?.visualPriority, "high");
 });
+
+test("keeps the cover visual on the cover when a concept title shares topic words", () => {
+  const plan = legacyLessonToSlidePlan({
+    context: { grade: "Grade 5", subject: "Science", topic: "Water transport in plants" },
+    lesson: {
+      conceptExplanation: "Water enters roots and travels upward through xylem to the leaves.",
+      guidedExample: "Trace one water molecule through the plant.",
+      learningObjectives: ["Trace water through a plant."],
+      practiceQuestions: ["Where does water enter a plant?"],
+      quickAssessment: ["Name the water-carrying tissue."],
+      title: "How water moves through plants",
+      visualPlan: [
+        {
+          anchor: "cover",
+          description: "A whole plant from roots to leaves.",
+          educationalPurpose: "Orient the learner to the complete system.",
+          targetTitle: "whole plant overview",
+          visualType: "real-world plant illustration"
+        },
+        {
+          anchor: "concept",
+          description: "A close-up of a continuous water column in xylem.",
+          educationalPurpose: "Explain upward transport.",
+          targetTitle: "xylem water column",
+          visualType: "labeled anatomy cutaway"
+        }
+      ]
+    }
+  });
+
+  const cover = plan.slides.find((slide) => slide.id === "title");
+  assert.match(cover?.visuals[0]?.accessibilityLabel ?? "", /whole plant/i);
+  assert.doesNotMatch(cover?.visuals[0]?.accessibilityLabel ?? "", /xylem/i);
+});

@@ -7,7 +7,7 @@ import {
 } from "./lessonEngine.ts";
 import { finalizeInstructionalPlan } from "./lessonSlides/lessonPlanner.ts";
 import { classifySlide } from "./lessonSlides/slideClassifier.ts";
-import { rewriteToFit } from "./lessonSlides/contentCompressor.ts";
+import { rewriteToFit, shortenTitle } from "./lessonSlides/contentCompressor.ts";
 import type {
   AssessmentItem,
   DeckQualityScore,
@@ -627,7 +627,7 @@ export function applyAiVisualDirections(
     const byTitle = sameAnchor.find((index) =>
       normalizePlainText(usable[index].targetTitle, 100).toLowerCase().split(/\W+/).some((word) => word.length > 3 && titleWords.has(word))
     );
-    const selectedIndex = titleMatch ?? byTitle ?? sameAnchor[0];
+    const selectedIndex = byTitle ?? sameAnchor[0] ?? titleMatch;
     if (selectedIndex === undefined) return slide;
 
     unused.delete(selectedIndex);
@@ -2629,10 +2629,7 @@ export function validateAndRepairSlidePlan(plan: LessonSlidePlan, audienceMode: 
     const cleanTitle = normalizePlainText(slide.title, 90)
       .replace(/\bTutor-guided\b/gi, "Guided")
       .replace(/\bTeacher\b/gi, "Lesson");
-    const titleWords = cleanTitle.split(/\s+/).filter(Boolean);
-    const repairedTitle = titleWords.length > 8
-      ? titleWords.slice(0, 8).join(" ").replace(/[,:;]+$/, "")
-      : cleanTitle;
+    const repairedTitle = shortenTitle(cleanTitle, 58);
     if (repairedTitle !== cleanTitle) {
       warnings.push(`Long title shortened at slide ${index + 1}.`);
     }

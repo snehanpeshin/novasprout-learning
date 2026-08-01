@@ -34,6 +34,7 @@ test("turns the lesson AI's visual decisions directly into renderable assets", (
   assert.equal(assets[0].type, "image");
   assert.equal(assets[0].placement, "2rb");
   assert.match(assets[0].prompt, /root hair.*xylem/i);
+  assert.match(assets[0].prompt, /only these exact short labels/i);
   assert.equal(assets[1].type, "latex");
   assert.equal(assets[1].placement, "3cb");
 });

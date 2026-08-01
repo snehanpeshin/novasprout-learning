@@ -94,6 +94,9 @@ export function assetsFromAiVisualPlan({
     const position = ["rb", "lb", "rm"][imageCandidates.length % 3];
     const id = `slide-${slideNumber}-${slug(targetTitle)}`;
     const needsGeneratedImage = /\b(?:anatom|cutaway|illustration|real.?world|photograph|map|geograph|spatial|3d|experiment|apparatus|physical object|organism|historical scene)\b/.test(normalizedType);
+    const imageTextInstruction = /\b(?:label|annotat)\w*\b/.test(normalizedType) && labels.length
+      ? `Include only these exact short labels where they directly support learning: ${labels.join(", ")}. Keep every label legible and correctly attached to its part.`
+      : "Do not draw words, letters, numbers, captions, callouts, leader lines, labels, or a watermark.";
 
     if (needsGeneratedImage && !usedSlides.has(slideNumber)) {
       usedSlides.add(slideNumber);
@@ -106,7 +109,7 @@ export function assetsFromAiVisualPlan({
         filename: `${id}.png`,
         latex: "",
         placement: `${slideNumber}${position}`,
-        prompt: `Create an unlabeled ${grade} ${subject} educational illustration about ${topic}. Visual structure: ${visualType}. Show this scene or system accurately: ${description}. Include these essential parts and relationships visually: ${labels.join(", ") || targetTitle}. Learning purpose: ${purpose}. Clear student-friendly textbook visual, strong hierarchy, uncluttered background, age-appropriate detail, accurate spatial relationships, no decorative elements. Do not draw any words, letters, numbers, captions, callouts, leader lines, labels, or watermark; the lesson renderer adds accessible labels separately.`,
+        prompt: `Create a ${grade} ${subject} educational illustration about ${topic}. Visual structure: ${visualType}. Show this scene or system accurately: ${description}. Include these essential parts and relationships visually: ${labels.join(", ") || targetTitle}. Learning purpose: ${purpose}. Clear student-friendly textbook visual, strong hierarchy, uncluttered background, age-appropriate detail, accurate spatial relationships, no decorative elements. ${imageTextInstruction}`,
         type: "image"
       });
     }

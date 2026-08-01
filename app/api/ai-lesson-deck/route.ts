@@ -1831,14 +1831,18 @@ function renderPlanSlideBody(slide: LessonPlanSlide, hasImageAsset = false, audi
   }).filter(Boolean).join("\n");
 
   if (slide.slideType === "lesson_cover") {
+    const coverGoals = (content.bullets ?? [])
+      .map((goal) => goal.replace(/^(?:describe|explain|show)\s+how\s+/i, ""))
+      .map((goal) => goal ? `${goal[0].toUpperCase()}${goal.slice(1)}` : "")
+      .map((goal) => rewriteToFit(goal, 14))
+      .filter(Boolean)
+      .slice(0, 1);
+    const firstGoal = coverGoals[0] || rewriteToFit(content.keyIdea ?? "", 9) || "See the whole idea before studying each part.";
     return String.raw`\begin{columns}[T]
-\begin{column}{0.38\textwidth}
-${keyIdea}
-\begin{block}{By the end, you can}
-${latexBullets(content.bullets, 3)}
-\end{block}
+\begin{column}{0.34\textwidth}
+\begin{alertblock}{Focus}\small ${escapeLatex(firstGoal)}\end{alertblock}
 \end{column}
-\begin{column}{0.58\textwidth}
+\begin{column}{0.62\textwidth}
 ${visualTex}
 \end{column}
 \end{columns}`;
