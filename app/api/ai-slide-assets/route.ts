@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
-import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
-import type { ConceptGraph } from "../../lib/lessonEngine";
-import { legacyLessonToSlidePlan, type AiVisualDirection } from "../../lib/lessonSlidePlan";
+import { NextResponse } from "next/server.js";
+import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess.ts";
+import type { ConceptGraph } from "../../lib/lessonEngine.ts";
+import { legacyLessonToSlidePlan, type AiVisualDirection } from "../../lib/lessonSlidePlan.ts";
+import { assetsFromAiVisualPlan } from "../../lib/aiSlideAssets.ts";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -200,6 +201,16 @@ export async function POST(request: Request) {
   }
 
   const deterministicAssets = deterministicAssetPlan({ grade, slideTitles, subject, topic });
+  const aiDirectedAssets = assetsFromAiVisualPlan({
+    grade,
+    slideTitles,
+    subject,
+    topic,
+    visualPlan: body.lesson?.visualPlan ?? []
+  });
+  if (body.lesson?.visualPlan?.length) {
+    return NextResponse.json({ assets: aiDirectedAssets });
+  }
   const useAiAssetPlanner = process.env.ENABLE_AI_ASSET_PLANNER?.trim().toLowerCase() !== "false";
   if (!useAiAssetPlanner) {
     return NextResponse.json({ assets: deterministicAssets });
