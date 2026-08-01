@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
-import { legacyLessonToSlidePlan } from "../../lib/lessonSlidePlan";
+import type { ConceptGraph } from "../../lib/lessonEngine";
+import { legacyLessonToSlidePlan, type AiVisualDirection } from "../../lib/lessonSlidePlan";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -12,6 +13,7 @@ type SlideAssetRequest = {
     topic?: string;
   };
   lesson?: {
+    conceptModel?: Partial<ConceptGraph>;
     conceptExplanation?: string;
     duration?: string;
     fullLessonSegments?: Array<{ activity?: string; time?: string; title?: string }>;
@@ -23,6 +25,7 @@ type SlideAssetRequest = {
     recommendedNextSession?: string;
     studentFit?: string;
     title?: string;
+    visualPlan?: AiVisualDirection[];
     warmUp?: string;
   };
   slideTitles?: string[];
@@ -184,28 +187,28 @@ export async function POST(request: Request) {
   const providedSlideTitles = (body.slideTitles ?? [])
     .map((item) => cleanText(item, 80))
     .filter(Boolean)
-    .slice(0, 28);
+    .slice(0, 60);
   const slideTitles = providedSlideTitles.length
     ? providedSlideTitles
     : legacyLessonToSlidePlan({
         context: body.context,
         lesson: body.lesson
-      }).slides.map((slide) => slide.title).slice(0, 28);
+      }).slides.map((slide) => slide.title).slice(0, 60);
 
   if (!grade || !subject || !topic || !title || !slideTitles.length) {
     return NextResponse.json({ error: "Missing lesson or context." }, { status: 400 });
   }
 
   const deterministicAssets = deterministicAssetPlan({ grade, slideTitles, subject, topic });
-  const useAiAssetPlanner = process.env.ENABLE_AI_ASSET_PLANNER?.trim().toLowerCase() === "true";
-  if (deterministicAssets.length || !useAiAssetPlanner) {
+  const useAiAssetPlanner = process.env.ENABLE_AI_ASSET_PLANNER?.trim().toLowerCase() !== "false";
+  if (!useAiAssetPlanner) {
     return NextResponse.json({ assets: deterministicAssets });
   }
 
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
-    return NextResponse.json({ error: "OPENAI_API_KEY is not configured." }, { status: 500 });
+    return NextResponse.json({ assets: deterministicAssets });
   }
 
   const prompt = `
@@ -226,8 +229,10 @@ Lesson details:
 - Example: ${body.lesson?.guidedExample ?? ""}
 - Practice: ${(body.lesson?.practiceQuestions ?? []).slice(0, 4).join(" | ")}
 - Quick checks: ${(body.lesson?.quickAssessment ?? []).join(" | ")}
+- AI visual directions: ${JSON.stringify((body.lesson?.visualPlan ?? []).slice(0, 60))}
+- Concept relationships: ${JSON.stringify((body.lesson?.conceptModel?.relationships ?? []).slice(0, 30))}
 
-Return a compact JSON object with 6 to 10 assets total.
+Return a compact JSON object containing only assets that materially improve this specific lesson. There is no required asset count and an empty assets array is valid when the built-in visual plan is already sufficient.
 Use two asset types:
 - image: a kid-friendly educational diagram prompt, no text labels inside the image
 - latex: a short formula, symbolic relationship, or structured notation when helpful
@@ -248,12 +253,13 @@ lt, ct, rt, lm, cm, rm, lb, cb, rb.
 Example: 1lb means slide 1, left bottom.
 
 Rules:
-- Plan at most one generated image asset for the single slide where a realistic, spatial, anatomical, geographic, experimental, or object-based illustration adds the most value. Built-in TikZ diagrams will provide the other slide visuals.
+- Follow the lesson AI's visual directions and concept relationships instead of applying a fixed subject template.
+- You may plan generated images for up to three slides where a realistic, spatial, anatomical, geographic, experimental, or object-based illustration adds meaning that the built-in diagrams cannot provide.
 - The image prompt must specify the important parts, accurate spatial relationships, process cues, age level, view angle, visual hierarchy, and intended educational purpose. Ask for no embedded words or labels.
 - Create latex/notation overlays for concept, example, and practice slides only when symbolic notation materially improves understanding.
 - Every asset must be instructional. Decorative boxes, random icons, and generic labels do not count.
 - Do not create decorative images. Every image must clarify the lesson.
-- Prefer the one image for a physical system, map, experiment setup, real object, or spatial structure that cannot be represented faithfully by generic boxes.
+- Prefer images for physical systems, maps, experiment setups, real objects, or spatial structures that cannot be represented faithfully by programmatic diagrams.
 - For math, prefer visual models such as bars, number lines, coordinate grids, geometric sketches, or proportional tables.
 - For science, prefer process diagrams, experiment setups, cause/effect models, or observation diagrams.
 - For ELA/study skills, prefer organizing visuals such as flowcharts, annotation models, or planning maps.
@@ -282,7 +288,8 @@ Rules:
             ...assetSchema
           }
         }
-      })
+      }),
+      signal: AbortSignal.timeout(22_000)
     });
 
     const payload = await readJsonResponse(response);
@@ -297,16 +304,16 @@ Rules:
     }
 
     const parsed = parseJson(extractOutputText(payload));
-    if (!parsed?.assets?.length) {
-      const fallbackAssets = deterministicAssetPlan({ grade, slideTitles, subject, topic });
-      if (fallbackAssets.length) {
-        return NextResponse.json({ assets: fallbackAssets });
-      }
-
-      return NextResponse.json({ error: "The AI did not return a usable asset plan." }, { status: 502 });
+    if (!Array.isArray(parsed?.assets)) {
+      return NextResponse.json({ assets: deterministicAssets });
     }
 
-    return NextResponse.json({ assets: parsed.assets });
+    const selectedAssets = parsed.assets.filter((asset: { placement?: unknown; type?: unknown }) =>
+      typeof asset?.placement === "string" && ["image", "latex"].includes(String(asset?.type))
+    );
+    const imageAssets = selectedAssets.filter((asset: { type?: string }) => asset.type === "image").slice(0, 3);
+    const latexAssets = selectedAssets.filter((asset: { type?: string }) => asset.type === "latex").slice(0, 16);
+    return NextResponse.json({ assets: [...imageAssets, ...latexAssets] });
   } catch (error) {
     const fallbackAssets = deterministicAssetPlan({ grade, slideTitles, subject, topic });
     if (fallbackAssets.length) {

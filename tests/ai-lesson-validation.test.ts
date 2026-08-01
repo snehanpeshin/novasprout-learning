@@ -22,7 +22,21 @@ function validLesson() {
       passingScore: 70,
       questions: [question(0), question(1), question(2)]
     },
-    title: "A complete sample lesson"
+    title: "A complete sample lesson",
+    visualPlan: [
+      {
+        anchor: "concept",
+        description: "A labeled relationship model connecting each part of the central idea.",
+        educationalPurpose: "Helps the learner see how the concept parts affect one another.",
+        visualType: "concept map"
+      },
+      {
+        anchor: "worked_example",
+        description: "A visible sequence matching every reasoning step to the example values.",
+        educationalPurpose: "Makes the worked method easier to follow and reuse.",
+        visualType: "worked solution"
+      }
+    ]
   };
 }
 

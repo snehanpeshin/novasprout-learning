@@ -40,6 +40,19 @@ export function validateGeneratedLesson(lesson: unknown): LessonValidationResult
     issues.push("Lesson segments must include a title and student-facing teaching content.");
   }
 
+  const visualPlan = Array.isArray(lesson.visualPlan) ? lesson.visualPlan : [];
+  if (visualPlan.length < 2) {
+    issues.push("The lesson needs an AI-designed visual strategy for its main learning moments.");
+  } else if (visualPlan.some((direction) =>
+    !isRecord(direction) ||
+    !hasText(direction.anchor, 3) ||
+    !hasText(direction.visualType, 3) ||
+    !hasText(direction.educationalPurpose, 12) ||
+    !hasText(direction.description, 12)
+  )) {
+    issues.push("Each visual direction needs a target, visual type, description, and educational purpose.");
+  }
+
   const exam = lesson.timedExam;
   if (!isRecord(exam)) {
     issues.push("Timed quiz is missing.");

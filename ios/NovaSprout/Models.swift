@@ -92,6 +92,19 @@ struct TimedExam: Codable, Hashable {
     let questions: [ExamQuestion]
 }
 
+struct LessonVisualDirection: Codable, Hashable {
+    let anchor: String?
+    let description: String?
+    let educationalPurpose: String?
+    let equation: String?
+    let labels: [String]?
+    let layout: String?
+    let priority: String?
+    let steps: [String]?
+    let targetTitle: String?
+    let visualType: String?
+}
+
 struct GeneratedLesson: Codable, Hashable {
     let conceptExplanation: String?
     let conceptModel: LessonConceptModel?
@@ -109,6 +122,7 @@ struct GeneratedLesson: Codable, Hashable {
     let studentFit: String?
     let timedExam: TimedExam?
     let title: String?
+    let visualPlan: [LessonVisualDirection]?
     let warmUp: String?
 
     var displayTitle: String {

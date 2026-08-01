@@ -65,6 +65,7 @@ enum SampleData {
             ]
         ),
         title: "Equivalent Fractions",
+        visualPlan: nil,
         warmUp: "Draw a rectangle, shade one half, and then divide each half into two equal pieces. How many fourths are shaded?"
     )
 }

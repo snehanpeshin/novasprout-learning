@@ -115,7 +115,7 @@ actor APIClient {
             // Planning is optional; the deck renderer supplies complete,
             // subject-specific diagrams when this service is unavailable.
         }
-        let selectedImages = Array(allAssets.filter { $0.type == "image" }.prefix(1))
+        let selectedImages = Array(allAssets.filter { $0.type == "image" }.prefix(3))
         // The deck renderer already creates subject-specific equations and diagrams.
         // Keep optional AI LaTeX snippets out of the native pipeline because an
         // incomplete formula should never prevent the core lesson from compiling.

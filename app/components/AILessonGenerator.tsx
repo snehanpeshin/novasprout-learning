@@ -66,6 +66,18 @@ type GeneratedLesson = {
     questions: ExamQuestion[];
   };
   title?: string;
+  visualPlan?: Array<{
+    anchor?: string;
+    description?: string;
+    educationalPurpose?: string;
+    equation?: string;
+    labels?: string[];
+    layout?: string;
+    priority?: string;
+    steps?: string[];
+    targetTitle?: string;
+    visualType?: string;
+  }>;
   warmUp?: string;
 };
 

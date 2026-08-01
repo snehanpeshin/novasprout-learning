@@ -67,6 +67,18 @@ type LessonDeckRequest = {
     recommendedNextSession?: string;
     studentFit?: string;
     title?: string;
+    visualPlan?: Array<{
+      anchor?: string;
+      description?: string;
+      educationalPurpose?: string;
+      equation?: string;
+      labels?: string[];
+      layout?: string;
+      priority?: string;
+      steps?: string[];
+      targetTitle?: string;
+      visualType?: string;
+    }>;
     warmUp?: string;
   };
   slideTitles?: string[];
@@ -1374,8 +1386,10 @@ function renderScientificGraph(visual: VisualSpec) {
   return String.raw`\begin{center}
 \begin{tikzpicture}[scale=0.86]
 \draw[step=0.65cm, gray!22, very thin] (0,0) grid (5.2,3.3);
-\draw[->, thick] (0,0) -- (5.6,0) node[right,align=left]{\scriptsize ${escapeLatex(labels[0])}};
-\draw[->, thick] (0,0) -- (0,3.7) node[above,align=center]{\scriptsize ${escapeLatex(labels[1])}};
+\draw[->, thick] (0,0) -- (5.6,0);
+\node[below,anchor=north east,text width=2.5cm,align=right,font=\scriptsize] at (5.5,-0.03) {${escapeLatex(labels[0])}};
+\draw[->, thick] (0,0) -- (0,3.7);
+\node[above,anchor=south west,text width=2.7cm,align=left,font=\scriptsize] at (0.06,3.62) {${escapeLatex(labels[1])}};
 \draw[very thick, SubjectAccent] ${scaled};
 ${dots}
 \node[draw=NovaCoral, fill=NovaCoral!9, rounded corners=3pt, text width=2.5cm, align=center, font=\scriptsize] at (3.75,2.75) {${escapeLatex(labels[2] ?? visual.title ?? "Observed relationship")}};

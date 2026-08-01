@@ -110,7 +110,21 @@ export type VisualSpec = {
   type: VisualType;
 };
 
+export type AiVisualDirection = {
+  anchor?: string;
+  description?: string;
+  educationalPurpose?: string;
+  equation?: string;
+  labels?: string[];
+  layout?: string;
+  priority?: string;
+  steps?: string[];
+  targetTitle?: string;
+  visualType?: string;
+};
+
 export type LessonPlanSlide = {
+  aiVisualDirection?: boolean;
   assessment?: AssessmentItem;
   accessibilityLabel: string;
   estimatedMinutes: number;
@@ -173,6 +187,7 @@ type LegacyLesson = {
   recommendedNextSession?: string;
   studentFit?: string;
   title?: string;
+  visualPlan?: AiVisualDirection[];
   warmUp?: string;
 };
 
@@ -433,6 +448,209 @@ function makeSlide(
     visualPriority,
     visuals
   };
+}
+
+export function visualSelectionFromDirection(value?: string): VisualSelectionType {
+  const visual = normalizePlainText(value, 100).toLowerCase().replace(/[_-]+/g, " ");
+  if (/\b(?:none|no visual|text only|blank)\b/.test(visual)) return "no_visual";
+  if (/\b(?:circuit|schematic|wiring)\b/.test(visual)) return "circuit_diagram";
+  if (/\b(?:equation|formula|derivation|symbolic|latex)\b/.test(visual)) return "equation_flow";
+  if (/\b(?:number line|fraction bar|tape diagram|ratio bar)\b/.test(visual)) return "number_line";
+  if (/\b(?:coordinate|graph|plot|chart|data display|axis)\b/.test(visual)) return "coordinate_graph";
+  if (/\b(?:compare|comparison|table|venn|before and after|versus)\b/.test(visual)) return "comparison_table";
+  if (/\b(?:timeline|chronology|historical sequence)\b/.test(visual)) return "timeline";
+  if (/\b(?:process|sequence|cycle|flowchart|pathway|mechanism|steps)\b/.test(visual)) return "process_flow";
+  if (/\b(?:anatom|labeled|cutaway|cross section|system diagram|scientific diagram|map)\b/.test(visual)) return "labeled_scientific_diagram";
+  if (/\b(?:worked solution|worked example|solution path)\b/.test(visual)) return "worked_solution";
+  if (/\b(?:icon|cards|gallery|grid)\b/.test(visual)) return "icon_grid";
+  if (/\b(?:image|illustration|photo|scene|real object|3d|solid|shape)\b/.test(visual)) return "image_or_illustration";
+  return "concept_map";
+}
+
+function visualTypeFromDirection(value: string | undefined, selection: VisualSelectionType): VisualType {
+  const visual = normalizePlainText(value, 100).toLowerCase().replace(/[_-]+/g, " ");
+  if (/\b(?:tape diagram|fraction bar|ratio bar)\b/.test(visual)) return "tape_diagram";
+  if (/\b(?:double number line|number line)\b/.test(visual)) return "double_number_line";
+  if (/\b(?:ratio table)\b/.test(visual)) return "ratio_table";
+  if (/\b(?:data table)\b/.test(visual)) return "data_table";
+  if (/\b(?:scientific graph|data graph|line graph|bar chart)\b/.test(visual)) return "scientific_graph";
+  if (/\b(?:3d coordinate|coordinate space)\b/.test(visual)) return "coordinate_space_3d";
+  if (/\b(?:solid net|shape net)\b/.test(visual)) return "solid_net";
+  if (/\b(?:solid geometry|3d solid|geometric solid)\b/.test(visual)) return "solid_geometry";
+  if (/\b(?:structure function)\b/.test(visual)) return "structure_function";
+  if (/\b(?:flowchart)\b/.test(visual)) return "flowchart";
+  if (/\b(?:annotated image|cutaway)\b/.test(visual)) return "annotated_image";
+  if (/\b(?:labeled system|anatom|system diagram|map)\b/.test(visual)) return "labeled_system";
+  if (/\b(?:vocabulary grid)\b/.test(visual)) return "vocabulary_grid";
+  if (/\b(?:cards)\b/.test(visual)) return "labeled_cards";
+  if (/\b(?:worked solution|solution path)\b/.test(visual)) return "worked_solution";
+
+  const selectionDefaults: Record<Exclude<VisualSelectionType, "no_visual">, VisualType> = {
+    circuit_diagram: "circuit_diagram",
+    comparison_table: "comparison_table",
+    concept_map: "concept_map",
+    coordinate_graph: "coordinate_graph",
+    equation_flow: "equation_steps",
+    icon_grid: "icon_grid",
+    image_or_illustration: "cover_illustration",
+    labeled_scientific_diagram: "labeled_system",
+    number_line: "double_number_line",
+    process_flow: "process_sequence",
+    timeline: "process_sequence",
+    worked_solution: "worked_solution"
+  };
+  return selectionDefaults[selection === "no_visual" ? "concept_map" : selection];
+}
+
+function aiVisualSpec(direction: AiVisualDirection, slide: LessonPlanSlide, topic: string): VisualSpec | null {
+  const selection = visualSelectionFromDirection(direction.visualType);
+  if (selection === "no_visual") return null;
+
+  const description = normalizePlainText(direction.description, 360);
+  const purpose = normalizePlainText(direction.educationalPurpose, 260);
+  const suppliedLabels = (direction.labels ?? []).map((item) => normalizePlainText(item, 72)).filter(Boolean);
+  const labels = [...new Set([...suppliedLabels, ...visualKeywords(description, [topic], 8)])].slice(0, 10);
+  const steps = (direction.steps ?? []).map((item) => normalizePlainText(item, 100)).filter(Boolean).slice(0, 8);
+  const type = visualTypeFromDirection(direction.visualType, selection);
+  const base: VisualSpec = {
+    accessibilityLabel: description || purpose || `Instructional ${type.replace(/_/g, " ")} for ${topic}.`,
+    caption: purpose,
+    expectedInsight: purpose || description,
+    id: `${slide.id}-ai-visual`,
+    labels,
+    steps,
+    title: normalizePlainText(direction.targetTitle, 72) || slide.title,
+    type
+  };
+
+  if (type === "comparison_table" || type === "structure_function") {
+    const midpoint = Math.max(1, Math.ceil(labels.length / 2));
+    base.columns = [
+      { items: labels.slice(0, midpoint), title: "First view" },
+      { items: labels.slice(midpoint), title: "Second view" }
+    ];
+  }
+  if (["data_table", "ratio_table", "tape_diagram", "double_number_line"].includes(type)) {
+    const midpoint = Math.max(1, Math.ceil(labels.length / 2));
+    base.rows = [labels.slice(0, midpoint), labels.slice(midpoint)];
+  }
+  if (type === "equation_steps") {
+    base.equation = normalizePlainText(direction.equation, 160) || steps[0] || labels[0];
+  }
+  if (type === "worked_solution") {
+    const explanation = normalizePlainText(
+      slide.studentContent.explanation || slide.studentContent.question || slide.studentContent.keyIdea,
+      420
+    );
+    const solutionSteps = steps.length
+      ? steps
+      : (slide.studentContent.steps ?? []).map((item) => normalizePlainText(item, 130)).filter(Boolean);
+    const answer = normalizePlainText(slide.studentContent.answer, 160);
+    base.sections = [
+      { label: "GIVEN", text: explanation || description || "Read the problem and identify the known information." },
+      { label: "FIND", text: normalizePlainText(slide.studentContent.question, 160) || purpose || "State what must be found or explained." },
+      { label: "MODEL", text: solutionSteps[0] || normalizePlainText(direction.equation, 160) || "Choose a model that connects the known and unknown information." },
+      { label: "APPLY", text: solutionSteps[1] || "Apply the model one justified step at a time." },
+      { label: "RESULT", text: answer || solutionSteps.at(-1) || "State the result clearly with its meaning or unit." },
+      { label: "CHECK", text: solutionSteps.at(-1) || "Check the result against the original information." }
+    ];
+  }
+  base.mathematicalRelationship = normalizePlainText(direction.equation, 160) || purpose;
+  return base;
+}
+
+function visualAnchorForSlide(slide: LessonPlanSlide) {
+  if (slide.id === "title") return "cover";
+  if (slide.id === "big-idea") return "big_idea";
+  if (slide.id === "vocabulary") return "vocabulary";
+  if (slide.id === "prior-knowledge") return "prerequisite";
+  if (slide.id === "warm-up") return "warm_up";
+  if (slide.id.startsWith("concept-")) return "concept";
+  if (slide.id.startsWith("worked-example-")) return "worked_example";
+  if (slide.id.startsWith("content-")) return "lesson_segment";
+  if (slide.id.startsWith("practice-")) return "practice";
+  if (slide.id === "common-mistake") return "misconception";
+  if (slide.id.startsWith("check-")) return "assessment";
+  if (slide.id === "summary") return "summary";
+  if (slide.id === "next-session") return "next_steps";
+  return "concept";
+}
+
+function normalizeVisualAnchor(value?: string) {
+  const anchor = normalizePlainText(value, 80).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+  if (/title|cover|opening/.test(anchor)) return "cover";
+  if (/big_idea|overview|objective/.test(anchor)) return "big_idea";
+  if (/vocab|keyword|term/.test(anchor)) return "vocabulary";
+  if (/prior|prereq|before/.test(anchor)) return "prerequisite";
+  if (/warm/.test(anchor)) return "warm_up";
+  if (/worked|example/.test(anchor)) return "worked_example";
+  if (/segment|section/.test(anchor)) return "lesson_segment";
+  if (/practice/.test(anchor)) return "practice";
+  if (/misconception|mistake/.test(anchor)) return "misconception";
+  if (/assessment|check|quiz/.test(anchor)) return "assessment";
+  if (/summary|review/.test(anchor)) return "summary";
+  if (/next|extension/.test(anchor)) return "next_steps";
+  return "concept";
+}
+
+function preferredLayout(value?: string): LessonPlanSlide["layoutType"] | undefined {
+  const layout = normalizePlainText(value, 60).toLowerCase();
+  if (/full.*visual|visual.*full|immersive/.test(layout)) return "full-visual";
+  if (/equation|formula|math/.test(layout)) return "equation-focus";
+  if (/text.*only|reading|text focus/.test(layout)) return "text-focus";
+  if (/split|text.*visual|visual.*text|two column/.test(layout)) return "text-visual";
+  return undefined;
+}
+
+export function applyAiVisualDirections(
+  slides: LessonPlanSlide[],
+  directions: AiVisualDirection[] | undefined,
+  topic: string
+) {
+  const usable = (directions ?? []).filter((direction) => normalizePlainText(direction.visualType, 100));
+  const unused = new Set(usable.map((_, index) => index));
+
+  return slides.map((slide) => {
+    const anchor = visualAnchorForSlide(slide);
+    const sameAnchor = [...unused].filter((index) => normalizeVisualAnchor(usable[index].anchor) === anchor);
+    const titleWords = new Set(normalizePlainText(slide.title, 100).toLowerCase().split(/\W+/).filter((word) => word.length > 3));
+    const titleMatch = [...unused]
+      .map((index) => ({
+        index,
+        score: normalizePlainText(usable[index].targetTitle, 100)
+          .toLowerCase()
+          .split(/\W+/)
+          .filter((word) => word.length > 3 && titleWords.has(word)).length
+      }))
+      .filter((candidate) => candidate.score > 0)
+      .sort((left, right) => right.score - left.score)[0]?.index;
+    const byTitle = sameAnchor.find((index) =>
+      normalizePlainText(usable[index].targetTitle, 100).toLowerCase().split(/\W+/).some((word) => word.length > 3 && titleWords.has(word))
+    );
+    const selectedIndex = titleMatch ?? byTitle ?? sameAnchor[0];
+    if (selectedIndex === undefined) return slide;
+
+    unused.delete(selectedIndex);
+    const direction = usable[selectedIndex];
+    const selection = visualSelectionFromDirection(direction.visualType);
+    const visual = aiVisualSpec(direction, slide, topic);
+    const priority = normalizePlainText(direction.priority, 20).toLowerCase();
+    return {
+      ...slide,
+      aiVisualDirection: true,
+      layoutType: preferredLayout(direction.layout) ?? slide.layoutType,
+      purpose: normalizePlainText(direction.educationalPurpose, 260) || slide.purpose,
+      visualPriority: priority === "essential"
+        ? "high"
+        : priority === "helpful"
+          ? "medium"
+          : priority === "low" || priority === "medium" || priority === "high"
+            ? priority
+            : slide.visualPriority,
+      visualSelection: selection,
+      visuals: visual ? [visual] : []
+    };
+  });
 }
 
 const topicVocabulary = [
@@ -2138,7 +2356,7 @@ export function legacyLessonToSlidePlan({
   const grade = normalizePlainText(context?.grade || "Student", 40);
   const title = normalizePlainText(lesson?.title || topic, 120);
   const durationMinutes = durationToMinutes(lesson?.duration);
-  const objectives = (lesson?.learningObjectives ?? []).map((item) => stripDuplicateNumbering(item)).filter(Boolean).slice(0, 4);
+  const objectives = (lesson?.learningObjectives ?? []).map((item) => stripDuplicateNumbering(item)).filter(Boolean);
   const vocabulary = vocabularyFor(subjectKey, topic, lesson);
   const slides: LessonPlanSlide[] = [
     makeSlide("title", "title", `Learn ${topic}`, 2, {
@@ -2212,7 +2430,7 @@ export function legacyLessonToSlidePlan({
     );
   }
 
-  chunkText(removeTutorInstructionLanguage(lesson?.conceptExplanation, 3200), 220, 7).forEach((chunk, index) => {
+  chunkText(removeTutorInstructionLanguage(lesson?.conceptExplanation, 5200), 220, 14).forEach((chunk, index) => {
     slides.push(
       makeSlide(`concept-${index + 1}`, "concept", conceptSlideTitle(subjectKey, topic, chunk, index), 4, {
         explanation: chunk,
@@ -2252,7 +2470,7 @@ export function legacyLessonToSlidePlan({
     );
   });
 
-  (lesson?.fullLessonSegments ?? []).slice(0, 5).forEach((segment, index) => {
+  (lesson?.fullLessonSegments ?? []).forEach((segment, index) => {
     const activity = removeTutorInstructionLanguage(segment.activity, 360);
     if (!activity) {
       return;
@@ -2270,7 +2488,7 @@ export function legacyLessonToSlidePlan({
     );
   });
 
-  (lesson?.practiceQuestions ?? []).map(splitQuestionParts).filter((item) => item.question).slice(0, 6).forEach((item, index) => {
+  (lesson?.practiceQuestions ?? []).map(splitQuestionParts).filter((item) => item.question).forEach((item, index) => {
     slides.push(
       makeSlide(`practice-${index + 1}`, "independent_practice", questionSlideTitle("Practice", subjectKey, topic, item.question, index), 3, {
         answer: item.answer || item.why,
@@ -2344,7 +2562,7 @@ export function legacyLessonToSlidePlan({
     ], "high")
   );
 
-  (lesson?.quickAssessment ?? []).map(splitQuestionParts).filter((item) => item.question).slice(0, 4).forEach((item, index) => {
+  (lesson?.quickAssessment ?? []).map(splitQuestionParts).filter((item) => item.question).forEach((item, index) => {
     slides.push(
       makeSlide(`check-${index + 1}`, "answer_explanation", questionSlideTitle("Check", subjectKey, topic, item.question, index), 2, {
         answer: item.answer || item.why,
@@ -2391,7 +2609,7 @@ export function legacyLessonToSlidePlan({
     context: { grade, subject, subjectKey, topic },
     durationMinutes,
     schemaVersion: lessonSlidePlanSchemaVersion,
-    slides,
+    slides: applyAiVisualDirections(slides, lesson?.visualPlan, topic),
     title,
     validationWarnings: []
   });
@@ -2449,7 +2667,7 @@ export function validateAndRepairSlidePlan(plan: LessonSlidePlan, audienceMode: 
   const enhanced = enhanceLessonPlan({
     ...plan,
     durationMinutes: Math.max(20, Math.min(90, plan.durationMinutes || 45)),
-    slides: slides.slice(0, 36),
+    slides,
     title: normalizePlainText(plan.title, 120) || "NovaSprout Lesson",
     validationWarnings: warnings
   }, audienceMode) as LessonSlidePlan;

@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 import { POST as compileLessonDeck } from "../app/api/ai-lesson-deck/route.ts";
 import {
   legacyLessonToSlidePlan,
+  type AiVisualDirection,
   type LessonSlidePlan
 } from "../app/lib/lessonSlidePlan.ts";
 import { isPlaceholderSlide } from "../app/lib/lessonSlides/slideValidator.ts";
@@ -53,6 +54,7 @@ type Lesson = {
   recommendedNextSession: string;
   studentFit: string;
   title: string;
+  visualPlan: AiVisualDirection[];
   warmUp: string;
 };
 
@@ -540,6 +542,65 @@ function lessonFor(scenario: Scenario, cycle: number): Lesson {
     { activity: `${scenario.concepts[3]} ${scenario.misconception}`, title: "Connect and correct" },
     { activity: `Apply the idea to a new example and justify the result. ${scenario.assessments[0]}`, title: "Apply and verify" }
   ];
+  const visualPlan: AiVisualDirection[] = [
+    {
+      anchor: "Build the core idea",
+      description: scenario.visual,
+      educationalPurpose: `Make the central relationship between ${scenario.keywords[0]} and ${scenario.keywords[1]} visible before adding detail.`,
+      labels: scenario.keywords.slice(0, 4),
+      layout: cycle % 2 === 0 ? "visual-dominant split" : "balanced split",
+      priority: "essential",
+      targetTitle: "Build the core idea",
+      visualType: scenario.subject === "Mathematics"
+        ? "topic-specific mathematical model with exact labels"
+        : scenario.subject === "Science"
+          ? "topic-specific scientific diagram with labeled relationships"
+          : "topic-specific explanatory model"
+    },
+    {
+      anchor: "Read the visual model",
+      description: `${scenario.visual} Reveal the model in the same order a student should read it.`,
+      educationalPurpose: "Help the student interpret the representation instead of merely decorating the slide.",
+      labels: scenario.keywords.slice(0, 5),
+      layout: "visual first",
+      priority: "essential",
+      steps: scenario.concepts.slice(0, 4),
+      targetTitle: "Read the visual model",
+      visualType: "guided annotated visual walkthrough"
+    },
+    {
+      anchor: "Guided Example",
+      description: `Turn this example into a short worked visual: ${scenario.example}`,
+      educationalPurpose: "Connect each reasoning step to the exact value, evidence, or concept it uses.",
+      labels: scenario.keywords.slice(0, 3),
+      layout: "step-by-step",
+      priority: "essential",
+      steps: [scenario.example],
+      targetTitle: "Guided Example",
+      visualType: "worked solution with progressive reasoning"
+    },
+    {
+      anchor: "Connect and correct",
+      description: `Contrast the correct model with this misconception: ${scenario.misconception}`,
+      educationalPurpose: "Let the student diagnose the misconception by comparing the two representations.",
+      labels: ["Misconception", "Correct model", "Why"],
+      layout: "side-by-side comparison",
+      priority: "helpful",
+      targetTitle: "Connect and correct",
+      visualType: "before-and-after misconception comparison"
+    },
+    {
+      anchor: "Apply and verify",
+      description: `Show the student's path from interpreting the question through checking the result for ${scenario.topic}.`,
+      educationalPurpose: "Provide a reusable self-checking routine for independent practice.",
+      labels: ["Interpret", "Model", "Apply", "Check"],
+      layout: "horizontal process",
+      priority: "helpful",
+      steps: ["Interpret", "Model", "Apply", "Check"],
+      targetTitle: "Apply and verify",
+      visualType: "student decision pathway"
+    }
+  ];
   return {
     conceptExplanation: `${scenario.concepts.join(" ")}${conceptExtra}`,
     duration: profile.duration,
@@ -561,6 +622,7 @@ function lessonFor(scenario: Scenario, cycle: number): Lesson {
     recommendedNextSession: `Use missed questions to revisit ${scenario.keywords[1]} and apply the idea in a new context.`,
     studentFit: `${profile.difficulty} ${profile.language} lesson for ${scenario.grade}. ${profile.purpose}.`,
     title: `${scenario.title}: ${profile.mode}`,
+    visualPlan,
     warmUp: scenario.warmUp
   };
 }

@@ -293,6 +293,7 @@ function workedSolutionVisual(slide: LessonPlanSlide): VisualSpec {
 }
 
 function selectedVisual({
+  aiDirected,
   selection,
   slide,
   subject,
@@ -300,6 +301,7 @@ function selectedVisual({
   circuitProblem,
   conceptDefinitions
 }: {
+  aiDirected: boolean;
   circuitProblem?: CircuitProblem;
   conceptDefinitions: Map<string, string>;
   selection: VisualSelectionType;
@@ -309,6 +311,11 @@ function selectedVisual({
 }): VisualSpec[] {
   const existing = slide.visuals.filter((visual) => visualIsSpecific(visual, topic));
   const electricity = isElectricityContext(subject, topic);
+  if (aiDirected) {
+    if (selection === "no_visual") return [];
+    if (electricity && selection === "circuit_diagram") return [electricityVisual(slide, circuitProblem)];
+    if (existing.length) return existing.slice(0, 1);
+  }
   if (selection === "no_visual") {
     return slide.slideType === "learning_objectives" || slide.slideType === "next_steps"
       ? []
@@ -417,22 +424,25 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
     }
     if (assessment) assessmentIndex += 1;
     const safeContent = assessment ? hideAssessmentAnswer({ ...slide, assessment, legacyType: slide.type, slideType }) : slide.studentContent;
-    const selection = selectVisualType({
-      slide: { ...slide, assessment, legacyType: slide.type, math: formulas, slideType, studentContent: safeContent },
-      subject: plan.context.subject,
-      topic: plan.context.topic
-    });
+    const selection = slide.aiVisualDirection && slide.visualSelection
+      ? slide.visualSelection
+      : selectVisualType({
+          slide: { ...slide, assessment, legacyType: slide.type, math: formulas, slideType, studentContent: safeContent },
+          subject: plan.context.subject,
+          topic: plan.context.topic
+        });
     const draft: LessonPlanSlide = {
       ...slide,
       assessment,
       math: formulas,
-      purpose: slidePurpose(slideType),
+      purpose: slide.purpose || slidePurpose(slideType),
       slideType,
       studentContent: safeContent,
       visualSelection: selection,
       visuals: slide.visuals
     };
     draft.visuals = selectedVisual({
+      aiDirected: Boolean(slide.aiVisualDirection),
       circuitProblem,
       conceptDefinitions,
       selection,
@@ -440,7 +450,9 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
       subject: plan.context.subject,
       topic: plan.context.topic
     });
-    draft.layoutType = legacyLayoutType(selectPurposeLayout({ ...draft, legacyType: draft.type }));
+    draft.layoutType = slide.aiVisualDirection && slide.layoutType
+      ? slide.layoutType
+      : legacyLayoutType(selectPurposeLayout({ ...draft, legacyType: draft.type }));
     return draft;
   });
 

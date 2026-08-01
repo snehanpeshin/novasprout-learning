@@ -4,6 +4,11 @@ import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
+const configuredImageLimit = Number(process.env.MAX_GENERATED_SLIDE_IMAGES ?? 3);
+const maxGeneratedImages = Number.isFinite(configuredImageLimit)
+  ? Math.min(3, Math.max(1, Math.round(configuredImageLimit)))
+  : 3;
+
 type ImageAssetRequest = {
   assets?: Array<{
     assetId?: string;
@@ -77,7 +82,7 @@ export async function POST(request: Request) {
       prompt: cleanText(asset.prompt, 900)
     }))
     .filter((asset) => asset.prompt && asset.placement)
-    .slice(0, 1);
+    .slice(0, maxGeneratedImages);
 
   if (!imageAssets.length) {
     return NextResponse.json({ images: [] });
