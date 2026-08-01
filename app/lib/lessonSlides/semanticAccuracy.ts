@@ -212,11 +212,17 @@ function nearlyEqual(first: number, second: number) {
 
 function arithmeticErrors(value: string) {
   const errors: string[] = [];
-  const calculation = /(-?\d+(?:\.\d+)?)\s*(\+|-|x|\*|\/|÷)\s*(-?\d+(?:\.\d+)?)\s*=\s*(-?\d+(?:\.\d+)?)/gi;
+  const calculation = /(-?\d+(?:\.\d+)?)\s*(\+|-|x|\*|\/|÷)\s*(-?\d+(?:\.\d+)?)\s*=\s*(-?\d+(?:\.\d+)?)(?:\s*(\/|÷)\s*(-?\d+(?:\.\d+)?))?/gi;
   for (const match of value.matchAll(calculation)) {
     const left = Number(match[1]);
     const right = Number(match[3]);
-    const stated = Number(match[4]);
+    const statedNumerator = Number(match[4]);
+    const statedDenominator = match[6] === undefined ? null : Number(match[6]);
+    const stated = statedDenominator === null
+      ? statedNumerator
+      : statedDenominator === 0
+        ? Number.NaN
+        : statedNumerator / statedDenominator;
     const operator = match[2].toLowerCase();
     const expected = operator === "+"
       ? left + right

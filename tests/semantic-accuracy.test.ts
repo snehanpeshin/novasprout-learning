@@ -152,6 +152,42 @@ test("recomputes simple arithmetic and blocks an incorrect equality", () => {
   assert.ok(result.findingsBySlide.get("lesson-slide")?.some((finding) => finding.code === "calculation_error"));
 });
 
+test("accepts mathematically equivalent fraction equalities", () => {
+  const result = runSemanticAccuracyGate({
+    slides: [slide({
+      studentContent: {
+        keyIdea: "Simplify equivalent fractions: 6/9 = 2/3 and 10/4 = 5/2."
+      },
+      title: "Equivalent fractions"
+    })],
+    subject: "Mathematics",
+    subjectKey: "math",
+    topic: "Ratios and proportions"
+  });
+
+  assert.equal(result.summary.unresolvedErrors, 0);
+  assert.ok(!result.findingsBySlide.get("lesson-slide")?.some((finding) =>
+    finding.code === "calculation_error"
+  ));
+});
+
+test("still rejects unequal fractions written as equivalent", () => {
+  const result = runSemanticAccuracyGate({
+    slides: [slide({
+      studentContent: { keyIdea: "This claim is incorrect: 6/9 = 3/4." },
+      title: "Check fraction equivalence"
+    })],
+    subject: "Mathematics",
+    subjectKey: "math",
+    topic: "Ratios and proportions"
+  });
+
+  assert.equal(result.summary.unresolvedErrors, 1);
+  assert.ok(result.findingsBySlide.get("lesson-slide")?.some((finding) =>
+    finding.code === "calculation_error"
+  ));
+});
+
 test("accepts a recomputed equality and rejects an invalid answer-key option", () => {
   const valid = runSemanticAccuracyGate({
     slides: [slide({ studentContent: { keyIdea: "A 25 percent discount on 80 is 0.25 x 80 = 20." } })],
