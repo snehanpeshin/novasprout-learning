@@ -231,6 +231,15 @@ test("placeholder and incomplete activity content is rejected", () => {
   assert.equal(isCompleteSentence(rewriteToFit("Calculate resistance for two.", 6)), true);
 });
 
+test("numbered AI prose cannot trap parenthesis repair", () => {
+  const repaired = rewriteToFit(
+    "Question: Can capillary action lift water 20 meters? 1) Use h = (2 gamma)/(rho g r). 2) Substitute the values. Final check: compare the result with 20 meters.",
+    80
+  );
+  assert.equal(isCompleteSentence(repaired), true);
+  assert.match(repaired, /h = \(2 gamma\)\/\(rho g r\)/);
+});
+
 test("title and visual alignment requires a real circuit comparison", () => {
   const findings = validateTitleVisualAlignment(
     "Circuit Types and Visual Comparison",

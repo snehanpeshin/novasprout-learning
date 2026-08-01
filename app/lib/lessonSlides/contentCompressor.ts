@@ -19,6 +19,30 @@ function balancedParentheses(value: string) {
   }, 0) === 0;
 }
 
+function repairParentheses(value: string) {
+  const characters: string[] = [];
+  const openIndexes: number[] = [];
+
+  for (const character of value) {
+    if (character === "(") {
+      openIndexes.push(characters.length);
+      characters.push(character);
+      continue;
+    }
+    if (character === ")") {
+      if (openIndexes.length) {
+        openIndexes.pop();
+        characters.push(character);
+      }
+      continue;
+    }
+    characters.push(character);
+  }
+
+  for (const index of openIndexes.reverse()) characters.splice(index, 1);
+  return normalize(characters.join(""));
+}
+
 export function isCompleteSentence(value: string) {
   const text = normalize(value);
   if (!text || !/[.!?]$/.test(text)) return false;
@@ -39,9 +63,7 @@ function repairDanglingEnding(value: string) {
     .replace(/\b(?:and|or|but|because|for|with|using)\.?$/i, "")
     .replace(/[,;:]+$/, "")
     .trim();
-  while (repaired.includes("(") && !balancedParentheses(repaired)) {
-    repaired = repaired.replace(/\s*\([^()]*$/, "").trim();
-  }
+  if (!balancedParentheses(repaired)) repaired = repairParentheses(repaired);
   return repaired;
 }
 

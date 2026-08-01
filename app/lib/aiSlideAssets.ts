@@ -21,25 +21,36 @@ function titleMatchIndex(slideTitles: string[], targetTitle?: string) {
   );
   if (!targetWords.size) return -1;
 
-  return slideTitles
-    .map((title, index) => ({
+  const titleWordSets = slideTitles.map((title) => new Set(
+    title
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((word) => word.length > 3)
+  ));
+  const wordFrequency = new Map<string, number>();
+  for (const words of titleWordSets) {
+    for (const word of words) wordFrequency.set(word, (wordFrequency.get(word) ?? 0) + 1);
+  }
+
+  return titleWordSets
+    .map((words, index) => ({
       index,
-      score: title
-        .toLowerCase()
-        .split(/[^a-z0-9]+/)
-        .filter((word) => word.length > 3 && targetWords.has(word)).length
+      score: [...words]
+        .filter((word) => targetWords.has(word))
+        .reduce((sum, word) => sum + 1 / (wordFrequency.get(word) ?? 1), 0)
     }))
     .filter((candidate) => candidate.score > 0)
     .sort((left, right) => right.score - left.score)[0]?.index ?? -1;
 }
 
 function directionSlideNumber(direction: AiVisualDirection, slideTitles: string[], fallbackIndex: number) {
+  const anchor = cleanText(direction.anchor, 60).toLowerCase();
+  if (/cover|title|opening/.test(anchor)) return 1;
+
   const titleIndex = titleMatchIndex(slideTitles, direction.targetTitle);
   if (titleIndex >= 0) return titleIndex + 1;
 
-  const anchor = cleanText(direction.anchor, 60).toLowerCase();
   const anchorPatterns: Array<[RegExp, RegExp]> = [
-    [/cover|title|opening/, /lesson|learn|introduction|overview/i],
     [/big.idea|overview/, /big idea|overview/i],
     [/vocab|keyword/, /key words|vocabulary/i],
     [/warm/, /warm.?up/i],
@@ -95,7 +106,7 @@ export function assetsFromAiVisualPlan({
         filename: `${id}.png`,
         latex: "",
         placement: `${slideNumber}${position}`,
-        prompt: `${grade} ${subject} educational illustration about ${topic}. Create ${visualType}: ${description}. Show these essential parts and relationships accurately: ${labels.join(", ") || targetTitle}. Learning purpose: ${purpose}. Clear student-friendly textbook visual, strong hierarchy, uncluttered background, age-appropriate detail, accurate spatial relationships, no decorative elements, no embedded words, no labels, no watermark.`,
+        prompt: `Create an unlabeled ${grade} ${subject} educational illustration about ${topic}. Visual structure: ${visualType}. Show this scene or system accurately: ${description}. Include these essential parts and relationships visually: ${labels.join(", ") || targetTitle}. Learning purpose: ${purpose}. Clear student-friendly textbook visual, strong hierarchy, uncluttered background, age-appropriate detail, accurate spatial relationships, no decorative elements. Do not draw any words, letters, numbers, captions, callouts, leader lines, labels, or watermark; the lesson renderer adds accessible labels separately.`,
         type: "image"
       });
     }

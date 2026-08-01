@@ -56,6 +56,38 @@ test("does not create a decorative asset when the AI says no visual", () => {
   assert.deepEqual(assets, []);
 });
 
+test("uses distinctive topic words when matching a visual to a slide", () => {
+  const assets = assetsFromAiVisualPlan({
+    grade: "Grade 5",
+    slideTitles: [
+      "Learn how water moves through plants",
+      "Understand: Water enters the roots",
+      "Understand: Water then travels upward",
+      "Xylem, cohesion, and adhesion"
+    ],
+    subject: "Science",
+    topic: "Water transport in plants",
+    visualPlan: [
+      {
+        anchor: "cover",
+        description: "A whole-plant cutaway.",
+        educationalPurpose: "Orient the learner.",
+        targetTitle: "plant cross-section",
+        visualType: "anatomy cutaway"
+      },
+      {
+        anchor: "concept",
+        description: "A continuous water column inside a xylem vessel.",
+        educationalPurpose: "Show cohesion and adhesion in the transport tissue.",
+        targetTitle: "xylem water column",
+        visualType: "anatomy cutaway"
+      }
+    ]
+  });
+
+  assert.deepEqual(assets.map((asset) => asset.placement), ["1rb", "4lb"]);
+});
+
 test("returns AI-directed assets without a second AI request or supplied slide titles", async () => {
   const previousToken = process.env.AI_LESSON_ACCESS_TOKEN;
   process.env.AI_LESSON_ACCESS_TOKEN = "asset-test-token";
