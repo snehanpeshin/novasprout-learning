@@ -68,6 +68,24 @@ test("rebuilds a missing learner task and keeps its answer outside visible conte
   assert.equal(result.summary.unresolvedErrors, 0);
 });
 
+test("replaces a generic learner prompt with a specific concept task", () => {
+  const result = runSlideDoctor({
+    conceptGraph,
+    slides: [slide({
+      id: "generic-practice",
+      slideType: "guided_practice",
+      studentContent: { question: "Your turn" },
+      title: "Practice the relationship",
+      type: "guided_practice"
+    })],
+    topic: "A new interdisciplinary topic"
+  });
+
+  assert.match(result.slides[0].studentContent.question ?? "", /core component/i);
+  assert.doesNotMatch(result.slides[0].studentContent.question ?? "", /^Your turn$/i);
+  assert.equal(result.summary.unresolvedErrors, 0);
+});
+
 test("resets colliding visual metadata and removes competing visual layers", () => {
   const result = runSlideDoctor({
     conceptGraph,

@@ -244,6 +244,37 @@ test("quality scoring still blocks an unresolved accuracy error", () => {
   assert.match(deck.reasons.join(" "), /unresolved validation error/i);
 });
 
+test("final quality uses the repaired task instead of a stale placeholder error", () => {
+  const plan = legacyLessonToSlidePlan({
+    context: { grade: "Grade 7", subject: "Mathematics", topic: "Area and volume" },
+    lesson: {
+      conceptExplanation: "Area measures a flat region in square units, while volume measures three-dimensional space in cubic units.",
+      conceptModel: {
+        assessmentTargets: ["Calculate area and volume with appropriate units."],
+        formulas: [],
+        misconceptions: [],
+        nodes: [
+          { definition: "The amount of two-dimensional space inside a boundary.", id: "area", label: "area" },
+          { definition: "The amount of three-dimensional space inside a solid.", id: "volume", label: "volume" }
+        ],
+        relationships: [{ explanation: "Area uses square units while volume uses cubic units.", from: "area", relationship: "differs from", to: "volume" }]
+      },
+      learningObjectives: ["Distinguish area from volume and select the correct units."],
+      practiceQuestions: ["Your turn"],
+      title: "Area and Volume"
+    }
+  });
+  const practice = plan.slides.find((slide) => slide.id === "practice-1");
+  const unresolvedPlaceholder = (plan.qualityFindings ?? []).some((finding) =>
+    finding.code === "placeholder_slide" && finding.severity === "error" &&
+    finding.repair !== "Automatically repaired before rendering."
+  );
+
+  assert.ok(practice);
+  assert.doesNotMatch(practice?.studentContent.question ?? "", /^Your turn$/i);
+  assert.equal(unresolvedPlaceholder, false);
+});
+
 test("all finalized slides carry explicit semantic types", () => {
   const plan = legacyLessonToSlidePlan({
     context: { grade: "Grade 7", subject: "Science", topic: "Electric circuits" },

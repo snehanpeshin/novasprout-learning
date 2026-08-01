@@ -1,7 +1,7 @@
 import type { LessonPlanSlide, VisualSpec } from "../lessonSlidePlan.ts";
 import { rewriteToFit } from "./contentCompressor.ts";
 import { legacyLayoutType, selectPurposeLayout } from "./layoutEngine.ts";
-import { validateAndRepairSlide } from "./slideValidator.ts";
+import { isPlaceholderSlide, validateAndRepairSlide } from "./slideValidator.ts";
 import type { SlideValidationFinding } from "./types.ts";
 
 type ConceptGraphSource = {
@@ -176,7 +176,8 @@ function repairOneSlide({
   const source = conceptContent(graph, topic, index);
   const contentWordCount = words(visibleText({ ...repaired, title: "" })).length;
   const needsQuestion = ["guided_practice", "independent_practice", "knowledge_check"].includes(repaired.slideType);
-  if (needsQuestion && !clean(repaired.studentContent.question)) {
+  const needsTaskRepair = !clean(repaired.studentContent.question) || isPlaceholderSlide(repaired);
+  if (needsQuestion && needsTaskRepair) {
     repaired.studentContent.question = `How would you use ${source.labels[0] || topic} to explain or solve a new example?`;
     repaired.studentContent.hint = `Start with the main relationship from ${topic}, then justify one step.`;
     findings.push({
@@ -184,6 +185,25 @@ function repairOneSlide({
       code: "placeholder_slide",
       message: "A missing practice task was rebuilt with a specific question and hint.",
       offendingElement: "studentContent.question",
+      repaired: true,
+      severity: "error"
+    });
+  } else if (repaired.slideType === "worked_example" && needsTaskRepair) {
+    const existingSteps = repaired.studentContent.steps?.filter((step) => clean(step)) ?? [];
+    repaired.studentContent.question ||= `How can ${source.labels[0] || topic} be used to solve this example?`;
+    repaired.studentContent.steps = existingSteps.length >= 2
+      ? existingSteps
+      : [
+          `Identify the quantities or evidence connected to ${source.labels[0] || topic}.`,
+          ...existingSteps,
+          "Apply the relationship and show each intermediate step.",
+          "Check the result against the original information and include appropriate units."
+        ].slice(0, 4);
+    findings.push({
+      automaticCorrection: "Rebuilt the worked example with a specific prompt, solution path, and final check.",
+      code: "placeholder_slide",
+      message: "A worked example without a complete learner task was rebuilt and checked again.",
+      offendingElement: "studentContent",
       repaired: true,
       severity: "error"
     });

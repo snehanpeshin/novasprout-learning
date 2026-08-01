@@ -17,7 +17,7 @@ import { electricityFormulaSet, formatMathExpression } from "./mathRenderer.ts";
 import { classifySlide, slidePurpose } from "./slideClassifier.ts";
 import { runSlideDoctor } from "./slideDoctor.ts";
 import { runSemanticAccuracyGate } from "./semanticAccuracy.ts";
-import { isPlaceholderSlide, validateAndRepairSlide } from "./slideValidator.ts";
+import { validateAndRepairSlide } from "./slideValidator.ts";
 import { createSpeakerNotes } from "./speakerNotesGenerator.ts";
 import { createCircuitDiagramLayout } from "./visualLayoutValidator.ts";
 import {
@@ -392,10 +392,9 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
       .map((node) => [clean(node.label, 80).toLowerCase(), clean(node.definition, 260)] as const)
       .filter(([label, definition]) => label && definition)
   );
-  const sourceSlides = plan.slides.filter((slide) => {
-    const slideType = classifySlide({ ...slide, legacyType: slide.type });
-    return !isPlaceholderSlide({ ...slide, legacyType: slide.type, slideType });
-  });
+  // Keep weak drafts in the pipeline so Slide Doctor can rebuild them instead
+  // of silently dropping a lesson activity before the repair passes run.
+  const sourceSlides = plan.slides;
   const draftSlides = sourceSlides.map((slide) => {
     const slideType = classifySlide({ ...slide, legacyType: slide.type });
     const formulas = electricityLesson
@@ -491,8 +490,11 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
   const finalSlides = slideDoctor.slides;
   const finalFindingsBySlide = new Map<string, SlideValidationFinding[]>();
   finalSlides.forEach((slide) => {
+    const historicalStructuralFindings = (findingsBySlide.get(slide.id) ?? []).filter(
+      (finding) => finding.repaired || finding.severity !== "error"
+    );
     finalFindingsBySlide.set(slide.id, deduplicateSlideFindings([
-      ...(findingsBySlide.get(slide.id) ?? []),
+      ...historicalStructuralFindings,
       ...(semanticAccuracy.findingsBySlide.get(slide.id) ?? []),
       ...(slideDoctor.findingsBySlide.get(slide.id) ?? [])
     ]));

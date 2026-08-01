@@ -61,12 +61,14 @@ export function isPlaceholderSlide(slide: SemanticSlideInput) {
     ...(slide.studentContent?.steps ?? [])
   ].filter(Boolean).join(" ").toLowerCase();
   const task = learnerTask(slide);
+  const normalizedTask = task.toLowerCase().replace(/[.!?]+$/, "").trim();
+  const normalizedText = text.trim().replace(/[.!?]+$/, "").trim();
   const activity = slide.slideType === "guided_practice" ||
     slide.slideType === "independent_practice" ||
     slide.slideType === "knowledge_check";
   if (activity && !task) return true;
-  if (activity && genericActivityText.some((phrase) => task.toLowerCase() === phrase)) return true;
-  if (genericActivityText.some((phrase) => text.trim() === phrase)) return true;
+  if (activity && genericActivityText.some((phrase) => normalizedTask === phrase)) return true;
+  if (genericActivityText.some((phrase) => normalizedText === phrase)) return true;
   if (slide.slideType === "worked_example") {
     const workedText = clean(
       [
