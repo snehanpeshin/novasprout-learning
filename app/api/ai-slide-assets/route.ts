@@ -3,6 +3,7 @@ import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess.ts";
 import type { ConceptGraph } from "../../lib/lessonEngine.ts";
 import { legacyLessonToSlidePlan, type AiVisualDirection } from "../../lib/lessonSlidePlan.ts";
 import { assetsFromAiVisualPlan } from "../../lib/aiSlideAssets.ts";
+import { deterministicAssetPlan, mergeFallbackImages } from "../../lib/deterministicSlideAssets.ts";
 import { restoreVisualPlanFromLesson } from "../../lib/visualPlanBridge.ts";
 
 export const runtime = "nodejs";
@@ -116,77 +117,6 @@ function parseJson(outputText: string) {
       return null;
     }
   }
-}
-
-function placementForSlide(slideTitles: string[], titlePattern: RegExp, fallbackSlide: number, position: string) {
-  const slideIndex = slideTitles.findIndex((title) => titlePattern.test(title));
-  return `${slideIndex >= 0 ? slideIndex + 1 : fallbackSlide}${position}`;
-}
-
-function deterministicAssetPlan({
-  grade,
-  slideTitles,
-  subject,
-  topic
-}: {
-  grade: string;
-  slideTitles: string[];
-  subject: string;
-  topic: string;
-}) {
-  const normalizedTopic = topic.toLowerCase();
-
-  if (normalizedTopic.includes("digest")) {
-    return [
-      {
-        assetId: "digestive-system-anatomy-image",
-        alt: "Student-friendly digestive system anatomical illustration without text labels.",
-        aspectRatio: "1:1",
-        caption: "A visual overview of the digestive organs.",
-        educationalPurpose: "Helps students recognize the organs before reading the labeled diagram.",
-        filename: "digestive-system-anatomy.png",
-        latex: "",
-        placement: placementForSlide(slideTitles, /digestive system map/i, 8, "rb"),
-        prompt:
-          `${grade} accurate simplified cutaway educational illustration of the human digestive system in a front-facing human torso. Show the mouth connected to the esophagus, stomach below the diaphragm, liver above and beside the stomach, pancreas beneath the stomach, coiled small intestine enclosed by the large intestine. Make the physical arrangement anatomically coherent and the food pathway easy to trace. Modern classroom textbook style, deep navy outlines, growth green, sky blue, warm yellow and coral accents, off-white background, no text, no labels, no decorative objects`,
-        type: "image"
-      }
-    ];
-  }
-
-  if (/\b(?:science|biology|chemistry|physics|health|environment)\b/i.test(subject)) {
-    const cellDivision = /\b(?:cell division|cell cycle|mitosis|meiosis|cytokinesis|chromosome|chromatid)\b/i.test(topic);
-    return [
-      {
-        assetId: cellDivision ? "cell-division-stage-image" : "topic-system-image",
-        alt: cellDivision
-          ? "Student-friendly biological illustration comparing the main stages of cell division."
-          : `Student-friendly scientific illustration of ${topic}.`,
-        aspectRatio: "16:9",
-        caption: cellDivision ? "One cell prepares, separates its chromosomes, and becomes two cells." : `A visual model of ${topic}.`,
-        educationalPurpose: cellDivision
-          ? "Makes chromosome movement and changes in the cell boundary visible across mitosis and cytokinesis."
-          : `Gives the learner one concrete visual reference for ${topic}.`,
-        filename: cellDivision ? "cell-division-stages.png" : "topic-system.png",
-        latex: "",
-        placement: placementForSlide(slideTitles, cellDivision ? /mitosis|cell cycle|division stages|cytokinesis/i : /overview|map|system|process|big idea/i, 2, "rm"),
-        prompt: cellDivision
-          ? `${grade} accurate educational biology storyboard of animal cell division from interphase through prophase, metaphase, anaphase, telophase, and cytokinesis. Show six distinct cells in sequence, chromosomes condensing, aligning at the equator, sister chromatids separating to opposite poles, two nuclei reforming, and the cleavage furrow producing two daughter cells. Keep chromosome count scientifically consistent across stages. Clean modern textbook illustration, white background, deep navy outlines, blue cell membranes, purple chromosomes, warm yellow spindle fibers, no words, no letters, no labels, no watermark`
-          : `${grade} accurate educational scientific illustration of ${topic}. Show the central structures, process, scale, and cause-and-effect relationships a student must see to understand the topic. Use one coherent textbook model with a clear focal point, accurate spatial relationships, age-appropriate detail, clean white background, strong accessible contrast, no words, no letters, no labels, no watermark`,
-        type: "image"
-      }
-    ];
-  }
-
-  return [];
-}
-
-function mergeFallbackImages(
-  assets: Array<Record<string, unknown>>,
-  fallbackAssets: Array<Record<string, unknown>>
-) {
-  if (assets.some((asset) => asset.type === "image")) return assets;
-  return [...fallbackAssets.filter((asset) => asset.type === "image").slice(0, 1), ...assets];
 }
 
 async function readJsonResponse(response: Response) {

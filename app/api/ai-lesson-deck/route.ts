@@ -1195,6 +1195,35 @@ ${nodes}
 \end{center}`;
 }
 
+function renderTrenchSystemVisual() {
+  return String.raw`\begin{center}
+\begin{tikzpicture}[scale=0.68, every node/.style={font=\tiny,align=center}]
+\fill[NovaGrowth!10] (-4.3,1.35) rectangle (4.3,2.15);
+\draw[NovaGrowth!55!black, thick] (-4.3,1.35) -- (4.3,1.35);
+\node[font=\scriptsize\bfseries,text=NovaCoral] at (-3.25,1.82) {Enemy front line};
+\node[font=\scriptsize\bfseries,text=NovaInk!75] at (-1.55,0.95) {No-man's-land};
+\foreach \x in {-2.55,-2.25,-1.95} {
+  \draw[NovaInk!65] (\x,1.34) -- (\x+.16,1.65) -- (\x+.32,1.34);
+}
+\node[font=\tiny,text=NovaInk!75] at (-2.23,1.92) {barbed wire};
+\path[draw=SubjectAccent,fill=SubjectAccent!13,very thick]
+  (-0.15,1.35) -- (-0.15,-0.75) -- (0.75,-0.75) -- (0.75,1.35);
+\node[rotate=90,font=\scriptsize\bfseries,text=SubjectAccent!85!black] at (0.30,0.25) {Front-line trench};
+\path[draw=NovaSky,fill=NovaSky!12,very thick]
+  (2.75,1.35) -- (2.75,-0.55) -- (3.55,-0.55) -- (3.55,1.35);
+\node[rotate=90,font=\scriptsize\bfseries,text=NovaSky!80!black] at (3.15,0.32) {Support trench};
+\draw[NovaGrowth,very thick,double] (0.75,-0.1) -- (2.75,0.35);
+\node[font=\tiny\bfseries,text=NovaGrowth!70!black,rotate=10] at (1.72,0.38) {Communication trench};
+\path[draw=NovaYellow!70!black,fill=NovaYellow!20,thick,rounded corners=2pt]
+  (0.75,-0.72) -- (1.85,-0.72) -- (1.85,-1.35) -- (0.75,-1.35) -- cycle;
+\node[font=\tiny\bfseries] at (1.30,-1.03) {Dugout};
+\draw[-{Stealth[length=2mm]},NovaCoral,thick] (-1.2,0.45) -- (-0.22,0.45);
+\node[font=\tiny,text=NovaCoral] at (-1.2,0.72) {assault crosses\\open ground};
+\node[font=\tiny,text=NovaInk!70,text width=5.8cm] at (1.1,-1.75) {Defense in depth linked the front line to support positions while dugouts offered limited protection.};
+\end{tikzpicture}
+\end{center}`;
+}
+
 function renderProcessVisual(visual: VisualSpec) {
   const steps = (visual.steps?.length ? visual.steps : visualLabels(visual, ["Observe", "Model", "Explain", "Apply"]))
     .map((step) => cleanText(step, 52))
@@ -1803,6 +1832,8 @@ function renderVisualSpec(
       return renderSolidNet();
     case "tape_diagram":
       return renderTapeDiagram(visual);
+    case "trench_system":
+      return renderTrenchSystemVisual();
     default:
       return renderCardsVisual(visual);
   }

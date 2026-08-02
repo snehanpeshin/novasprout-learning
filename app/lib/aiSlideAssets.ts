@@ -12,7 +12,7 @@ function slug(value: string) {
     .slice(0, 48) || "lesson-visual";
 }
 
-const generatedImageVisual = /\b(?:anatom|biolog|cellular|cutaway|illustration|real.?world|photograph|map|geograph|spatial|3d|experiment|apparatus|physical object|organism|microscope|mitosis|chromosome|molecule|historical scene|animation|storyboard|life cycle|labeled system|stage sequence)\b/;
+const generatedImageVisual = /\b(?:anatom|biolog|cellular|cutaway|illustration|real.?world|photograph|map|geograph|spatial|3d|experiment|apparatus|physical object|organism|microscope|mitosis|chromosome|molecule|historical scene|battlefield|trench|animation|storyboard|life cycle|labeled system|stage sequence)\b/;
 const programmaticVisual = /\b(?:equation|formula|derivation|symbolic|latex|number line|fraction bar|tape diagram|ratio bar|coordinate graph|plot|chart|data table|comparison table|venn|timeline|flowchart|code trace|circuit schematic)\b/;
 
 function titleMatchIndex(slideTitles: string[], targetTitle?: string) {

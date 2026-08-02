@@ -75,6 +75,7 @@ export type VisualType =
   | "scientific_graph"
   | "structure_function"
   | "tape_diagram"
+  | "trench_system"
   | "battery_symbol"
   | "circuit_diagram"
   | "cover_illustration"
@@ -239,14 +240,25 @@ function learnerFacingSegment(value?: string) {
   const text = removeTutorInstructionLanguage(value, 900);
   if (!text) return "";
 
-  const authoringImperative = /^(?:ask|create|demonstrate|describe|discuss|emphasize|explain|give|guide|have|introduce|model|present|provide|review|show|teach|tell|use)\b/i;
-  const productionMeta = /\b(?:slide|visuals? to show|image prompt|speaker notes?|tutor instructions?|teacher instructions?|interactive quiz|lesson plan)\b/i;
+  const authoringImperative = /^(?:ask|create|demonstrate|describe|discuss|emphasize|explain|give|guide|have|introduce|model|present|provide|review|show|start|teach|tell|use)\b/i;
+  const productionMeta = /\b(?:slide|visuals? to show|image prompt|speaker notes?|tutor instructions?|teacher instructions?|interactive quiz|lesson plan|key takeaway notes|summary and next steps|quick mental check and vocabulary review)\b/i;
   const sentences = text
     .split(/(?<=[.!?])\s+/)
-    .map((sentence) => sentence.trim())
+    .map((sentence) => sentence
+      .replace(/\s+\b(?:ask|create|demonstrate|describe|discuss|emphasize|explain|give|guide|have|introduce|model|present|provide|review|show|start|teach|tell|use)\b[^.!?]*$/i, "")
+      .trim())
     .filter((sentence) => sentence && !authoringImperative.test(sentence) && !productionMeta.test(sentence));
 
   return sentences.join(" ").trim();
+}
+
+function learnerFacingTitle(value?: string, fallback = "") {
+  const title = normalizePlainText(value, 100)
+    .replace(/^(?:ask|create|demonstrate|describe|discuss|emphasize|explain|give|guide|have|introduce|model|present|provide|review|show|start|teach|tell|use)\s+(?:how\s+|why\s+|the\s+)?/i, "")
+    .replace(/\s+\b(?:ask|create|demonstrate|describe|discuss|emphasize|explain|give|guide|have|introduce|model|present|provide|review|show|start|teach|tell|use)\b.*$/i, "")
+    .replace(/[.:;,]+$/, "")
+    .trim();
+  return title || fallback;
 }
 
 export function detectSubjectKey(subject?: string, topic?: string): SubjectKey {
@@ -450,7 +462,7 @@ function slideTitle(prefix: string, text: string, fallback: string) {
 }
 
 function splitQuestionParts(value: string) {
-  const text = stripDuplicateNumbering(value);
+  const text = stripDuplicateNumbering(value).replace(/\bshort answer\s*:/gi, "Short-response question: ");
   const hintMatch = text.match(/\bHint:\s*([^]*?)(?:\bAnswer:|\bWhy:|$)/i);
   const answerMatch = text.match(/\bAnswer:\s*([^]*?)(?:\bWhy:|$)/i);
   const whyMatch = text.match(/\bWhy:\s*([^]*?)$/i);
@@ -850,8 +862,112 @@ function socialTopicKind(value: string): SocialTopicKind {
   return "society";
 }
 
-function socialVisual(value: string, id: string): VisualSpec {
-  const kind = socialTopicKind(value);
+function socialVisual(value: string, id: string, topicContext = ""): VisualSpec {
+  const focus = normalizePlainText(value, 1200);
+  const combined = topicContext + " " + focus;
+  const kind = socialTopicKind(combined);
+  const worldWarOne = /\bworld war (?:i|1|one)\b/i.test(combined);
+
+  if (worldWarOne && /\b(casualt|percent|percentage|calculate|calculation)\b/i.test(focus)) {
+    const numbers = (focus.match(/\d[\d,]*/g) ?? [])
+      .map((item) => Number(item.replace(/,/g, "")))
+      .filter((item) => Number.isFinite(item))
+      .sort((a, b) => b - a);
+    const total = numbers[0];
+    const casualties = numbers[1];
+    const percentage = total > 0 && casualties >= 0 ? Number(((casualties / total) * 100).toFixed(2)) : null;
+    return {
+      accessibilityLabel: "A casualty-rate calculation that divides casualties by total forces and converts the result to a percentage.",
+      equation: total && casualties !== undefined
+        ? "\\frac{" + casualties.toLocaleString("en-US") + "}{" + total.toLocaleString("en-US") + "}\\times100\\%" + (percentage === null ? "" : "=" + percentage + "\\%")
+        : "\\text{casualty percentage}=\\frac{\\text{casualties}}{\\text{total soldiers}}\\times100\\%",
+      id,
+      labels: ["Identify total soldiers", "Identify casualties", "Divide", "Multiply by 100%", "Interpret the rate"],
+      steps: ["Write the fraction", "Divide casualties by total", "Convert to percent", "Check the result is reasonable"],
+      title: "Calculate the casualty percentage",
+      type: "equation_steps"
+    };
+  }
+
+  if (worldWarOne && /\b(trench|no-man|front-line|support trench|communication trench|stalemate)\b/i.test(focus)) {
+    return {
+      accessibilityLabel: "A cross-section of a World War I trench system showing the front line, support trench, communication trench, no-man's-land, dugout, parapet, and barbed wire.",
+      expectedInsight: "Connected defensive trenches protected soldiers but made frontal attacks costly and helped create stalemate.",
+      id,
+      labels: ["Enemy line", "No-man's-land", "Barbed wire", "Front-line trench", "Communication trench", "Support trench", "Dugout"],
+      title: "World War I trench system",
+      type: "trench_system"
+    };
+  }
+
+  if (worldWarOne && /\b(map|global|western front|eastern front|colonies|colonial|empire)\b/i.test(focus)) {
+    return {
+      accessibilityLabel: "A comparison of the Western Front with the Eastern and global dimensions of World War I.",
+      columns: [
+        { title: "Western Front", items: ["France and Belgium", "Dense trench systems", "Limited movement after 1914"] },
+        { title: "Eastern and global war", items: ["Longer, more mobile Eastern Front", "Fighting in the Middle East and Africa", "Colonial troops and resources"] }
+      ],
+      expectedInsight: "Trench stalemate was especially associated with the Western Front, while the war extended far beyond it.",
+      id,
+      title: "A war across fronts and empires",
+      type: "comparison_table"
+    };
+  }
+
+  if (worldWarOne && /\b(central powers|allied powers|allies|two groups|coalitions?)\b/i.test(focus)) {
+    return {
+      accessibilityLabel: "A historically qualified comparison of the main World War I alliance groups and when later members joined.",
+      columns: [
+        { title: "Central Powers", items: ["Germany", "Austria-Hungary", "Ottoman Empire joined 1914", "Bulgaria joined 1915"] },
+        { title: "Allied Powers", items: ["France, Britain, Russia", "Italy joined 1915", "United States joined 1917", "Many colonies contributed"] }
+      ],
+      expectedInsight: "The coalitions changed during the war, so a date matters when listing members.",
+      id,
+      title: "The wartime coalitions",
+      type: "comparison_table"
+    };
+  }
+
+  if (worldWarOne && /\b(machine gun|artillery|poison gas|tank|technology|weapon)\b/i.test(focus)) {
+    return {
+      accessibilityLabel: "A comparison linking World War I battlefield technologies to their tactical effects and limitations.",
+      columns: [
+        { title: "Firepower and defense", items: ["Machine guns swept open ground", "Artillery caused most casualties", "Gas required masks and changed tactics"] },
+        { title: "Attempts to break stalemate", items: ["Tanks crossed some trenches", "Aircraft improved reconnaissance", "Early systems were unreliable"] }
+      ],
+      expectedInsight: "New technology increased destructive power faster than armies learned to move safely across defended ground.",
+      id,
+      title: "Technology changed the battlefield",
+      type: "comparison_table"
+    };
+  }
+
+  if (worldWarOne && /\b(treaty|versailles|reparation|consequence|armistice|redrew|changed maps|league of nations)\b/i.test(focus)) {
+    const steps = ["Armistice ended fighting", "Empires collapsed", "Borders and states changed", "Treaties imposed settlements"];
+    return {
+      accessibilityLabel: "A consequence chain from the armistice through imperial collapse, border changes, and postwar settlements.",
+      expectedInsight: "The armistice stopped combat, while later treaties reshaped borders and political relationships.",
+      id,
+      labels: steps,
+      steps,
+      title: "From armistice to postwar settlement",
+      type: "process_sequence"
+    };
+  }
+
+  if (worldWarOne && /\b(cause|nationalism|imperialism|militarism|assassination|sarajevo|mobilization|declaration|trigger|crisis)\b/i.test(focus)) {
+    const steps = ["Rivalries and militarism", "Sarajevo assassination", "Ultimatum and mobilization", "Alliance-backed declarations"];
+    return {
+      accessibilityLabel: "A World War I escalation chain distinguishing long-term tensions from the 1914 trigger and government decisions.",
+      expectedInsight: "The assassination triggered the July Crisis, but mobilization and declarations by governments turned the crisis into a wider war.",
+      id,
+      labels: steps,
+      steps,
+      title: "How the July Crisis widened",
+      type: "process_sequence"
+    };
+  }
+
   if (kind === "geography") {
     const steps = ["Orient direction", "Read the legend", "Measure distance", "Use geographic evidence"];
     return {
@@ -1054,7 +1170,7 @@ function questionVisual(subjectKey: SubjectKey, topic: string, question: string,
     };
   }
   if (subjectKey === "social") {
-    return socialVisual(`${topic} ${question}`, id);
+    return socialVisual(question, id, topic);
   }
 
   return {
@@ -1261,7 +1377,7 @@ function topicVisual(subjectKey: SubjectKey, topic: string, text: string, id: st
     };
   }
   if (subjectKey === "social") {
-    return socialVisual(combined, id);
+    return socialVisual(text, id, topic);
   }
 
   return {
@@ -2386,6 +2502,63 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
   }
 
   if (subjectKey === "social") {
+    if (/\bworld war (?:i|1|one)\b/.test(lowerTopic)) {
+      return [
+        makeSlide(
+          "wwi-causes",
+          "process",
+          "Long-Term Causes And The 1914 Trigger",
+          5,
+          {
+            keyIdea: "National rivalries made Europe unstable; the Sarajevo assassination triggered a crisis that governments escalated through ultimatums, mobilization, and declarations of war.",
+            bullets: ["Nationalism, imperial rivalry, militarism, and alliances raised tension.", "The assassination was the trigger, not the only cause."]
+          },
+          [socialVisual("nationalism imperialism militarism alliances assassination mobilization declarations", "wwi-cause-chain", topic)]
+        ),
+        makeSlide(
+          "wwi-alliances",
+          "comparison",
+          "The Wartime Coalitions Changed",
+          4,
+          {
+            keyIdea: "The alliance groups were not fixed for the entire war, so membership should be tied to a date."
+          },
+          [socialVisual("Central Powers Allied Powers alliances and later members", "wwi-alliance-comparison", topic)]
+        ),
+        makeSlide(
+          "wwi-trenches",
+          "labeled_diagram",
+          "How A Trench System Worked",
+          5,
+          {
+            keyIdea: "Front, support, and communication trenches formed a defensive network; no-man's-land separated opposing front lines.",
+            bullets: ["Dugouts provided limited shelter.", "Barbed wire and machine-gun fire made frontal assaults costly."]
+          },
+          [socialVisual("front-line trench support trench communication trench no-man's-land dugout barbed wire stalemate", "wwi-trench-system", topic)]
+        ),
+        makeSlide(
+          "wwi-technology",
+          "comparison",
+          "Technology And Battlefield Effects",
+          5,
+          {
+            keyIdea: "Industrial firepower strengthened defense and increased casualties, while tanks and aircraft developed as attempts to restore movement and improve reconnaissance."
+          },
+          [socialVisual("machine gun artillery poison gas tanks aircraft technology", "wwi-technology-effects", topic)]
+        ),
+        makeSlide(
+          "wwi-consequences",
+          "process",
+          "From Armistice To Postwar Settlement",
+          5,
+          {
+            keyIdea: "The armistice ended fighting on November 11, 1918; later treaties dismantled empires, changed borders, created mandates, and imposed new obligations.",
+            bullets: ["The Treaty of Versailles dealt specifically with Germany.", "Other treaties addressed Austria, Hungary, Bulgaria, and the Ottoman Empire."]
+          },
+          [socialVisual("armistice consequences treaties Versailles reparations changed borders", "wwi-consequence-chain", topic)]
+        )
+      ];
+    }
     const kind = socialTopicKind(lowerTopic);
     return kind === "geography"
       ? [
@@ -2552,7 +2725,7 @@ export function legacyLessonToSlidePlan({
   const objectives = (lesson?.learningObjectives ?? []).map((item) => stripDuplicateNumbering(item)).filter(Boolean);
   const vocabulary = vocabularyFor(subjectKey, topic, lesson);
   const slides: LessonPlanSlide[] = [
-    makeSlide("title", "title", `Learn ${topic}`, 2, {
+    makeSlide("title", "title", title, 2, {
       bullets: objectives,
       keyIdea: normalizePlainText(lesson?.studentFit || `A clear NovaSprout lesson on ${topic}.`, 240)
     }, [
@@ -2658,6 +2831,9 @@ export function legacyLessonToSlidePlan({
     slides.push(
       makeSlide(`worked-example-${index + 1}`, "worked_example", subjectKey === "math" ? slideTitle("Example", exampleText, `Worked Example ${index + 1}`) : part.title, 4, {
         explanation: part.explanation,
+        ...(subjectKey === "social"
+          ? { question: "How does this step connect historical context, decisions, and consequences?" }
+          : {}),
         steps: exampleSteps.length ? exampleSteps : undefined
       }, [exampleVisual], "medium")
     );
@@ -2665,10 +2841,13 @@ export function legacyLessonToSlidePlan({
 
   (lesson?.fullLessonSegments ?? []).forEach((segment, index) => {
     const activity = learnerFacingSegment(segment.activity);
+    const segmentTitle = learnerFacingTitle(segment.title, `Content ${index + 1}`);
     if (!activity) {
       return;
     }
-    const segmentTitle = normalizePlainText(segment.title, 80) || `Content ${index + 1}`;
+    if (activity.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim() === segmentTitle.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()) {
+      return;
+    }
     const containsLearnerTask = /\b(?:calculate|compare|decide|estimate|explain|identify|predict|question|solve|try)\b/i.test(activity) &&
       /[?]|\b(?:calculate|estimate|predict|solve|try)\b/i.test(activity);
     slides.push(
@@ -2710,11 +2889,15 @@ export function legacyLessonToSlidePlan({
             ? ["Do not change only the numerator or only the denominator.", "Equivalent fractions use the same nonzero factor on both parts."]
           : subjectKey === "math"
             ? ["Do not multiply only one quantity in a ratio.", "Equivalent ratios need the same scale factor on both quantities."]
+            : subjectKey === "social" && /\bworld war (?:i|1|one)\b/i.test(topic)
+              ? ["Do not treat the Sarajevo assassination as the only cause of the war.", "Separate long-term tensions, the immediate trigger, and the decisions that widened the conflict."]
             : ["Check the exact question before answering.", "Use evidence or steps, not only a guess."],
       keyIdea: subjectKey === "science" && /\b(periodic|element|atom|atomic|isotope|ion|proton|neutron|electron)\b/i.test(topic)
         ? "Keep identity, isotope, and charge separate: protons identify the element, neutrons set the isotope, and electrons set the ion charge."
         : subjectKey === "science" && /\b(electric|electricity|circuit|current|voltage|resistance)\b/i.test(topic)
           ? "Better reasoning: voltage transfers energy per unit charge, while current measures charge flow around a closed path."
+          : subjectKey === "social" && /\bworld war (?:i|1|one)\b/i.test(topic)
+            ? "Better reasoning distinguishes underlying conditions from the 1914 trigger and the choices made during the July Crisis."
           : "Mistakes become easier to catch when you know what to look for."
     }, [
       {
@@ -2744,6 +2927,11 @@ export function legacyLessonToSlidePlan({
                 { title: "Incorrect move", items: ["Change one quantity only", "Use different scale factors"] },
                 { title: "Accurate move", items: ["Change both quantities", "Use one scale factor"] }
               ]
+            : subjectKey === "social" && /\bworld war (?:i|1|one)\b/i.test(topic)
+              ? [
+                  { title: "Oversimplified", items: ["One event caused everything", "All alliances acted automatically"] },
+                  { title: "Evidence-based", items: ["Long-term tensions plus a trigger", "Governments made escalating decisions"] }
+                ]
             : [
                 { title: "Weak reasoning", items: ["Guess", "Skip evidence"] },
                 { title: "Strong reasoning", items: ["Show a step", "Connect evidence"] }

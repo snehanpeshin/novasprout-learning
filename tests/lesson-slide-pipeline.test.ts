@@ -524,6 +524,64 @@ test("uses the active concept model for neighboring science-topic vocabulary", (
   assert.equal(plan.semanticAccuracy?.unresolvedErrors, 0);
 });
 
+test("builds a student-facing World War I deck with topic-specific visuals", () => {
+  const plan = legacyLessonToSlidePlan({
+    context: {
+      grade: "Grades 6-8",
+      subject: "Social Studies",
+      topic: "World War I causes, trench warfare, and consequences"
+    },
+    lesson: {
+      conceptExplanation: "Long-term nationalism, imperial competition, militarism, and alliance commitments made Europe unstable. The assassination at Sarajevo triggered the July Crisis. Mobilizations and declarations widened the conflict. On the Western Front, connected trench systems and industrial firepower helped create a costly stalemate.",
+      fullLessonSegments: [
+        {
+          activity: "Explain how the front-line trench connected to communication trenches, support trenches, and dugouts. Show how soldiers crossed no-man's-land.",
+          title: "Trench layout: Explain how defensive depth worked"
+        },
+        {
+          activity: "The armistice ended fighting on November 11, 1918. Later treaties changed borders and imposed different settlements on the defeated powers.",
+          title: "After the fighting stopped"
+        }
+      ],
+      guidedExample: "Step 1: Separate long-term tensions from the immediate trigger. Step 2: Trace the assassination, ultimatum, mobilization, and declarations. Step 3: Use dated evidence to explain why the conflict widened. Final check: Do not describe the alliance system as automatic.",
+      learningObjectives: [
+        "Distinguish long-term causes from the 1914 trigger.",
+        "Relate trench systems and industrial weapons to battlefield stalemate."
+      ],
+      practiceQuestions: [
+        "A force had 200,000 soldiers and suffered 30,000 casualties. Calculate the casualty percentage.",
+        "Short answer: Label the front-line trench, communication trench, support trench, dugout, and no-man's-land.",
+        "Compare the Central Powers and Allied Powers and note one country that joined later."
+      ],
+      title: "World War I: Causes, Trench Warfare, and Consequences"
+    }
+  });
+
+  const allLearnerText = plan.slides.flatMap((slide) => [
+    slide.title,
+    slide.studentContent.keyIdea,
+    slide.studentContent.explanation,
+    slide.studentContent.question,
+    ...(slide.studentContent.bullets ?? []),
+    ...(slide.studentContent.steps ?? [])
+  ]).filter(Boolean).join(" ");
+  const casualtySlide = plan.slides.find((slide) => /casualty percentage/i.test(slide.studentContent.question ?? ""));
+  const trenchSlides = plan.slides.filter((slide) => /trench/i.test(`${slide.title} ${slide.studentContent.question ?? ""}`));
+  const shortAnswerSlide = plan.slides.find((slide) => /short-response question/i.test(slide.studentContent.question ?? ""));
+
+  assert.equal(plan.slides[0].title, "World War I: Causes, Trench Warfare, and Consequences");
+  assert.ok(plan.slides.some((slide) => slide.title === "Long-Term Causes And The 1914 Trigger"));
+  assert.ok(plan.slides.some((slide) => slide.title === "The Wartime Coalitions Changed"));
+  assert.ok(plan.slides.some((slide) => slide.title === "How A Trench System Worked"));
+  assert.ok(trenchSlides.some((slide) => slide.visuals.some((visual) => visual.type === "trench_system")));
+  assert.equal(casualtySlide?.visuals[0]?.type, "equation_steps");
+  assert.match(casualtySlide?.visuals[0]?.equation ?? "", /15\\%/);
+  assert.match(shortAnswerSlide?.studentContent.question ?? "", /front-line trench.*no-man's-land/i);
+  assert.doesNotMatch(allLearnerText, /Explain how|Show how|Identify quantities or evidence|include appropriate units|key takeaway notes/i);
+  assert.match(allLearnerText, /assassination as the only cause/i);
+  assert.equal(plan.semanticAccuracy?.unresolvedErrors, 0);
+});
+
 test("applies the shared content and design safeguards across subjects", () => {
   const cases = [
     { subject: "Mathematics", topic: "Equivalent fractions", example: "Step 1: Draw equal wholes. Step 2: Split each part by the same factor. Step 3: Check that the shaded amount is unchanged." },

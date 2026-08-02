@@ -1,6 +1,3 @@
-import { authorizeVerifiedAppleAccess } from "./appleAccessAuthorization.ts";
-import { verifyAppleTransactionJws } from "./appleIap.ts";
-
 export async function isAiAccessAllowed(
   request: Request,
   { consumeSingleLesson = false }: { consumeSingleLesson?: boolean } = {}
@@ -23,6 +20,12 @@ export async function isAiAccessAllowed(
   }
 
   const appleJws = request.headers.get("x-apple-transaction-jws")?.trim() ?? "";
+  if (!appleJws) return false;
+
+  const [{ authorizeVerifiedAppleAccess }, { verifyAppleTransactionJws }] = await Promise.all([
+    import("./appleAccessAuthorization.ts"),
+    import("./appleIap.ts")
+  ]);
   const appleAccess = await verifyAppleTransactionJws(appleJws);
   if (!appleAccess) return false;
 

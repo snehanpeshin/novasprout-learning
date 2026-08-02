@@ -31,6 +31,7 @@ const rendererRegistry: Record<DiagramRendererFamily, Set<string>> = {
     "microstate_model",
     "process_sequence",
     "ratio_table",
+    "trench_system",
     "vocabulary_grid",
     "worked_solution"
   ]),
