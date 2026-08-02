@@ -665,7 +665,12 @@ const topicVocabulary = [
     terms: ["population", "random sample", "parameter", "statistic", "sample mean", "sampling distribution", "standard error", "sample size", "z-score", "confidence interval"]
   },
   {
-    pattern: /\b(digest\w*|stomachs?|intestines?|enzymes?|bile|food)\b/i,
+    pattern: /\b(photosynth\w*|chlorophyll|chloroplasts?|stomata|xylem|phloem|plants?\s+(?:make|making|produce|producing|get|getting)\s+(?:their\s+own\s+)?food)\b/i,
+    subjects: ["science"] as SubjectKey[],
+    terms: ["photosynthesis", "chlorophyll", "chloroplast", "light energy", "carbon dioxide", "water", "glucose", "oxygen", "stomata", "xylem", "phloem"]
+  },
+  {
+    pattern: /\b(digest\w*|stomachs?|intestines?|esophagus|enzymes?|bile|villi|absorption)\b/i,
     subjects: ["science"] as SubjectKey[],
     terms: ["mouth", "esophagus", "stomach", "small intestine", "large intestine", "enzyme", "bile", "absorption", "villi", "waste"]
   },

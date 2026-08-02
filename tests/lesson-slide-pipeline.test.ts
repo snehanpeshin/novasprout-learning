@@ -7,6 +7,7 @@ import { fitTextToBox } from "../app/lib/lessonSlides/contentCompressor.ts";
 import { assessSlideDesignPrinciples, scoreDeckQuality } from "../app/lib/lessonSlides/deckQualityScorer.ts";
 import { formatMathExpression, validateFormattedMath } from "../app/lib/lessonSlides/mathRenderer.ts";
 import { classifySlide } from "../app/lib/lessonSlides/slideClassifier.ts";
+import { finalizeInstructionalPlan } from "../app/lib/lessonSlides/lessonPlanner.ts";
 import { validateAndRepairSlide } from "../app/lib/lessonSlides/slideValidator.ts";
 import {
   isElectricityContext,
@@ -273,6 +274,65 @@ test("final quality uses the repaired task instead of a stale placeholder error"
   assert.ok(practice);
   assert.doesNotMatch(practice?.studentContent.question ?? "", /^Your turn$/i);
   assert.equal(unresolvedPlaceholder, false);
+});
+
+test("final semantic quality uses repaired photosynthesis content instead of a stale domain error", () => {
+  const base = legacyLessonToSlidePlan({
+    context: { grade: "Grades 6-8", subject: "Science", topic: "How plants make food: photosynthesis" },
+    lesson: {
+      conceptExplanation: "Chlorophyll in chloroplasts captures light energy. Plants use carbon dioxide and water to make glucose and release oxygen.",
+      conceptModel: {
+        assessmentTargets: ["Explain the inputs and outputs of photosynthesis."],
+        formulas: [],
+        misconceptions: [],
+        nodes: [
+          { definition: "An organelle where photosynthesis occurs.", id: "chloroplast", label: "chloroplast" },
+          { definition: "A gas plants use to build glucose.", id: "carbon-dioxide", label: "carbon dioxide" }
+        ],
+        relationships: [
+          { explanation: "Chloroplasts use light energy to help form glucose.", from: "chloroplast", relationship: "helps form", to: "glucose" }
+        ]
+      },
+      learningObjectives: ["Trace how light, water, and carbon dioxide contribute to glucose production."],
+      practiceQuestions: ["How do the inputs of photosynthesis reach a leaf?"],
+      title: "Photosynthesis"
+    }
+  });
+  const practiceId = base.slides.find((slide) =>
+    ["guided_practice", "independent_practice", "knowledge_check"].includes(slide.slideType)
+  )?.id;
+  assert.ok(practiceId);
+
+  const plan = finalizeInstructionalPlan({
+    ...base,
+    slides: base.slides.map((item) => item.id === practiceId
+      ? {
+          ...item,
+          studentContent: {
+            keyIdea: "The mouth, stomach, and small intestine break food down during digestion.",
+            question: "Your turn"
+          }
+        }
+      : item)
+  });
+  const repairedPractice = plan.slides.find((slide) => slide.id === practiceId);
+  const unresolvedDigestiveError = (plan.qualityFindings ?? []).some((finding) =>
+    finding.code === "unsupported_claim" && finding.severity === "error" && /digestive system/i.test(finding.explanation)
+  );
+
+  assert.equal(
+    unresolvedDigestiveError,
+    false,
+    JSON.stringify({
+      findings: plan.qualityFindings?.filter((finding) => /digestive system/i.test(finding.explanation)),
+      repairedPractice: repairedPractice?.studentContent,
+      vocabulary: plan.slides.find((slide) => slide.id === "vocabulary"),
+      semanticAccuracy: plan.semanticAccuracy
+    })
+  );
+  assert.equal(plan.semanticAccuracy?.unresolvedErrors, 0);
+  assert.doesNotMatch(JSON.stringify(repairedPractice?.studentContent), /mouth|stomach|small intestine/i);
+  assert.match(repairedPractice?.studentContent.question ?? "", /chloroplast|photosynthesis|carbon dioxide/i);
 });
 
 test("all finalized slides carry explicit semantic types", () => {

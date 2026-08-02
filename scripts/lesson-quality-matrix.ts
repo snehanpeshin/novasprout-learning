@@ -246,6 +246,33 @@ const scenarios: Scenario[] = [
   },
   {
     assessments: [
+      "Which gas enters a leaf for photosynthesis? Answer: carbon dioxide.",
+      "What energy-rich product does photosynthesis make? Answer: glucose."
+    ],
+    concepts: [
+      "Photosynthesis converts light energy into chemical energy stored in glucose.",
+      "Roots absorb water, xylem carries it to leaves, and stomata allow carbon dioxide to enter.",
+      "Chlorophyll inside chloroplasts captures light energy.",
+      "Plants use carbon dioxide and water to make glucose and release oxygen."
+    ],
+    example: "Trace one carbon atom from carbon dioxide in the air into glucose. Step 1: carbon dioxide enters through a stoma. Step 2: it reaches a chloroplast. Step 3: light-powered reactions help rearrange atoms into glucose. Answer: the carbon becomes part of glucose.",
+    grade: "Grades 6-8",
+    id: "science-photosynthesis",
+    keywords: ["photosynthesis", "chlorophyll", "chloroplast", "carbon dioxide", "glucose", "stomata", "xylem"],
+    misconception: "Plants do not obtain food from soil; they make glucose from carbon dioxide and water using light energy.",
+    practices: [
+      "Try: Name the tissue that carries water upward. Answer: xylem.",
+      "Try: Identify the gas released by photosynthesis. Answer: oxygen.",
+      "Try: Predict what happens in darkness. Answer: the light-dependent input stops, so photosynthesis slows or stops."
+    ],
+    subject: "Science",
+    title: "How Plants Make Food",
+    topic: "How plants make food: photosynthesis",
+    visual: "Show a leaf cross-section with sunlight, carbon dioxide, water, chloroplasts, glucose, and oxygen connected by accurate directional arrows.",
+    warmUp: "What materials and energy source does a green leaf need to make glucose?"
+  },
+  {
+    assessments: [
       "Which quantity is the same throughout one series path? Answer: current.",
       "A 12 V source drives 2 A. Find power. Answer: 24 W."
     ],

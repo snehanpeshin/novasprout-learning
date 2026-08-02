@@ -475,7 +475,7 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
     return repaired;
   });
 
-  const semanticAccuracy = runSemanticAccuracyGate({
+  const initialSemanticAccuracy = runSemanticAccuracyGate({
     conceptGraph: plan.conceptGraph,
     slides: repairedSlides,
     subject: plan.context.subject,
@@ -484,19 +484,32 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
   });
   const slideDoctor = runSlideDoctor({
     conceptGraph: plan.conceptGraph,
-    slides: semanticAccuracy.slides,
+    slides: initialSemanticAccuracy.slides,
     topic: plan.context.topic
   });
-  const finalSlides = slideDoctor.slides;
+  // Slide Doctor can replace or refill learner-facing content. Re-run semantic
+  // validation so an abandoned draft cannot block an accurate repaired slide.
+  const finalSemanticAccuracy = runSemanticAccuracyGate({
+    conceptGraph: plan.conceptGraph,
+    slides: slideDoctor.slides,
+    subject: plan.context.subject,
+    subjectKey: plan.context.subjectKey,
+    topic: plan.context.topic
+  });
+  const finalSlides = finalSemanticAccuracy.slides;
   const finalFindingsBySlide = new Map<string, SlideValidationFinding[]>();
   finalSlides.forEach((slide) => {
     const historicalStructuralFindings = (findingsBySlide.get(slide.id) ?? []).filter(
       (finding) => finding.repaired || finding.severity !== "error"
     );
+    const historicalSemanticFindings = (initialSemanticAccuracy.findingsBySlide.get(slide.id) ?? []).filter(
+      (finding) => finding.repaired || finding.severity !== "error"
+    );
     finalFindingsBySlide.set(slide.id, deduplicateSlideFindings([
       ...historicalStructuralFindings,
-      ...(semanticAccuracy.findingsBySlide.get(slide.id) ?? []),
-      ...(slideDoctor.findingsBySlide.get(slide.id) ?? [])
+      ...historicalSemanticFindings,
+      ...(slideDoctor.findingsBySlide.get(slide.id) ?? []),
+      ...(finalSemanticAccuracy.findingsBySlide.get(slide.id) ?? [])
     ]));
   });
   const answerKey = assessmentAnswerKey(finalSlides.map((slide) => slide.assessment));
@@ -514,7 +527,11 @@ export function finalizeInstructionalPlan(plan: LessonSlidePlan): LessonSlidePla
     answerKey,
     deckQuality,
     qualityFindings,
-    semanticAccuracy: semanticAccuracy.summary,
+    semanticAccuracy: {
+      ...finalSemanticAccuracy.summary,
+      repairedMismatches:
+        initialSemanticAccuracy.summary.repairedMismatches + finalSemanticAccuracy.summary.repairedMismatches
+    },
     slideDoctor: slideDoctor.summary,
     slides,
     validationWarnings: [

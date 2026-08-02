@@ -75,6 +75,54 @@ test("blocks learner-facing cross-domain contamination instead of hiding it", ()
   ));
 });
 
+test("does not confuse photosynthesis vocabulary with the digestive system", () => {
+  const result = runSemanticAccuracyGate({
+    conceptGraph: {
+      nodes: [
+        { definition: "A chloroplast captures light energy for photosynthesis.", label: "chloroplast" },
+        { definition: "Stomata exchange carbon dioxide and oxygen with the air.", label: "stomata" }
+      ],
+      relationships: [
+        { explanation: "Xylem carries water to the leaf.", from: "xylem", relationship: "carries", to: "water" }
+      ]
+    },
+    slides: [slide({
+      studentContent: {
+        explanation: "Chlorophyll in chloroplasts captures light. Stomata admit carbon dioxide, while xylem supplies water and phloem transports sugar.",
+        keyIdea: "Plants use light energy to make glucose from carbon dioxide and water."
+      },
+      title: "How a leaf makes food"
+    })],
+    subject: "Science",
+    subjectKey: "science",
+    topic: "How plants make food: photosynthesis"
+  });
+
+  assert.equal(result.summary.unresolvedErrors, 0);
+  assert.ok(!result.findingsBySlide.get("lesson-slide")?.some((finding) =>
+    finding.code === "unsupported_claim" && /digestive system/i.test(finding.message)
+  ));
+});
+
+test("still blocks a real digestive-system cluster in a photosynthesis lesson", () => {
+  const result = runSemanticAccuracyGate({
+    slides: [slide({
+      studentContent: {
+        keyIdea: "Food moves from the mouth through the esophagus to the stomach and small intestine."
+      },
+      title: "Plant photosynthesis"
+    })],
+    subject: "Science",
+    subjectKey: "science",
+    topic: "How plants make food: photosynthesis"
+  });
+
+  assert.equal(result.summary.unresolvedErrors, 1);
+  assert.ok(result.findingsBySlide.get("lesson-slide")?.some((finding) =>
+    finding.code === "unsupported_claim" && /digestive system/i.test(finding.message)
+  ));
+});
+
 test("keeps a three-branch visual when the topic is explicitly civics", () => {
   const result = runSemanticAccuracyGate({
     slides: [slide({
