@@ -8,6 +8,10 @@ const configuredImageLimit = Number(process.env.MAX_GENERATED_SLIDE_IMAGES ?? 3)
 const maxGeneratedImages = Number.isFinite(configuredImageLimit)
   ? Math.min(3, Math.max(1, Math.round(configuredImageLimit)))
   : 3;
+const configuredImageTimeoutMs = Number(process.env.OPENAI_IMAGE_TIMEOUT_MS ?? 110_000);
+const imageTimeoutMs = Number.isFinite(configuredImageTimeoutMs)
+  ? Math.min(180_000, Math.max(30_000, Math.round(configuredImageTimeoutMs)))
+  : 110_000;
 
 type ImageAssetRequest = {
   assets?: Array<{
@@ -89,7 +93,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const images = await Promise.all(
+    const results = await Promise.allSettled(
       imageAssets.map(async (asset) => {
         const imageModel = process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-1";
         const configuredQuality = process.env.OPENAI_IMAGE_QUALITY?.trim().toLowerCase();
@@ -97,7 +101,7 @@ export async function POST(request: Request) {
           ? configuredQuality
           : "medium";
         const controller = new AbortController();
-        const deadline = setTimeout(() => controller.abort(), 22_000);
+        const deadline = setTimeout(() => controller.abort(), imageTimeoutMs);
         let response: Response;
         try {
           response = await fetch("https://api.openai.com/v1/images/generations", {
@@ -154,8 +158,23 @@ export async function POST(request: Request) {
         throw new Error(`${asset.assetId || asset.placement}: image generation returned no image URL or PNG data.`);
       })
     );
+    const images = results.flatMap((result) =>
+      result.status === "fulfilled" ? [result.value] : []
+    );
+    const warnings = results.flatMap((result) =>
+      result.status === "rejected"
+        ? [result.reason instanceof Error ? result.reason.message : "An image could not be generated."]
+        : []
+    );
 
-    return NextResponse.json({ images: images.filter(Boolean) });
+    if (!images.length && warnings.length) {
+      return NextResponse.json(
+        { error: `Could not generate a lesson image: ${warnings[0]}`, images: [], warnings },
+        { status: warnings.some((warning) => /abort|timeout/i.test(warning)) ? 503 : 500 }
+      );
+    }
+
+    return NextResponse.json({ images, warnings });
   } catch (error) {
     return NextResponse.json(
       {

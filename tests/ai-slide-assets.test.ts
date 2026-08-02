@@ -35,7 +35,7 @@ test("turns the lesson AI's visual decisions directly into renderable assets", (
   assert.equal(assets[0].type, "image");
   assert.equal(assets[0].placement, "2rb");
   assert.match(assets[0].prompt, /root hair.*xylem/i);
-  assert.match(assets[0].prompt, /only these exact short labels/i);
+  assert.match(assets[0].prompt, /without printed labels/i);
   assert.equal(assets[1].type, "latex");
   assert.equal(assets[1].placement, "3cb");
 });
@@ -56,6 +56,49 @@ test("does not create a decorative asset when the AI says no visual", () => {
   });
 
   assert.deepEqual(assets, []);
+});
+
+test("plans a real generated image for a biological stage sequence", () => {
+  const assets = assetsFromAiVisualPlan({
+    grade: "Grade 7",
+    slideTitles: ["Cell Cycle Overview", "Track Chromosomes Through Mitosis", "Calculate Cell Doubling"],
+    subject: "Science",
+    topic: "Cell division and mitosis",
+    visualPlan: [{
+      anchor: "concept",
+      description: "Show chromosome condensation, alignment, sister chromatid separation, and formation of two nuclei.",
+      educationalPurpose: "Let students compare the visible chromosome changes at each stage.",
+      labels: ["prophase", "metaphase", "anaphase", "telophase"],
+      priority: "essential",
+      targetTitle: "Track Chromosomes Through Mitosis",
+      visualType: "mitosis stage storyboard"
+    }]
+  });
+
+  assert.equal(assets.filter((asset) => asset.type === "image").length, 1);
+  assert.equal(assets[0].placement, "2rb");
+  assert.match(assets[0].prompt, /chromosome condensation.*sister chromatid separation/i);
+});
+
+test("keeps equation and graph directions programmatic", () => {
+  const assets = assetsFromAiVisualPlan({
+    grade: "Grade 7",
+    slideTitles: ["Calculate Cell Doubling"],
+    subject: "Science",
+    topic: "Cell division",
+    visualPlan: [{
+      description: "Calculate cell count after repeated division.",
+      educationalPurpose: "Connect the exponent to the number of divisions.",
+      equation: "N=N_0\\times2^n",
+      labels: ["starting cells", "division rounds", "final cells"],
+      priority: "essential",
+      targetTitle: "Calculate Cell Doubling",
+      visualType: "equation derivation and graph"
+    }]
+  });
+
+  assert.equal(assets.some((asset) => asset.type === "image"), false);
+  assert.equal(assets.some((asset) => asset.type === "latex"), true);
 });
 
 test("uses distinctive topic words when matching a visual to a slide", () => {

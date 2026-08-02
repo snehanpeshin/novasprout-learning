@@ -235,6 +235,20 @@ function looksLikeTutorProcedure(value?: string) {
   return /\b(?:tutor|teacher|instructor)\s+(?:explains?|presents?|asks?|models?|introduces?|gives?|checks?|confirms?|notes?|guides?)\b/i.test(value ?? "");
 }
 
+function learnerFacingSegment(value?: string) {
+  const text = removeTutorInstructionLanguage(value, 900);
+  if (!text) return "";
+
+  const authoringImperative = /^(?:ask|create|demonstrate|describe|discuss|emphasize|explain|give|guide|have|introduce|model|present|provide|review|show|teach|tell|use)\b/i;
+  const productionMeta = /\b(?:slide|visuals? to show|image prompt|speaker notes?|tutor instructions?|teacher instructions?|interactive quiz|lesson plan)\b/i;
+  const sentences = text
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter((sentence) => sentence && !authoringImperative.test(sentence) && !productionMeta.test(sentence));
+
+  return sentences.join(" ").trim();
+}
+
 export function detectSubjectKey(subject?: string, topic?: string): SubjectKey {
   const normalizedTopic = normalizePlainText(topic, 120).toLowerCase();
   const normalized = normalizePlainText(subject, 80).toLowerCase();
@@ -372,6 +386,28 @@ function guidedExampleParts(
   const text = removeTutorInstructionLanguage(value, 3200);
   if (!text) return [];
 
+  const explicitExamples = text
+    .split(/(?=\b(?:Worked\s+)?Example\s*[A-Z0-9]+\s*[:.-])/i)
+    .map((section) => normalizePlainText(section, 1400))
+    .filter(Boolean);
+  if (explicitExamples.length > 1) {
+    return explicitExamples.slice(0, 4).flatMap((section, exampleIndex) => {
+      const stepSections = section
+        .split(/(?=\bStep\s*\d+\s*:|\bFinal check\s*:)/i)
+        .map((item) => normalizePlainText(item, 480))
+        .filter(Boolean);
+      const explanation = /^Step\s*\d+\s*:|^Final check\s*:/i.test(stepSections[0]) ? "" : stepSections.shift() ?? "";
+      const groups = Array.from({ length: Math.ceil(stepSections.length / 4) }, (_, groupIndex) =>
+        stepSections.slice(groupIndex * 4, groupIndex * 4 + 4)
+      );
+      return groups.map((steps, groupIndex) => ({
+        explanation: groupIndex === 0 ? explanation : undefined,
+        steps,
+        title: guidedExampleTitle(subjectKey, topic, steps, exampleIndex + groupIndex)
+      }));
+    });
+  }
+
   const sections = text
     .split(/(?=\bStep\s*\d+\s*:|\bFinal check\s*:)/i)
     .map((section) => normalizePlainText(section, 700))
@@ -390,18 +426,17 @@ function guidedExampleParts(
   }
 
   const introduction = /^Step\s*\d+\s*:|^Final check\s*:/i.test(sections[0]) ? "" : sections.shift() ?? "";
-  const parts: GuidedExamplePart[] = [];
-  for (let index = 0; index < sections.length; index += 2) {
-    const steps = sections
-      .slice(index, index + 2)
-      .map((section) => section.replace(/^Step\s*(\d+)\s*:\s*/i, "Step $1: ").replace(/^Final check\s*:\s*/i, "Final check: "));
-    parts.push({
-      explanation: index === 0 ? introduction : undefined,
-      steps,
-      title: guidedExampleTitle(subjectKey, topic, steps, parts.length)
-    });
-  }
-  return parts;
+  const steps = sections
+    .map((section) => section.replace(/^Step\s*(\d+)\s*:\s*/i, "Step $1: ").replace(/^Final check\s*:\s*/i, "Final check: "))
+    .slice(0, 7);
+  const groups = Array.from({ length: Math.ceil(steps.length / 4) }, (_, groupIndex) =>
+    steps.slice(groupIndex * 4, groupIndex * 4 + 4)
+  );
+  return groups.map((group, index) => ({
+    explanation: index === 0 ? introduction : undefined,
+    steps: group,
+    title: guidedExampleTitle(subjectKey, topic, group, index)
+  }));
 }
 
 function slideTitle(prefix: string, text: string, fallback: string) {
@@ -737,14 +772,6 @@ const topicVocabulary = [
 ];
 
 function vocabularyFor(subjectKey: SubjectKey, topic: string, lesson?: LegacyLesson) {
-  const lowerTopic = topic.toLowerCase();
-  const dictionaryMatch = topicVocabulary.find((entry) =>
-    entry.subjects.includes(subjectKey) && entry.pattern.test(lowerTopic)
-  );
-  if (dictionaryMatch) {
-    return dictionaryMatch.terms.slice(0, 8);
-  }
-
   // The concept model is a safer source than scanning all lesson prose. A
   // single shared word such as "atom", "element", "cell", or "balance" can
   // otherwise pull vocabulary from a neighboring chapter.
@@ -755,6 +782,13 @@ function vocabularyFor(subjectKey: SubjectKey, topic: string, lesson?: LegacyLes
     );
   if (conceptTerms.length >= 3) {
     return conceptTerms.slice(0, 8);
+  }
+  const lowerTopic = topic.toLowerCase();
+  const dictionaryMatch = topicVocabulary.find((entry) =>
+    entry.subjects.includes(subjectKey) && entry.pattern.test(lowerTopic)
+  );
+  if (dictionaryMatch) {
+    return dictionaryMatch.terms.slice(0, 8);
   }
   if (subjectKey === "ela") {
     return ["main idea", "evidence", "inference", "claim", "context", "structure", "summary", "revision"];
@@ -1144,6 +1178,54 @@ function topicVisual(subjectKey: SubjectKey, topic: string, text: string, id: st
           title: "Digestive system",
           type: "labeled_system"
       };
+  }
+  if (subjectKey === "science" && /\b(cell division|cell cycle|mitosis|meiosis|cytokinesis|chromosome|chromatid)\b/i.test(combined)) {
+    if (/\b(calculate|calculation|number|double|doubling|generation|mitotic index|percent|percentage|fraction)\b/i.test(text)) {
+      return {
+        accessibilityLabel: "A biological calculation pathway that defines the quantities, substitutes values, computes the result, and checks its meaning.",
+        equation: /mitotic index/i.test(text) ? "\\text{mitotic index}=\\frac{\\text{dividing cells}}{\\text{total cells}}\\times100\\%" : "N=N_0\\times2^n",
+        id,
+        labels: ["Define quantities", "Substitute", "Calculate", "Interpret in context"],
+        steps: ["Identify the starting amount", "Choose the number of divisions", "Apply the relationship", "Check the biological meaning"],
+        title: "Calculate and interpret",
+        type: "equation_steps"
+      };
+    }
+    return {
+      accessibilityLabel: "A stage sequence showing chromosome and cell-boundary changes during the cell cycle, mitosis, and cytokinesis.",
+      expectedInsight: "DNA is copied before mitosis; mitosis separates duplicated chromosomes; cytokinesis divides the cell contents.",
+      id,
+      labels: ["Interphase", "Prophase", "Metaphase", "Anaphase", "Telophase", "Cytokinesis"],
+      steps: ["DNA is copied", "Chromosomes condense", "Chromosomes align", "Chromatids separate", "Nuclei reform", "Cell divides"],
+      title: "Follow chromosome movement",
+      type: "process_sequence"
+    };
+  }
+  if (subjectKey === "science" && /\b(sequence|stage|cycle|pathway|process|first|next|then|finally|changes? into|moves? from)\b/i.test(text)) {
+    const steps = visualKeywords(text, [topic, "Start", "Change", "Result"], 6);
+    return {
+      accessibilityLabel: `A topic-specific sequence showing how ${topic} changes from one stage to the next.`,
+      expectedInsight: `Each stage causes or prepares the next stage in ${topic}.`,
+      id,
+      labels: steps,
+      steps,
+      title: `Sequence in ${topic}`,
+      type: "process_sequence"
+    };
+  }
+  if (subjectKey === "science" && /\b(compare|contrast|versus|vs\.?|difference|similar)\b/i.test(text)) {
+    const labels = visualKeywords(text, [topic, "Feature", "Evidence", "Meaning"], 6);
+    return {
+      accessibilityLabel: `A side-by-side comparison of the important distinctions in ${topic}.`,
+      columns: [
+        { items: labels.slice(0, 3), title: "First case" },
+        { items: labels.slice(3, 6), title: "Second case" }
+      ],
+      expectedInsight: `Compare the same feature in both cases before drawing a conclusion about ${topic}.`,
+      id,
+      title: `Compare ${topic}`,
+      type: "comparison_table"
+    };
   }
   if (subjectKey === "ela") {
     const writing = /\b(paragraph|essay|writing|sentence|revision)\b/i.test(combined);
@@ -1724,6 +1806,108 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
             type: "comparison_table"
           }
         ]
+      )
+    ];
+  }
+
+  if (subjectKey === "science" && /\b(cell division|cell cycle|mitosis|meiosis|cytokinesis|chromosome|chromatid)\b/.test(lowerTopic)) {
+    return [
+      makeSlide(
+        "cell-cycle-overview",
+        "process",
+        "The Cell Cycle At A Glance",
+        4,
+        {
+          keyIdea: "A cell grows and copies its DNA before it separates one complete chromosome set into each daughter cell.",
+          bullets: ["Interphase includes G1, S, and G2.", "Mitosis divides the nucleus.", "Cytokinesis divides the cytoplasm."]
+        },
+        [{
+          accessibilityLabel: "Cell-cycle sequence from G1 through DNA replication, preparation, mitosis, cytokinesis, and two daughter cells.",
+          expectedInsight: "DNA replication happens in S phase before mitosis begins.",
+          id: "cell-cycle-sequence",
+          labels: ["G1: grow", "S: copy DNA", "G2: prepare", "Mitosis: divide nucleus", "Cytokinesis: divide cell"],
+          steps: ["G1", "S", "G2", "Mitosis", "Cytokinesis"],
+          title: "One complete cell cycle",
+          type: "process_sequence"
+        }]
+      ),
+      makeSlide(
+        "mitosis-stages",
+        "labeled_diagram",
+        "Track Chromosomes Through Mitosis",
+        6,
+        {
+          keyIdea: "Mitosis preserves chromosome number by separating duplicated sister chromatids into two nuclei.",
+          bullets: ["Prophase: chromosomes condense.", "Metaphase: duplicated chromosomes align in the middle.", "Anaphase: sister chromatids move apart.", "Telophase: two nuclei reform."]
+        },
+        [{
+          accessibilityLabel: "Four-stage mitosis sequence showing condensed chromosomes, alignment, separation, and formation of two nuclei.",
+          expectedInsight: "Chromosome copies separate only after they align at the cell equator.",
+          id: "mitosis-stage-sequence",
+          labels: ["Prophase", "Metaphase", "Anaphase", "Telophase"],
+          steps: ["Condense", "Align", "Separate", "Re-form nuclei"],
+          title: "Chromosome movement",
+          type: "process_sequence"
+        }]
+      ),
+      makeSlide(
+        "cytokinesis-compare",
+        "comparison",
+        "Cytokinesis: Animal And Plant Cells",
+        4,
+        {
+          keyIdea: "Both cells divide their cytoplasm, but the surrounding structures make the mechanism different.",
+          bullets: ["Animal cells pinch inward with a cleavage furrow.", "Plant cells build a cell plate that becomes a new wall."]
+        },
+        [{
+          accessibilityLabel: "Side-by-side comparison of an animal-cell cleavage furrow and a plant-cell cell plate.",
+          columns: [
+            { title: "Animal cell", items: ["Flexible membrane", "Cleavage furrow", "Pinches inward"] },
+            { title: "Plant cell", items: ["Rigid cell wall", "Cell plate", "Builds outward"] }
+          ],
+          expectedInsight: "A rigid plant cell wall prevents the pinching mechanism used by animal cells.",
+          id: "cytokinesis-comparison",
+          title: "Two ways to divide cytoplasm",
+          type: "comparison_table"
+        }]
+      ),
+      makeSlide(
+        "cell-doubling-calculation",
+        "worked_example",
+        "Calculate Cell Doubling",
+        5,
+        {
+          keyIdea: "If every cell divides successfully, the number of cells doubles in each round.",
+          steps: ["Start with N0 = 1 cell.", "Use n = 4 division rounds.", "N = N0 x 2^n = 1 x 2^4.", "N = 16 cells.", "Check by doubling: 1, 2, 4, 8, 16."]
+        },
+        [{
+          accessibilityLabel: "Cell-count doubling calculation from one cell to sixteen cells over four rounds.",
+          equation: "N=N_0\\times2^n",
+          id: "cell-doubling-equation",
+          labels: ["1 cell", "2 cells", "4 cells", "8 cells", "16 cells"],
+          steps: ["Round 0", "Round 1", "Round 2", "Round 3", "Round 4"],
+          title: "One cell doubles four times",
+          type: "equation_steps"
+        }]
+      ),
+      makeSlide(
+        "mitotic-index-calculation",
+        "worked_example",
+        "Calculate Mitotic Index",
+        5,
+        {
+          keyIdea: "Mitotic index estimates the fraction of observed cells that are currently in mitosis.",
+          steps: ["Count 12 cells in mitosis.", "Count 60 cells in total.", "Mitotic index = 12 / 60 x 100%.", "Mitotic index = 20%.", "Interpretation: one fifth of the observed cells are dividing."]
+        },
+        [{
+          accessibilityLabel: "Mitotic-index calculation using twelve dividing cells out of sixty total cells.",
+          equation: "\\text{mitotic index}=\\frac{12}{60}\\times100\\%=20\\%",
+          id: "mitotic-index-equation",
+          labels: ["Dividing cells = 12", "Total cells = 60", "Result = 20%"],
+          steps: ["Count", "Divide", "Convert to percent", "Interpret"],
+          title: "How many cells are dividing?",
+          type: "equation_steps"
+        }]
       )
     ];
   }
@@ -2443,7 +2627,7 @@ export function legacyLessonToSlidePlan({
     slides.push(
       makeSlide(`concept-${index + 1}`, "concept", conceptSlideTitle(subjectKey, topic, chunk, index), 4, {
         explanation: chunk,
-        keyIdea: index === 0 ? `Connect each organ or process to its role in ${topic}.` : undefined
+        keyIdea: index === 0 ? `Connect each core idea or process to its role in ${topic}.` : undefined
       }, [
         topicVisual(subjectKey, topic, chunk, `concept-card-${index + 1}`)
       ], "medium")
@@ -2480,7 +2664,7 @@ export function legacyLessonToSlidePlan({
   });
 
   (lesson?.fullLessonSegments ?? []).forEach((segment, index) => {
-    const activity = removeTutorInstructionLanguage(segment.activity, 360);
+    const activity = learnerFacingSegment(segment.activity);
     if (!activity) {
       return;
     }

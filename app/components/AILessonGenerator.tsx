@@ -1187,17 +1187,12 @@ function StudentSlideDeck({
         },
         method: "POST"
       }, imageGenerationTimeoutMs);
-      const data = await readDeckResponse<{ images?: SlideAsset[] }>(
+      const data = await readDeckResponse<{ images?: SlideAsset[]; warnings?: string[] }>(
         response,
         "Could not generate slide images."
       );
       const generatedImages = data.images ?? [];
       const plannedImages = inputAssets.filter((asset) => asset.type === "image");
-      if (plannedImages.length && generatedImages.length < plannedImages.length) {
-        throw new Error(
-          `Only ${generatedImages.length} of ${plannedImages.length} planned images were generated. Check OpenAI image billing/quota and try again.`
-        );
-      }
 
       const mergedAssets = inputAssets.map((asset) => {
           const generated = generatedImages.find(
@@ -1206,14 +1201,17 @@ function StudentSlideDeck({
           return generated ? { ...asset, ...generated } : asset;
         });
       const missingImages = mergedAssets.filter((asset) => asset.type === "image" && !asset.dataUrl);
-      if (missingImages.length) {
-        throw new Error(`${missingImages.length} planned image asset${missingImages.length === 1 ? "" : "s"} did not return PNG data.`);
+      const usableAssets = mergedAssets.filter((asset) => asset.type !== "image" || Boolean(asset.dataUrl));
+      if (missingImages.length || data.warnings?.length) {
+        setAssetError(
+          `${generatedImages.length} of ${plannedImages.length} planned images are ready. Built-in lesson visuals will replace the rest.`
+        );
       }
 
       await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.images);
-      setAssets(mergedAssets);
+      setAssets(usableAssets);
       setDeckStage("Images ready");
-      return mergedAssets;
+      return usableAssets;
     } catch (error) {
       await waitForMinimumElapsed(stageStartedAt, minimumBuildStageMs.images);
       const message = error instanceof Error ? error.message : "Could not generate slide images.";

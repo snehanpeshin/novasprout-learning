@@ -154,7 +154,39 @@ function deterministicAssetPlan({
     ];
   }
 
+  if (/\b(?:science|biology|chemistry|physics|health|environment)\b/i.test(subject)) {
+    const cellDivision = /\b(?:cell division|cell cycle|mitosis|meiosis|cytokinesis|chromosome|chromatid)\b/i.test(topic);
+    return [
+      {
+        assetId: cellDivision ? "cell-division-stage-image" : "topic-system-image",
+        alt: cellDivision
+          ? "Student-friendly biological illustration comparing the main stages of cell division."
+          : `Student-friendly scientific illustration of ${topic}.`,
+        aspectRatio: "16:9",
+        caption: cellDivision ? "One cell prepares, separates its chromosomes, and becomes two cells." : `A visual model of ${topic}.`,
+        educationalPurpose: cellDivision
+          ? "Makes chromosome movement and changes in the cell boundary visible across mitosis and cytokinesis."
+          : `Gives the learner one concrete visual reference for ${topic}.`,
+        filename: cellDivision ? "cell-division-stages.png" : "topic-system.png",
+        latex: "",
+        placement: placementForSlide(slideTitles, cellDivision ? /mitosis|cell cycle|division stages|cytokinesis/i : /overview|map|system|process|big idea/i, 2, "rm"),
+        prompt: cellDivision
+          ? `${grade} accurate educational biology storyboard of animal cell division from interphase through prophase, metaphase, anaphase, telophase, and cytokinesis. Show six distinct cells in sequence, chromosomes condensing, aligning at the equator, sister chromatids separating to opposite poles, two nuclei reforming, and the cleavage furrow producing two daughter cells. Keep chromosome count scientifically consistent across stages. Clean modern textbook illustration, white background, deep navy outlines, blue cell membranes, purple chromosomes, warm yellow spindle fibers, no words, no letters, no labels, no watermark`
+          : `${grade} accurate educational scientific illustration of ${topic}. Show the central structures, process, scale, and cause-and-effect relationships a student must see to understand the topic. Use one coherent textbook model with a clear focal point, accurate spatial relationships, age-appropriate detail, clean white background, strong accessible contrast, no words, no letters, no labels, no watermark`,
+        type: "image"
+      }
+    ];
+  }
+
   return [];
+}
+
+function mergeFallbackImages(
+  assets: Array<Record<string, unknown>>,
+  fallbackAssets: Array<Record<string, unknown>>
+) {
+  if (assets.some((asset) => asset.type === "image")) return assets;
+  return [...fallbackAssets.filter((asset) => asset.type === "image").slice(0, 1), ...assets];
 }
 
 async function readJsonResponse(response: Response) {
@@ -207,9 +239,9 @@ export async function POST(request: Request) {
           title,
           ...visualPlan.map((direction) => cleanText(direction.targetTitle, 80)).filter(Boolean)
         ].slice(0, 60);
-    return NextResponse.json({
-      assets: assetsFromAiVisualPlan({ grade, slideTitles: directSlideTitles, subject, topic, visualPlan })
-    });
+    const directedAssets = assetsFromAiVisualPlan({ grade, slideTitles: directSlideTitles, subject, topic, visualPlan });
+    const fallbackAssets = deterministicAssetPlan({ grade, slideTitles: directSlideTitles, subject, topic });
+    return NextResponse.json({ assets: mergeFallbackImages(directedAssets, fallbackAssets) });
   }
 
   const slideTitles = providedSlideTitles.length
@@ -337,7 +369,9 @@ Rules:
     );
     const imageAssets = selectedAssets.filter((asset: { type?: string }) => asset.type === "image").slice(0, 3);
     const latexAssets = selectedAssets.filter((asset: { type?: string }) => asset.type === "latex").slice(0, 16);
-    return NextResponse.json({ assets: [...imageAssets, ...latexAssets] });
+    return NextResponse.json({
+      assets: mergeFallbackImages([...imageAssets, ...latexAssets], deterministicAssets)
+    });
   } catch (error) {
     const fallbackAssets = deterministicAssetPlan({ grade, slideTitles, subject, topic });
     if (fallbackAssets.length) {

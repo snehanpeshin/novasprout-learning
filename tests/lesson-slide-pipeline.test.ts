@@ -100,6 +100,55 @@ test("routes overlapping subject names to the correct lesson templates", () => {
   assert.equal(detectSubjectKey("Test Preparation", "Math review and percent"), "math");
 });
 
+test("builds cell-division lessons from cell-cycle content instead of generic cell anatomy", () => {
+  const plan = legacyLessonToSlidePlan({
+    context: {
+      grade: "Grade 7",
+      subject: "Science",
+      topic: "Cell division, cell cycle, mitosis, cytokinesis, and simple calculations"
+    },
+    lesson: {
+      conceptExplanation: "The cell cycle includes interphase, mitosis, and cytokinesis. DNA is copied during S phase before sister chromatids separate.",
+      conceptModel: {
+        nodes: [
+          { definition: "The repeating sequence of growth and division.", id: "cycle", label: "cell cycle" },
+          { definition: "Growth and DNA replication before nuclear division.", id: "interphase", label: "interphase" },
+          { definition: "Division of the nucleus.", id: "mitosis", label: "mitosis" },
+          { definition: "Division of the cytoplasm.", id: "cytokinesis", label: "cytokinesis" },
+          { definition: "A DNA-containing structure.", id: "chromosome", label: "chromosome" }
+        ],
+        relationships: []
+      },
+      fullLessonSegments: [
+        { activity: "Explain prophase, metaphase, anaphase, and telophase. Show a diagram.", title: "Authoring note" },
+        { activity: "DNA is copied during S phase before mitosis begins.", title: "DNA before division" }
+      ],
+      guidedExample: "Example 1: One cell divides four times. Step 1: Start with one cell. Step 2: Use N = N0 x 2^n. Step 3: Calculate 2^4 = 16. Final check: Double four times.",
+      learningObjectives: ["Sequence the stages and calculate cell counts."],
+      practiceQuestions: ["How many cells result after three complete rounds of division?"],
+      title: "Cell Division"
+    }
+  });
+  const titles = plan.slides.map((slide) => slide.title);
+  const vocabulary = plan.slides.find((slide) => slide.id === "vocabulary")?.studentContent.bullets?.join(" ") ?? "";
+  const contentText = plan.slides
+    .flatMap((slide) => Object.values(slide.studentContent))
+    .flat()
+    .filter((value): value is string => typeof value === "string")
+    .join(" ");
+  const workedExample = plan.slides.find((slide) => slide.id === "worked-example-1");
+
+  assert.ok(titles.includes("Track Chromosomes Through Mitosis"));
+  assert.ok(titles.includes("Cytokinesis: Animal And Plant Cells"));
+  assert.ok(titles.includes("Calculate Cell Doubling"));
+  assert.ok(titles.includes("Calculate Mitotic Index"));
+  assert.equal(titles.includes("Inside A Cell"), false);
+  assert.equal(titles.includes("From Cells To Organ Systems"), false);
+  assert.match(vocabulary, /cell cycle|interphase|mitosis|cytokinesis/i);
+  assert.doesNotMatch(contentText, /Explain prophase|Show a diagram/i);
+  assert.ok((workedExample?.studentContent.steps?.length ?? 0) >= 4);
+});
+
 test("does not treat civic power or a current problem as electricity", () => {
   assert.equal(isElectricityContext("Science", "Electricity and circuits"), true);
   assert.equal(isElectricityContext("Social Studies", "Government power and checks"), false);
@@ -403,7 +452,8 @@ test("turns a digestive-system lesson into complete, topic-specific teaching sli
 
   assert.match(objectiveSlide?.studentContent.bullets?.[0] ?? "", /mouth to anus/i);
   assert.doesNotMatch(allText, /Visuals to show|A key term used to reason|Find the requested quantity/i);
-  assert.ok(workedSlides.length >= 3);
+  assert.ok(workedSlides.length >= 1);
+  assert.ok(workedSlides.flatMap((slide) => slide.studentContent.steps ?? []).length >= 6);
   assert.ok(workedSlides.some((slide) => slide.studentContent.steps?.some((step) => /peristalsis/i.test(step))));
   assert.ok(practiceSlides.every((slide) => slide.visuals[0]?.type !== "concept_map"));
   assert.ok(plan.slides.some((slide) => slide.title === "How Bile And Lipase Digest Fat"));

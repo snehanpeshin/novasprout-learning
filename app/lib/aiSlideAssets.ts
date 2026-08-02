@@ -12,6 +12,9 @@ function slug(value: string) {
     .slice(0, 48) || "lesson-visual";
 }
 
+const generatedImageVisual = /\b(?:anatom|biolog|cellular|cutaway|illustration|real.?world|photograph|map|geograph|spatial|3d|experiment|apparatus|physical object|organism|microscope|mitosis|chromosome|molecule|historical scene|animation|storyboard|life cycle|labeled system|stage sequence)\b/;
+const programmaticVisual = /\b(?:equation|formula|derivation|symbolic|latex|number line|fraction bar|tape diagram|ratio bar|coordinate graph|plot|chart|data table|comparison table|venn|timeline|flowchart|code trace|circuit schematic)\b/;
+
 function titleMatchIndex(slideTitles: string[], targetTitle?: string) {
   const targetWords = new Set(
     cleanText(targetTitle, 100)
@@ -91,12 +94,16 @@ export function assetsFromAiVisualPlan({
     const description = cleanText(direction.description, 500);
     const purpose = cleanText(direction.educationalPurpose, 300);
     const labels = (direction.labels ?? []).map((label) => cleanText(label, 70)).filter(Boolean).slice(0, 10);
+    const priority = cleanText(direction.priority, 30).toLowerCase();
     const position = ["rb", "lb", "rm"][imageCandidates.length % 3];
     const id = `slide-${slideNumber}-${slug(targetTitle)}`;
-    const needsGeneratedImage = /\b(?:anatom|cutaway|illustration|real.?world|photograph|map|geograph|spatial|3d|experiment|apparatus|physical object|organism|historical scene)\b/.test(normalizedType);
-    const imageTextInstruction = /\b(?:label|annotat)\w*\b/.test(normalizedType) && labels.length
-      ? `Include only these exact short labels where they directly support learning: ${labels.join(", ")}. Keep every label legible and correctly attached to its part.`
-      : "Do not draw words, letters, numbers, captions, callouts, leader lines, labels, or a watermark.";
+    const visualEvidence = `${normalizedType} ${description.toLowerCase()} ${targetTitle.toLowerCase()} ${labels.join(" ").toLowerCase()}`;
+    const physicalSubject = /\b(?:science|biology|chemistry|physics|environment|geography|history|engineering|health)\b/i.test(subject);
+    const needsGeneratedImage = !programmaticVisual.test(normalizedType) && (
+      generatedImageVisual.test(visualEvidence) ||
+      physicalSubject && labels.length >= 3 && /\b(?:high|essential)\b/.test(priority)
+    );
+    const imageTextInstruction = "Do not draw words, letters, numbers, captions, callouts, leader lines, labels, or a watermark. Leave clean space where the slide renderer can add labels separately.";
 
     if (needsGeneratedImage && !usedSlides.has(slideNumber)) {
       usedSlides.add(slideNumber);
@@ -109,7 +116,7 @@ export function assetsFromAiVisualPlan({
         filename: `${id}.png`,
         latex: "",
         placement: `${slideNumber}${position}`,
-        prompt: `Create a ${grade} ${subject} educational illustration about ${topic}. Visual structure: ${visualType}. Show this scene or system accurately: ${description}. Include these essential parts and relationships visually: ${labels.join(", ") || targetTitle}. Learning purpose: ${purpose}. Clear student-friendly textbook visual, strong hierarchy, uncluttered background, age-appropriate detail, accurate spatial relationships, no decorative elements. ${imageTextInstruction}`,
+        prompt: `Create a ${grade} ${subject} educational illustration about ${topic}. Visual structure: ${visualType}. Show this scene or system accurately: ${description}. Include these essential parts and relationships as visible shapes and spatial relationships, without printed labels: ${labels.join(", ") || targetTitle}. Learning purpose: ${purpose}. Clear student-friendly textbook visual, strong hierarchy, uncluttered background, age-appropriate detail, accurate spatial relationships, no decorative elements. ${imageTextInstruction}`,
         type: "image"
       });
     }
