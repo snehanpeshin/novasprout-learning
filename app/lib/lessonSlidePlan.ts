@@ -738,19 +738,23 @@ const topicVocabulary = [
 
 function vocabularyFor(subjectKey: SubjectKey, topic: string, lesson?: LegacyLesson) {
   const lowerTopic = topic.toLowerCase();
-  const lessonText = normalizePlainText([
-    topic,
-    lesson?.title,
-    lesson?.conceptExplanation,
-    lesson?.guidedExample,
-    ...(lesson?.learningObjectives ?? []),
-    ...(lesson?.practiceQuestions ?? [])
-  ].filter(Boolean).join(" "), 5000);
-  const dictionaryMatch =
-    topicVocabulary.find((entry) => entry.pattern.test(lowerTopic)) ??
-    topicVocabulary.find((entry) => entry.subjects.includes(subjectKey) && entry.pattern.test(lessonText));
+  const dictionaryMatch = topicVocabulary.find((entry) =>
+    entry.subjects.includes(subjectKey) && entry.pattern.test(lowerTopic)
+  );
   if (dictionaryMatch) {
     return dictionaryMatch.terms.slice(0, 8);
+  }
+
+  // The concept model is a safer source than scanning all lesson prose. A
+  // single shared word such as "atom", "element", "cell", or "balance" can
+  // otherwise pull vocabulary from a neighboring chapter.
+  const conceptTerms = (lesson?.conceptModel?.nodes ?? [])
+    .map((node) => normalizePlainText(node.label, 48))
+    .filter((term, index, all) =>
+      term.length >= 2 && all.findIndex((candidate) => candidate.toLowerCase() === term.toLowerCase()) === index
+    );
+  if (conceptTerms.length >= 3) {
+    return conceptTerms.slice(0, 8);
   }
   if (subjectKey === "ela") {
     return ["main idea", "evidence", "inference", "claim", "context", "structure", "summary", "revision"];

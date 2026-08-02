@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { validateGeneratedLesson } from "../app/lib/aiLessonValidation.ts";
+import {
+  criticalLessonValidationIssues,
+  validateGeneratedLesson
+} from "../app/lib/aiLessonValidation.ts";
 
 function question(index: number) {
   return {
@@ -73,4 +76,24 @@ test("requires a warning for hazardous experiments", () => {
 
   lesson.fullLessonSegments[0].activity += " Wear safety goggles and work with adult supervision.";
   assert.equal(validateGeneratedLesson(lesson).valid, true);
+});
+
+test("only structurally unusable or unsafe findings block lesson delivery", () => {
+  assert.deepEqual(
+    criticalLessonValidationIssues([
+      "The lesson needs an AI-designed visual strategy for its main learning moments.",
+      "Quiz question 2 duplicates an earlier question."
+    ]),
+    []
+  );
+  assert.deepEqual(
+    criticalLessonValidationIssues([
+      "Quiz question 1 has an invalid answer index.",
+      "A potentially hazardous experiment is missing a clear safety warning."
+    ]),
+    [
+      "Quiz question 1 has an invalid answer index.",
+      "A potentially hazardous experiment is missing a clear safety warning."
+    ]
+  );
 });

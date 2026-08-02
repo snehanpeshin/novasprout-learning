@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../../lib/aiAccess";
 import { extractAiLessonOutputText, parseAiLessonJson } from "../../../lib/aiLessonResponse";
-import { validateGeneratedLesson } from "../../../lib/aiLessonValidation";
+import {
+  criticalLessonValidationIssues,
+  validateGeneratedLesson
+} from "../../../lib/aiLessonValidation";
 import { bridgeVisualPlanIntoLesson } from "../../../lib/visualPlanBridge";
 
 export const runtime = "nodejs";
@@ -74,10 +77,11 @@ export async function GET(request: Request) {
       }
 
       const validation = validateGeneratedLesson(lesson);
-      if (!validation.valid) {
+      const criticalValidationIssues = criticalLessonValidationIssues(validation.issues);
+      if (criticalValidationIssues.length) {
         return NextResponse.json(
           {
-            error: `The AI lesson did not pass NovaSprout's content check: ${validation.issues.slice(0, 3).join(" ")}`,
+            error: `The AI lesson could not be used safely: ${criticalValidationIssues.slice(0, 3).join(" ")}`,
             validationErrors: validation.issues
           },
           { status: 422 }
@@ -85,7 +89,12 @@ export async function GET(request: Request) {
       }
 
       return NextResponse.json(
-        { lesson: bridgeVisualPlanIntoLesson(lesson), responseId, status },
+        {
+          lesson: bridgeVisualPlanIntoLesson(lesson),
+          responseId,
+          status,
+          validationWarnings: validation.issues
+        },
         { headers: { "Cache-Control": "no-store" } }
       );
     }

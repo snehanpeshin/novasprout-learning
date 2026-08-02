@@ -105,3 +105,13 @@ export function validateGeneratedLesson(lesson: unknown): LessonValidationResult
 
   return { issues: [...new Set(issues)], valid: issues.length === 0 };
 }
+
+/**
+ * Only failures that make a lesson unsafe or structurally unusable should
+ * stop delivery. Other findings are returned as advisory quality warnings.
+ */
+export function criticalLessonValidationIssues(issues: string[]) {
+  const criticalPattern = /lesson output is not an object|lesson title is missing|concept explanation is incomplete|guided example is incomplete|lesson segments must include|timed quiz is missing|quiz question \d+ is malformed|quiz question \d+ must have exactly four|quiz question \d+ has an invalid answer index|potentially hazardous experiment is missing/i;
+
+  return issues.filter((issue) => criticalPattern.test(issue));
+}

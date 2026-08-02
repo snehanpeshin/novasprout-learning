@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { checkCurriculumTopic, checkKidSafeContent } from "../../lib/curriculumGuard";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 import { extractAiLessonOutputText, parseAiLessonJson } from "../../lib/aiLessonResponse";
-import { validateGeneratedLesson } from "../../lib/aiLessonValidation";
+import {
+  criticalLessonValidationIssues,
+  validateGeneratedLesson
+} from "../../lib/aiLessonValidation";
 import { bridgeVisualPlanIntoLesson } from "../../lib/visualPlanBridge";
 
 export const runtime = "nodejs";
@@ -1045,16 +1048,21 @@ Keep claims cautious. Do not promise grades, test scores, admissions results, di
         );
       }
       const validation = validateGeneratedLesson(lesson);
-      if (!validation.valid) {
+      const criticalValidationIssues = criticalLessonValidationIssues(validation.issues);
+      if (criticalValidationIssues.length) {
         return NextResponse.json(
           {
-            error: `The AI lesson did not pass NovaSprout's content check: ${validation.issues.slice(0, 3).join(" ")}`,
+            error: `The AI lesson could not be used safely: ${criticalValidationIssues.slice(0, 3).join(" ")}`,
             validationErrors: validation.issues
           },
           { status: 422 }
         );
       }
-      return NextResponse.json({ lesson: bridgeVisualPlanIntoLesson(lesson), status: "completed" });
+      return NextResponse.json({
+        lesson: bridgeVisualPlanIntoLesson(lesson),
+        status: "completed",
+        validationWarnings: validation.issues
+      });
     }
 
     if (responseId && ["queued", "in_progress"].includes(generationStatus)) {

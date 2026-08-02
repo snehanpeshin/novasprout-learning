@@ -2362,60 +2362,31 @@ async function compileDeckRequest(request: Request) {
   }
 
   const semanticPlan = legacyLessonToSlidePlan({ context: body.context, lesson: body.lesson });
-  if (semanticPlan.deckQuality && !semanticPlan.deckQuality.exportReady) {
-    const unresolvedFindings = (semanticPlan.qualityFindings ?? [])
-      .filter((finding) => finding.severity === "error" && finding.repair !== "Automatically repaired before rendering.")
-      .slice(0, 2)
-      .map((finding) => `Slide ${finding.slideNumber ?? "?"}: ${finding.explanation}`);
-    const qualityDetails = [
-      ...unresolvedFindings,
-      ...semanticPlan.deckQuality.reasons.slice(0, Math.max(0, 3 - unresolvedFindings.length))
-    ];
-    return NextResponse.json(
-      {
-        compilerStatus: "quality_gate_failed",
-        error: `The lesson needs one more quality pass before export. ${qualityDetails.join(" ") || "Please retry the private lesson."}`,
-        qualityFindings: semanticPlan.qualityFindings,
-        qualityScore: semanticPlan.deckQuality,
-        qualityWarnings: semanticPlan.deckQuality.reasons
-      },
-      { status: 422 }
-    );
-  }
+  // Quality review is advisory after deterministic repairs. It must never
+  // prevent a usable lesson from reaching the learner.
+  const deckQualityWarnings = semanticPlan.deckQuality?.exportReady === false
+    ? semanticPlan.deckQuality.reasons.map((reason) => `Quality review: ${reason}`)
+    : [];
   const semanticWarnings = (semanticPlan.qualityFindings ?? [])
     .filter((finding) => finding.severity !== "info")
-    .map((finding) => `${finding.slideId ?? "lesson"}: ${finding.explanation}`);
+    .map((finding) => `${finding.slideId ?? "lesson"}: ${finding.explanation}`)
+    .concat(deckQualityWarnings);
   const slideBodies = buildSlideBodies(body);
   const { errors: assetErrors, normalized: assets } = normalizeAssets(body.assets ?? [], slideBodies.length);
-  if (assetErrors.length) {
-    return NextResponse.json(
-      {
-        compilerStatus: "validation_failed",
-        error: "One or more visual assets had invalid slide placement metadata.",
-        validationErrors: assetErrors
-      },
-      { status: 400 }
-    );
-  }
-
-  const missingImageAssets = assets.filter((asset) => asset.type === "image" && !asset.dataUrl?.startsWith("data:image/png;base64,"));
-  if (missingImageAssets.length) {
-    return NextResponse.json(
-      {
-        compilerStatus: "validation_failed",
-        error: `${missingImageAssets.length} planned image asset${missingImageAssets.length === 1 ? "" : "s"} did not include generated PNG data. The deck was not compiled because real visuals are required for these slides.`,
-        validationErrors: missingImageAssets.map((asset) => `${asset.assetId || asset.placement}: missing generated image data`)
-      },
-      { status: 422 }
-    );
-  }
-
+  const usableAssets = assets.filter((asset) => {
+    const slideNumber = assetSlideNumber(asset.placement);
+    return slideNumber >= 1 && slideNumber <= slideBodies.length && Boolean(assetPosition(asset.placement));
+  });
   const {
     embeddedImageCount,
     remotePayloadBytes,
     selected: compileAssets,
-    warnings: assetWarnings
-  } = selectAssetsForCompilation(assets);
+    warnings: selectedAssetWarnings
+  } = selectAssetsForCompilation(usableAssets);
+  const assetWarnings = [
+    ...assetErrors.map((error) => `Optional visual skipped: ${error}`),
+    ...selectedAssetWarnings
+  ];
   const compiledSlideBodies = buildSlideBodies({ ...body, assets: compileAssets });
   const tex = buildBeamerTex({ ...body, assets: compileAssets });
   const densityWarnings = getDensityWarnings(compiledSlideBodies);

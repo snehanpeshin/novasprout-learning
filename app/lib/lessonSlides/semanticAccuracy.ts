@@ -410,9 +410,9 @@ export function runSemanticAccuracyGate({
         aligned = false;
         findings.push(finding(
           "unsupported_claim",
-          `The learner-facing content introduces a ${rule.name} cluster that is not supported by the selected subject and topic.`,
+          `Review suggested: the learner-facing content includes a ${rule.name} cluster that may be broader than the selected topic.`,
           false,
-          "error"
+          "warning"
         ));
       }
 

@@ -437,6 +437,43 @@ test("builds a chemistry lesson with verified periodic-table teaching visuals", 
   assert.equal(plan.semanticAccuracy?.unresolvedErrors, 0);
 });
 
+test("uses the active concept model for neighboring science-topic vocabulary", () => {
+  const plan = legacyLessonToSlidePlan({
+    context: { grade: "Grades 6-8", subject: "Science", topic: "Balancing chemical equations" },
+    lesson: {
+      conceptExplanation: "A balanced chemical equation has equal atom counts for every element on both sides because matter is conserved. Coefficients change molecule counts without changing a substance's formula.",
+      conceptModel: {
+        assessmentTargets: ["Balance an equation and verify each atom count."],
+        formulas: [],
+        misconceptions: [],
+        nodes: [
+          { definition: "A starting substance in a chemical reaction.", id: "reactant", label: "reactant" },
+          { definition: "A substance formed by a chemical reaction.", id: "product", label: "product" },
+          { definition: "A whole-number multiplier placed before a formula.", id: "coefficient", label: "coefficient" },
+          { definition: "The principle that matter is not created or destroyed.", id: "conservation", label: "conservation of mass" },
+          { definition: "A count used to verify both sides of an equation.", id: "atom-count", label: "atom count" }
+        ],
+        relationships: [
+          { explanation: "Coefficients are adjusted until every atom count matches.", from: "coefficient", relationship: "balances", to: "atom count" }
+        ]
+      },
+      guidedExample: "Step 1: Count hydrogen and oxygen in H2 + O2 to H2O. Step 2: Add a coefficient of 2 before H2O. Step 3: Add a coefficient of 2 before H2 and verify both sides.",
+      learningObjectives: [
+        "Explain conservation of mass in a chemical equation.",
+        "Balance a simple equation and verify atom counts."
+      ],
+      practiceQuestions: ["Balance N2 + H2 to NH3 and check each element."],
+      title: "Balancing chemical equations"
+    }
+  });
+
+  const vocabulary = plan.slides.find((slide) => slide.id === "vocabulary");
+  const terms = (vocabulary?.studentContent.bullets ?? []).join(" ");
+  assert.match(terms, /reactant|product|coefficient|conservation of mass/i);
+  assert.doesNotMatch(terms, /atomic number|mass number|proton|neutron|isotope|group|period/i);
+  assert.equal(plan.semanticAccuracy?.unresolvedErrors, 0);
+});
+
 test("applies the shared content and design safeguards across subjects", () => {
   const cases = [
     { subject: "Mathematics", topic: "Equivalent fractions", example: "Step 1: Draw equal wholes. Step 2: Split each part by the same factor. Step 3: Check that the shaded amount is unchanged." },

@@ -56,7 +56,7 @@ test("replaces a civics visual injected into a history lesson", () => {
   assert.match(JSON.stringify(result.slides[0].visuals), /historical context|source evidence|consequence/i);
 });
 
-test("blocks learner-facing cross-domain contamination instead of hiding it", () => {
+test("reports learner-facing cross-domain contamination without blocking delivery", () => {
   const result = runSemanticAccuracyGate({
     conceptGraph: historyGraph,
     slides: [slide({
@@ -69,9 +69,9 @@ test("blocks learner-facing cross-domain contamination instead of hiding it", ()
     topic: "Ancient Egyptian agriculture"
   });
 
-  assert.equal(result.summary.unresolvedErrors, 1);
+  assert.equal(result.summary.unresolvedErrors, 0);
   assert.ok(result.findingsBySlide.get("lesson-slide")?.some((finding) =>
-    finding.code === "unsupported_claim" && finding.severity === "error" && !finding.repaired
+    finding.code === "unsupported_claim" && finding.severity === "warning" && !finding.repaired
   ));
 });
 
@@ -104,7 +104,7 @@ test("does not confuse photosynthesis vocabulary with the digestive system", () 
   ));
 });
 
-test("still blocks a real digestive-system cluster in a photosynthesis lesson", () => {
+test("still reports a real digestive-system cluster in a photosynthesis lesson", () => {
   const result = runSemanticAccuracyGate({
     slides: [slide({
       studentContent: {
@@ -117,9 +117,9 @@ test("still blocks a real digestive-system cluster in a photosynthesis lesson", 
     topic: "How plants make food: photosynthesis"
   });
 
-  assert.equal(result.summary.unresolvedErrors, 1);
+  assert.equal(result.summary.unresolvedErrors, 0);
   assert.ok(result.findingsBySlide.get("lesson-slide")?.some((finding) =>
-    finding.code === "unsupported_claim" && /digestive system/i.test(finding.message)
+    finding.code === "unsupported_claim" && finding.severity === "warning" && /digestive system/i.test(finding.message)
   ));
 });
 
