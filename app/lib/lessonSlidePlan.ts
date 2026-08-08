@@ -711,7 +711,7 @@ export function applyAiVisualDirections(
     const namedType = explicitlyNamedVisualType(slide.title);
     const namedVisual = namedType ? slide.visuals.find((candidate) => candidate.type === namedType) : undefined;
     if (namedVisual && visual?.type !== namedType) {
-      return { ...slide, visualPriority: "high", visuals: [namedVisual] };
+      return { ...slide, visualPriority: "high" as const, visuals: [namedVisual] };
     }
     const priority = normalizePlainText(direction.priority, 20).toLowerCase();
     return {
