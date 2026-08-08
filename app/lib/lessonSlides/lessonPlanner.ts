@@ -72,6 +72,12 @@ const lessonVocabulary: Record<string, string> = {
   peristalsis: "Wave-like muscle contractions that move food through the digestive tract.",
   relationship: "A rule or pattern describing how two or more quantities or ideas are connected.",
   resistance: "Opposition to electric current in a component.",
+  ratio: "A comparison of two quantities written in a chosen order.",
+  "equivalent ratio": "A ratio made by multiplying or dividing both quantities by the same nonzero factor.",
+  proportion: "An equation stating that two ratios are equal.",
+  "unit rate": "A rate expressed per 1 unit of the second quantity.",
+  "scale factor": "The multiplier that changes both quantities in a ratio by the same amount.",
+  "constant of proportionality": "The constant unit rate connecting two quantities in a proportional relationship.",
   "small intestine": "The organ where most chemical digestion and nutrient absorption occur.",
   stomach: "A muscular organ that mixes food with acid and enzymes to form chyme.",
   variable: "A symbol or named storage location whose value can change.",
@@ -311,6 +317,7 @@ function selectedVisual({
 }): VisualSpec[] {
   const existing = slide.visuals.filter((visual) => visualIsSpecific(visual, topic));
   const electricity = isElectricityContext(subject, topic);
+  if (slide.slideType === "vocabulary") return [vocabularyVisual(slide, topic, conceptDefinitions)];
   if (aiDirected) {
     if (selection === "no_visual") return [];
     if (electricity && selection === "circuit_diagram") return [electricityVisual(slide, circuitProblem)];

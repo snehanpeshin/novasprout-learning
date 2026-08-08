@@ -1345,8 +1345,11 @@ ${bodyRows}
 }
 
 function renderDoubleNumberLine(visual: VisualSpec) {
-  const rows = visual.rows?.length
-    ? visual.rows
+  const candidateRows = visual.rows?.slice(0, 2) ?? [];
+  const validScaleRow = (row?: string[]) =>
+    Boolean(row && row.length >= 3 && row.length <= 7 && row.slice(1).every((value) => /^[-+]?\d+(?:\.\d+)?(?:\/\d+(?:\.\d+)?)?$|^[a-z?]$/i.test(value.trim())));
+  const rows = candidateRows.length === 2 && validScaleRow(candidateRows[0]) && validScaleRow(candidateRows[1]) && candidateRows[0].length === candidateRows[1].length
+    ? candidateRows
     : [
         ["A", "0", "2", "4", "6", "8"],
         ["B", "0", "3", "6", "9", "12"]

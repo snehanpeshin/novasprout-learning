@@ -223,8 +223,43 @@ function formattedNumber(value: number) {
 
 function arithmeticIssues(value: string) {
   const issues: ArithmeticIssue[] = [];
+  const occupiedRanges: Array<[number, number]> = [];
+  const multiplicationChain = /(-?\d+(?:\.\d+)?(?:\s*(?:x|\*|\/|÷)\s*-?\d+(?:\.\d+)?){2,})\s*=\s*(-?\d+(?:\.\d+)?)/gi;
+  for (const match of value.matchAll(multiplicationChain)) {
+    const expression = match[1];
+    const tokens = expression.match(/-?\d+(?:\.\d+)?|[x*\/÷]/gi) ?? [];
+    let expected = Number(tokens[0]);
+    for (let index = 1; index < tokens.length; index += 2) {
+      const operator = tokens[index].toLowerCase();
+      const operand = Number(tokens[index + 1]);
+      expected = operator === "/" || operator === "÷"
+        ? operand === 0 ? Number.NaN : expected / operand
+        : expected * operand;
+    }
+    const stated = Number(match[2]);
+    const start = match.index ?? 0;
+    occupiedRanges.push([start, start + match[0].length]);
+    if (!Number.isFinite(expected)) {
+      issues.push({
+        expression: match[0],
+        index: start,
+        message: `${match[0]} is undefined because division by zero is not allowed.`
+      });
+    } else if (!nearlyEqual(expected, stated)) {
+      const result = formattedNumber(expected);
+      issues.push({
+        correction: `${expression} = ${result}`,
+        expression: match[0],
+        index: start,
+        message: `${match[0]} should equal ${result}.`
+      });
+    }
+  }
+
   const calculation = /(-?\d+(?:\.\d+)?)\s*(\+|-|x|\*|\/|÷)\s*(-?\d+(?:\.\d+)?)\s*=\s*(-?\d+(?:\.\d+)?)(?:\s*(\/|÷)\s*(-?\d+(?:\.\d+)?))?/gi;
   for (const match of value.matchAll(calculation)) {
+    const start = match.index ?? 0;
+    if (occupiedRanges.some(([rangeStart, rangeEnd]) => start >= rangeStart && start < rangeEnd)) continue;
     const left = Number(match[1]);
     const right = Number(match[3]);
     const statedNumerator = Number(match[4]);
@@ -245,7 +280,7 @@ function arithmeticIssues(value: string) {
     if (!Number.isFinite(expected)) {
       issues.push({
         expression: match[0],
-        index: match.index ?? 0,
+        index: start,
         message: `${match[0]} is undefined because division by zero is not allowed.`
       });
     } else if (!nearlyEqual(expected, stated)) {
@@ -253,7 +288,7 @@ function arithmeticIssues(value: string) {
       issues.push({
         correction: `${match[1]} ${match[2]} ${match[3]} = ${result}`,
         expression: match[0],
-        index: match.index ?? 0,
+        index: start,
         message: `${match[0]} should equal ${result}.`
       });
     }

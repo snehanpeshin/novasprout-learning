@@ -259,7 +259,14 @@ function learnerFacingTitle(value?: string, fallback = "") {
     .replace(/\s+\b(?:ask|create|demonstrate|describe|discuss|emphasize|explain|give|guide|have|introduce|model|present|provide|review|show|start|teach|tell|use)\b.*$/i, "")
     .replace(/[.:;,]+$/, "")
     .trim();
-  return title || fallback;
+  const displayTitle = title || fallback;
+  return displayTitle ? `${displayTitle[0].toUpperCase()}${displayTitle.slice(1)}` : "";
+}
+
+function isSubstantiveLessonSegment(activity: string) {
+  const words = activity.split(/\s+/).filter(Boolean);
+  const hasSpecificReasoning = /\d.*(?:[=:/%]|\b(?:because|therefore|causes?|results?|means|so that)\b)/i.test(activity);
+  return words.length >= 12 || words.length >= 8 && hasSpecificReasoning;
 }
 
 export function detectSubjectKey(subject?: string, topic?: string): SubjectKey {
@@ -660,6 +667,15 @@ function preferredLayout(value?: string): LessonPlanSlide["layoutType"] | undefi
   return undefined;
 }
 
+function explicitlyNamedVisualType(value: string): VisualType | undefined {
+  const normalized = normalizePlainText(value, 240).toLowerCase();
+  if (/\bdouble number line\b/.test(normalized)) return "double_number_line";
+  if (/\bratio table\b/.test(normalized)) return "ratio_table";
+  if (/\b(?:coordinate|proportional) graph\b/.test(normalized)) return "coordinate_graph";
+  if (/\b(?:timeline|time line)\b/.test(normalized)) return "process_sequence";
+  return undefined;
+}
+
 export function applyAiVisualDirections(
   slides: LessonPlanSlide[],
   directions: AiVisualDirection[] | undefined,
@@ -692,6 +708,11 @@ export function applyAiVisualDirections(
     const direction = usable[selectedIndex];
     const selection = visualSelectionFromDirection(direction.visualType);
     const visual = aiVisualSpec(direction, slide, topic);
+    const namedType = explicitlyNamedVisualType(slide.title);
+    const namedVisual = namedType ? slide.visuals.find((candidate) => candidate.type === namedType) : undefined;
+    if (namedVisual && visual?.type !== namedType) {
+      return { ...slide, visualPriority: "high", visuals: [namedVisual] };
+    }
     const priority = normalizePlainText(direction.priority, 20).toLowerCase();
     return {
       ...slide,
@@ -1403,7 +1424,11 @@ function topicVisual(subjectKey: SubjectKey, topic: string, text: string, id: st
 }
 
 function fractionEquationSteps(value: string) {
-  const fractions = [...new Set(value.match(/\d+\s*\/\s*\d+/g) ?? [])].slice(0, 2);
+  const fractionPattern = "\\d+(?:\\.\\d+)?\\s*\\/\\s*\\d+(?:\\.\\d+)?";
+  const statedComparison = value.match(new RegExp(`(${fractionPattern})\\s*(?:=|with|versus|vs\\.?|and)\\s*(${fractionPattern})`, "i"));
+  const fractions = statedComparison
+    ? [statedComparison[1], statedComparison[2]]
+    : [...new Set(value.match(new RegExp(fractionPattern, "g")) ?? [])].slice(0, 2);
   if (fractions.length < 2) {
     return [];
   }
@@ -2349,6 +2374,29 @@ function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanS
             type: "coordinate_graph"
           }
         ]
+      ),
+      makeSlide(
+        "unit-rate-table",
+        "data_display",
+        "Find The Unit Rate",
+        4,
+        {
+          keyIdea: "A unit rate tells how much of one quantity corresponds to exactly 1 of another quantity.",
+          bullets: ["Divide both quantities by the second quantity.", "Keep the units in the answer, such as miles per hour."]
+        },
+        [
+          {
+            accessibilityLabel: "Ratio table reducing 120 miles in 2 hours to 60 miles in 1 hour.",
+            id: "unit-rate-table-model",
+            rows: [
+              ["Distance", "120 miles", "60 miles"],
+              ["Time", "2 hours", "1 hour"]
+            ],
+            tableHeaders: ["Quantity", "Given rate", "Unit rate"],
+            title: "Reduce the second quantity to 1",
+            type: "ratio_table"
+          }
+        ]
       )
     ];
   }
@@ -2860,7 +2908,7 @@ export function legacyLessonToSlidePlan({
   (lesson?.fullLessonSegments ?? []).forEach((segment, index) => {
     const activity = learnerFacingSegment(segment.activity);
     const segmentTitle = learnerFacingTitle(segment.title, `Content ${index + 1}`);
-    if (!activity) {
+    if (!activity || !isSubstantiveLessonSegment(activity)) {
       return;
     }
     if (activity.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim() === segmentTitle.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()) {
@@ -2878,7 +2926,15 @@ export function legacyLessonToSlidePlan({
     );
   });
 
-  (lesson?.practiceQuestions ?? []).map(splitQuestionParts).filter((item) => item.question).forEach((item, index) => {
+  const seenQuestions = new Set<string>();
+  const uniqueQuestion = (question: string) => {
+    const key = normalizePlainText(question, 500).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    if (!key || seenQuestions.has(key)) return false;
+    seenQuestions.add(key);
+    return true;
+  };
+
+  (lesson?.practiceQuestions ?? []).map(splitQuestionParts).filter((item) => item.question && uniqueQuestion(item.question)).forEach((item, index) => {
     slides.push(
       makeSlide(`practice-${index + 1}`, "independent_practice", questionSlideTitle("Practice", subjectKey, topic, item.question, index), 3, {
         answer: item.answer || item.why,
@@ -2961,7 +3017,7 @@ export function legacyLessonToSlidePlan({
     ], "high")
   );
 
-  (lesson?.quickAssessment ?? []).map(splitQuestionParts).filter((item) => item.question).forEach((item, index) => {
+  (lesson?.quickAssessment ?? []).map(splitQuestionParts).filter((item) => item.question && uniqueQuestion(item.question)).forEach((item, index) => {
     slides.push(
       makeSlide(`check-${index + 1}`, "answer_explanation", questionSlideTitle("Check", subjectKey, topic, item.question, index), 2, {
         answer: item.answer || item.why,
@@ -2987,9 +3043,14 @@ export function legacyLessonToSlidePlan({
   );
 
   if (lesson?.recommendedNextSession) {
+    const nextSession = normalizePlainText(lesson.recommendedNextSession, 300)
+      .replace(/\btimedExam\b/gi, "timed exam")
+      .replace(/^A live tutor could\s+/i, "")
+      .replace(/\bthe student(?:'s|s')\b/gi, "your")
+      .replace(/\bincorrect items\s*\(noted by question\)/gi, "missed questions");
     slides.push(
       makeSlide("next-session", "exit_ticket", "Recommended Next Session", 2, {
-        keyIdea: normalizePlainText(lesson.recommendedNextSession, 300),
+        keyIdea: nextSession ? `${nextSession[0].toUpperCase()}${nextSession.slice(1)}` : `Continue practicing ${topic}.`,
         question: "What should we practice next?"
       }, [
         {

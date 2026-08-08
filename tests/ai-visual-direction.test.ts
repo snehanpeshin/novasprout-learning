@@ -66,6 +66,48 @@ test("honors AI-selected visuals and layouts while keeping renderer validation",
   assert.match(transport?.visuals[0]?.accessibilityLabel ?? "", /root hairs.*xylem/i);
 });
 
+test("keeps vocabulary definitions even when AI requests a generic concept map", () => {
+  const plan = legacyLessonToSlidePlan({
+    context: { grade: "Grades 6-8", subject: "Mathematics", topic: "Ratios and proportions" },
+    lesson: {
+      title: "Ratios and proportions",
+      visualPlan: [{
+        anchor: "vocabulary",
+        description: "A small labeled vocabulary map.",
+        labels: ["equivalent ratio", "unit rate", "scale factor"],
+        visualType: "small labeled concept map"
+      }]
+    }
+  });
+  const vocabulary = plan.slides.find((slide) => slide.id === "vocabulary");
+
+  assert.equal(vocabulary?.visuals[0]?.type, "vocabulary_grid");
+  assert.match(JSON.stringify(vocabulary?.visuals[0]?.columns), /comparison of two quantities|per 1 unit/i);
+});
+
+test("keeps an explicitly named instructional visual when an AI direction conflicts", () => {
+  const plan = legacyLessonToSlidePlan({
+    context: { grade: "Grades 6-8", subject: "Mathematics", topic: "Ratios and proportions" },
+    lesson: {
+      fullLessonSegments: [{
+        activity: "Align corresponding values on two number lines so the common scale factor remains visible at every tick.",
+        title: "Double number line"
+      }],
+      title: "Ratios and proportions",
+      visualPlan: [{
+        anchor: "lesson_segment",
+        description: "A generic line graph with observed points.",
+        targetTitle: "Double number line",
+        visualType: "scientific graph"
+      }]
+    }
+  });
+  const numberLine = plan.slides.find((slide) => slide.title === "Double number line");
+
+  assert.equal(numberLine?.visuals[0]?.type, "double_number_line");
+  assert.equal(numberLine?.aiVisualDirection, undefined);
+});
+
 test("keeps all useful AI-generated content sections instead of enforcing old slide quotas", () => {
   const segments = Array.from({ length: 7 }, (_, index) => ({
     activity: `Section ${index + 1} explains a distinct cause, example, and consequence with enough detail for the learner.`,

@@ -497,6 +497,59 @@ test("normalizes LaTeX fractions before creating slide titles and learner diagra
   assert.match(learnerText, /7\/x\s*=\s*21\/9/);
 });
 
+test("repairs chained arithmetic and preserves decimal ratio values", () => {
+  const plan = legacyLessonToSlidePlan({
+    context: { grade: "Grades 6-8", subject: "Mathematics", topic: "Ratios and proportions" },
+    lesson: {
+      guidedExample: "Step 1: Scale the recipe. Step 2: Calculate 2 * 1 / 2 = 0.5 cup. Step 3: Compare 1/1.5 with 2/3 and check the cross products.",
+      title: "Ratios and proportions"
+    }
+  });
+  const workedSlides = plan.slides.filter((slide) => slide.id.startsWith("worked-example-"));
+  const visibleSteps = workedSlides.flatMap((slide) => slide.studentContent.steps ?? []).join(" ");
+  const equationSteps = workedSlides.flatMap((slide) => slide.visuals.flatMap((visual) => visual.steps ?? [])).join(" ");
+
+  assert.doesNotMatch(visibleSteps, /2 \* 1 \/ 2 = 0\.5/);
+  assert.match(visibleSteps, /2 \* 1 \/ 2 = 1/);
+  assert.match(equationSteps, /1\.5 \\times 2/);
+  assert.match(equationSteps, /1\/1\.5/);
+  assert.match(equationSteps, /2\/3/);
+});
+
+test("drops outline fragments while preserving substantive lesson sections", () => {
+  const plan = legacyLessonToSlidePlan({
+    context: { grade: "Grades 6-8", subject: "Mathematics", topic: "Ratios and proportions" },
+    lesson: {
+      fullLessonSegments: [
+        { activity: "Warm-up: quick ratio read.", title: "spot the ratio" },
+        { activity: "A unit rate compares two quantities by dividing both values so the second quantity becomes exactly 1.", title: "unit rates and scaling" }
+      ],
+      title: "Ratios and proportions"
+    }
+  });
+
+  assert.equal(plan.slides.some((slide) => slide.title === "Spot the ratio"), false);
+  assert.equal(plan.slides.some((slide) => slide.title === "Unit rates and scaling"), true);
+  assert.ok(plan.slides.some((slide) => slide.id === "unit-rate-table"));
+});
+
+test("removes repeated practice and assessment questions", () => {
+  const plan = legacyLessonToSlidePlan({
+    context: { grade: "Grades 6-8", subject: "Mathematics", topic: "Ratios and proportions" },
+    lesson: {
+      practiceQuestions: [
+        "A car travels 180 miles in 3 hours. What is the unit rate?",
+        "A car travels 180 miles in 3 hours. What is the unit rate?"
+      ],
+      quickAssessment: ["A car travels 180 miles in 3 hours. What is the unit rate?"],
+      title: "Ratios and proportions"
+    }
+  });
+
+  assert.equal(plan.slides.filter((slide) => slide.id.startsWith("practice-")).length, 1);
+  assert.equal(plan.slides.filter((slide) => slide.id.startsWith("check-")).length, 0);
+});
+
 test("builds a chemistry lesson with verified periodic-table teaching visuals", () => {
   const plan = legacyLessonToSlidePlan({
     context: { grade: "Grade 7", subject: "Science", topic: "Periodic table and atomic structure" },
