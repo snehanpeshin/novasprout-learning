@@ -136,7 +136,9 @@ test("builds cell-division lessons from cell-cycle content instead of generic ce
     .flat()
     .filter((value): value is string => typeof value === "string")
     .join(" ");
-  const workedExample = plan.slides.find((slide) => slide.id === "worked-example-1");
+  const workedExampleSteps = plan.slides
+    .filter((slide) => slide.id.startsWith("worked-example-"))
+    .flatMap((slide) => slide.studentContent.steps ?? []);
 
   assert.ok(titles.includes("Track Chromosomes Through Mitosis"));
   assert.ok(titles.includes("Cytokinesis: Animal And Plant Cells"));
@@ -146,7 +148,7 @@ test("builds cell-division lessons from cell-cycle content instead of generic ce
   assert.equal(titles.includes("From Cells To Organ Systems"), false);
   assert.match(vocabulary, /cell cycle|interphase|mitosis|cytokinesis/i);
   assert.doesNotMatch(contentText, /Explain prophase|Show a diagram/i);
-  assert.ok((workedExample?.studentContent.steps?.length ?? 0) >= 4);
+  assert.ok(workedExampleSteps.length >= 4);
 });
 
 test("does not treat civic power or a current problem as electricity", () => {
@@ -447,7 +449,7 @@ test("turns a digestive-system lesson into complete, topic-specific teaching sli
     .filter(Boolean)
     .join(" ");
   const objectiveSlide = plan.slides.find((slide) => slide.id === "title");
-  const workedSlides = plan.slides.filter((slide) => slide.slideType === "worked_example");
+  const workedSlides = plan.slides.filter((slide) => slide.id.startsWith("worked-example-"));
   const practiceSlides = plan.slides.filter((slide) => slide.slideType === "independent_practice");
 
   assert.match(objectiveSlide?.studentContent.bullets?.[0] ?? "", /mouth to anus/i);
@@ -459,6 +461,40 @@ test("turns a digestive-system lesson into complete, topic-specific teaching sli
   assert.ok(plan.slides.some((slide) => slide.title === "How Bile And Lipase Digest Fat"));
   assert.ok(plan.slides.some((slide) => slide.title === "Blood Or Lymph?"));
   assert.match(allText, /lacteal/i);
+});
+
+test("balances long worked examples without an orphan final-check slide", () => {
+  const plan = legacyLessonToSlidePlan({
+    context: { grade: "Grades 6-8", subject: "Mathematics", topic: "Ratios and proportions" },
+    lesson: {
+      guidedExample: "Step 1: Identify the two quantities. Step 2: Write the ratio. Step 3: Simplify the ratio. Step 4: Find the scale factor. Step 5: Apply the scale factor. Final check: Substitute the result and compare both ratios.",
+      title: "Ratios and proportions"
+    }
+  });
+  const workedSlides = plan.slides.filter((slide) => slide.id.startsWith("worked-example-"));
+  const stepCounts = workedSlides.map((slide) => slide.studentContent.steps?.length ?? 0);
+
+  assert.deepEqual(stepCounts, [3, 3]);
+  assert.ok(workedSlides.every((slide) => (slide.studentContent.steps ?? []).every((step) => !/identify quantities or evidence/i.test(step))));
+});
+
+test("normalizes LaTeX fractions before creating slide titles and learner diagrams", () => {
+  const plan = legacyLessonToSlidePlan({
+    context: { grade: "Grades 6-8", subject: "Mathematics", topic: "Ratios and proportions" },
+    lesson: {
+      practiceQuestions: [String.raw`Solve \frac{7}{x} = \frac{21}{9}. Hint: Use cross products.`],
+      title: "Ratios and proportions"
+    }
+  });
+  const practiceSlide = plan.slides.find((slide) => slide.id === "practice-1");
+  const learnerText = [
+    practiceSlide?.title,
+    practiceSlide?.studentContent.question,
+    ...(practiceSlide?.visuals.flatMap((visual) => visual.labels ?? []) ?? [])
+  ].join(" ");
+
+  assert.doesNotMatch(learnerText, /\\?frac/i);
+  assert.match(learnerText, /7\/x\s*=\s*21\/9/);
 });
 
 test("builds a chemistry lesson with verified periodic-table teaching visuals", () => {

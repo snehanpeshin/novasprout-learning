@@ -83,6 +83,7 @@ export function assetsFromAiVisualPlan({
   const imageCandidates: Array<Record<string, string>> = [];
   const latexCandidates: Array<Record<string, string>> = [];
   const usedSlides = new Set<number>();
+  const mathSubject = /\b(?:math|mathematics|algebra|geometry|statistics|calculus)\b/i.test(subject);
 
   for (const [index, direction] of visualPlan.entries()) {
     const visualType = cleanText(direction.visualType, 120);
@@ -99,7 +100,7 @@ export function assetsFromAiVisualPlan({
     const id = `slide-${slideNumber}-${slug(targetTitle)}`;
     const visualEvidence = `${normalizedType} ${description.toLowerCase()} ${targetTitle.toLowerCase()} ${labels.join(" ").toLowerCase()}`;
     const physicalSubject = /\b(?:science|biology|chemistry|physics|environment|geography|history|engineering|health)\b/i.test(subject);
-    const needsGeneratedImage = !programmaticVisual.test(normalizedType) && (
+    const needsGeneratedImage = !mathSubject && !programmaticVisual.test(normalizedType) && (
       generatedImageVisual.test(visualEvidence) ||
       physicalSubject && labels.length >= 3 && /\b(?:high|essential)\b/.test(priority)
     );

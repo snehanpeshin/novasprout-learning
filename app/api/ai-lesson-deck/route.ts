@@ -19,6 +19,7 @@ import { rewriteToFit, shortenTitle } from "../../lib/lessonSlides/contentCompre
 import { speakerNotesText } from "../../lib/lessonSlides/speakerNotesGenerator.ts";
 import type { CircuitProblem, SemanticSlideType } from "../../lib/lessonSlides/types.ts";
 import { diagramElementPosition } from "../../lib/lessonSlides/visualLayoutValidator.ts";
+import { looksLikeDisplayMath, normalizeVisibleMathText } from "../../lib/lessonSlides/latexText.ts";
 import { restoreVisualPlanFromLesson } from "../../lib/visualPlanBridge.ts";
 
 export const runtime = "nodejs";
@@ -173,7 +174,7 @@ function normalizeLessonText(value?: string) {
 }
 
 function escapeLatex(value?: string) {
-  const tokenized = (value ?? "")
+  const tokenized = normalizeVisibleMathText(value)
     .replace(/Rₑq/g, "NOVAREQSYMBOL")
     .replace(/Ω/g, "NOVAOMEGASYMBOL")
     .replace(/μ/g, "NOVAMUSYMBOL")
@@ -202,6 +203,7 @@ function escapeLatex(value?: string) {
 }
 
 function safeInlineLatex(value?: string) {
+  if (!looksLikeDisplayMath(value)) return "";
   const expression = cleanText(value, 240)
     .replace(/\\(?:input|include|write|read|openout|openin|usepackage|documentclass|begin|end)\b/gi, "")
     .replace(/[^a-zA-Z0-9\\+\-*/=().,:;_\^\s<>|[\]{}']/g, "")
@@ -867,10 +869,13 @@ function renderVocabularyGrid(visual: VisualSpec) {
   const nodes = entries.map((entry, index) => {
     const x = (index % 3) * 3.45 - 3.45;
     const y = index < 3 ? 1.15 : -1.25;
-    const detail = entry.items.map((item) => escapeLatex(item)).join("\\\\[0.08cm]");
-    return `\\node[draw=${index % 2 ? "NovaGrowth" : "NovaSky"},fill=white,rounded corners=5pt,text width=3.0cm,minimum height=1.8cm,align=left,inner sep=7pt] at (${x},${y}) {\\textbf{${escapeLatex(entry.title)}}\\\\[0.1cm]{\\scriptsize ${detail}}};`;
+    const detail = entry.items
+      .slice(0, 2)
+      .map((item) => escapeLatex(rewriteToFit(item, 12)))
+      .join("\\\\[0.08cm]");
+    return `\\node[draw=${index % 2 ? "NovaGrowth" : "NovaSky"},fill=white,rounded corners=5pt,text width=2.85cm,minimum height=1.85cm,align=left,inner sep=7pt] at (${x},${y}) {\\raggedright\\textbf{${escapeLatex(rewriteToFit(entry.title, 5))}}\\\\[0.1cm]{\\tiny ${detail}}};`;
   }).join("\n");
-  return String.raw`\begin{center}\begin{tikzpicture}[scale=0.86]${nodes}\end{tikzpicture}\end{center}`;
+  return String.raw`\begin{center}\resizebox{0.98\linewidth}{!}{\begin{tikzpicture}${nodes}\end{tikzpicture}}\end{center}`;
 }
 
 function renderElectricRelationships(visual: VisualSpec) {
@@ -1303,20 +1308,16 @@ function renderComparisonVisual(visual: VisualSpec) {
     [
       String.raw`\textbf{${escapeLatex(cleanText(column.title, 44))}}`,
       ...column.items
-        .slice(0, 4)
-        .map((item) => String.raw`\(\bullet\) ${escapeLatex(cleanText(item, 58))}`)
+        .slice(0, 3)
+        .map((item) => String.raw`\(\bullet\) ${escapeLatex(rewriteToFit(item, 10))}`)
     ].join(String.raw`\\[0.13cm]`);
 
   return String.raw`\begin{center}
-\begin{tikzpicture}[scale=0.82]
-\node[draw=NovaSky, fill=NovaSky!10, very thick, rounded corners=8pt, text width=2.2cm, minimum height=3.0cm, align=left, inner sep=0.22cm] (left) at (-1.65,0) {\scriptsize ${renderPanelText(columns[0])}};
-\node[draw=NovaGrowth, fill=NovaGrowth!10, very thick, rounded corners=8pt, text width=2.2cm, minimum height=3.0cm, align=left, inner sep=0.22cm] (right) at (1.65,0) {\scriptsize ${renderPanelText(columns[1])}};
-\node[circle, draw=NovaCoral, fill=NovaCoral!12, text=NovaCoral, font=\scriptsize\bfseries, inner sep=2.5pt] (compare) at (0,0) {VS};
-\draw[-{Stealth[length=2mm]}, line width=0.9pt, NovaCoral] (compare) -- (left.east);
-\draw[-{Stealth[length=2mm]}, line width=0.9pt, NovaCoral] (compare) -- (right.west);
-\node[below=0.18cm of left, text width=2.55cm, align=center, font=\tiny, text=NovaSky!75!black] {defining features};
-\node[below=0.18cm of right, text width=2.55cm, align=center, font=\tiny, text=NovaGrowth!75!black] {example and effect};
-\end{tikzpicture}
+\resizebox{0.98\linewidth}{!}{\begin{tikzpicture}
+\node[draw=NovaSky, fill=NovaSky!10, very thick, rounded corners=8pt, text width=3.35cm, minimum height=3.1cm, align=left, inner sep=0.24cm] (left) at (-2.25,0) {\scriptsize ${renderPanelText(columns[0])}};
+\node[draw=NovaGrowth, fill=NovaGrowth!10, very thick, rounded corners=8pt, text width=3.35cm, minimum height=3.1cm, align=left, inner sep=0.24cm] (right) at (2.25,0) {\scriptsize ${renderPanelText(columns[1])}};
+\draw[NovaCoral!65,line width=1.2pt] (0,-1.6)--(0,1.6);
+\end{tikzpicture}}
 \end{center}`;
 }
 
@@ -1599,9 +1600,15 @@ function renderEquationSteps(visual: VisualSpec) {
     return "";
   }
 
-  const safeSteps = steps.slice(0, 4).map((step) => safeInlineLatex(step) || escapeLatex(step));
+  const safeSteps = steps.slice(0, 4).map((step) => {
+    const formula = safeInlineLatex(step);
+    return {
+      content: formula ? `$${formula}$` : escapeLatex(rewriteToFit(step, 14)),
+      formula: Boolean(formula)
+    };
+  });
   const nodes = safeSteps
-    .map((step, index) => `\\node[draw, rounded corners=5pt, line width=${index === safeSteps.length - 1 ? "1.4pt" : "0.9pt"}, draw=${index === safeSteps.length - 1 ? "NovaGrowth" : "NovaSky"}, fill=${index === safeSteps.length - 1 ? "NovaGrowth" : "NovaSky"}!10, minimum width=4.7cm, minimum height=0.72cm] (s${index}) at (0,${-index * 1.0}) {\\Large $${step}$};`).join("\n");
+    .map((step, index) => `\\node[draw, rounded corners=5pt, line width=${index === safeSteps.length - 1 ? "1.4pt" : "0.9pt"}, draw=${index === safeSteps.length - 1 ? "NovaGrowth" : "NovaSky"}, fill=${index === safeSteps.length - 1 ? "NovaGrowth" : "NovaSky"}!10, text width=5.8cm, minimum height=0.76cm, align=center, inner sep=5pt] (s${index}) at (0,${-index * 1.08}) {${step.formula ? "\\normalsize" : "\\scriptsize"} ${step.content}};`).join("\n");
   const arrows = safeSteps.slice(0, -1).map((_, index) => `\\draw[-{Stealth[length=2.5mm]}, thick, NovaInk!60] (s${index}.south) -- (s${index + 1}.north);`).join("\n");
 
   return String.raw`\begin{center}
@@ -1613,21 +1620,30 @@ ${arrows}
 }
 
 function renderCardsVisual(visual: VisualSpec) {
-  const labels = visualLabels(visual, ["Key idea", "Example", "Evidence", "Application"]).slice(0, 6);
+  const labels = (visual.labels?.length ? visual.labels : ["Key idea", "Example", "Evidence", "Application"])
+    .map((label) => cleanText(label, 140))
+    .filter(Boolean)
+    .slice(0, 6);
+  const columnsPerRow = Math.min(3, labels.length);
   const columns = labels
     .map((label, index) => {
       const color = index % 2 ? "NovaGrowth" : "SubjectAccent";
-      const x = (index % 2) * 2.85;
-      const y = 1.2 - Math.floor(index / 2) * 1.05;
-      const fontSize = label.length > 20 ? "\\tiny" : "\\scriptsize";
-      return `\\node[draw, rounded corners=5pt, thick, fill=${color}!12, text width=2.3cm, minimum height=0.78cm, align=center] at (${x},${y}) {${fontSize}\\bfseries ${escapeLatex(label)}};`;
+      const x = (index % columnsPerRow - (columnsPerRow - 1) / 2) * 3.45;
+      const y = labels.length <= 3 ? 0 : 1.2 - Math.floor(index / columnsPerRow) * 2.4;
+      const separator = label.match(/^([^:–—-]{2,42})\s*[:–—-]\s*(.+)$/);
+      const title = rewriteToFit(separator?.[1] || label, 6);
+      const detail = separator?.[2] ? rewriteToFit(separator[2], 14) : "";
+      const body = detail
+        ? `\\raggedright\\textbf{${escapeLatex(title)}}\\\\[0.12cm]{\\tiny ${escapeLatex(detail)}}`
+        : `\\scriptsize\\bfseries ${escapeLatex(title)}`;
+      return `\\node[draw, rounded corners=5pt, thick, fill=${color}!12, text width=2.75cm, minimum height=${labels.length <= 3 ? "2.0cm" : "1.75cm"}, align=center, inner sep=6pt] at (${x},${y}) {${body}};`;
     })
     .join("\n");
 
   return String.raw`\begin{center}
-\begin{tikzpicture}[scale=0.88]
+\resizebox{0.98\linewidth}{!}{\begin{tikzpicture}
 ${columns}
-\end{tikzpicture}
+\end{tikzpicture}}
 \end{center}`;
 }
 
@@ -1636,7 +1652,8 @@ function renderConceptMap(visual: VisualSpec) {
   const center = cleanText(visual.title, 52) || labels.shift() || "Big idea";
   const nodes = labels.map((label, index) => {
     const coordinates = [[-2.5, 1.25], [2.5, 1.25], [-2.5, -1.25], [2.5, -1.25], [0, -2.0]][index] ?? [0, -2];
-    return `\\node[draw, rounded corners=5pt, line width=0.9pt, fill=${index % 2 ? "NovaGrowth" : "NovaSky"}!11, text width=1.75cm, minimum height=0.72cm, align=center] (c${index}) at (${coordinates[0]},${coordinates[1]}) {\\scriptsize ${escapeLatex(label)}};\\draw[-{Stealth[length=2mm]}, line width=0.9pt, gray!65] (core) -- (c${index});`;
+    const compactLabel = rewriteToFit(label.replace(/[-_/]+/g, " "), 6);
+    return `\\node[draw, rounded corners=5pt, line width=0.9pt, fill=${index % 2 ? "NovaGrowth" : "NovaSky"}!11, text width=1.85cm, minimum height=0.72cm, align=center] (c${index}) at (${coordinates[0]},${coordinates[1]}) {\\scriptsize ${escapeLatex(compactLabel)}};\\draw[-{Stealth[length=2mm]}, line width=0.9pt, gray!65] (core) -- (c${index});`;
   }).join("\n");
 
   return String.raw`\begin{center}
@@ -1902,7 +1919,7 @@ ${latexSteps(content.bullets, 4)}
   if (slide.slideType === "worked_example") {
     const visualType = slide.visuals[0]?.type;
     if (visualType === "worked_solution" || visualType === "electric_power") return visualTex;
-    const selectedSteps = (content.steps ?? []).filter((_, index, all) => index < 2 || index === all.length - 1);
+    const selectedSteps = (content.steps ?? []).slice(0, 3);
     return String.raw`\begin{columns}[T]
 \begin{column}{0.36\textwidth}
 ${keyIdea}
@@ -1954,7 +1971,7 @@ ${visualTex}
   if (slide.slideType === "misconception") {
     const bullets = content.bullets ?? [];
     return String.raw`\begin{columns}[T]
-\begin{column}{0.48\textwidth}
+\begin{column}{0.34\textwidth}
 \begin{alertblock}{Common mistake}
 \small ${escapeLatex(bullets[0] || "A tempting shortcut ignores an important relationship.")}
 \end{alertblock}
@@ -1962,7 +1979,7 @@ ${visualTex}
 \small ${escapeLatex(bullets[1] || "It does not match the evidence or model.")}
 \end{block}
 \end{column}
-\begin{column}{0.48\textwidth}
+\begin{column}{0.62\textwidth}
 \begin{block}{Better reasoning}
 \small ${escapeLatex(content.keyIdea || "Use the model and check each step.")}
 \end{block}
@@ -2108,6 +2125,8 @@ function buildBeamerTex(request: LessonDeckRequest) {
 \definecolor{SubjectAccent}{HTML}{${template.color}}
 \usefonttheme{professionalfonts}
 \renewcommand{\familydefault}{\sfdefault}
+\hyphenpenalty=10000
+\emergencystretch=1em
 \setbeamercolor{background canvas}{bg=NovaPaper}
 \setbeamercolor{normal text}{fg=NovaInk,bg=NovaPaper}
 \setbeamercolor{structure}{fg=NovaBlue}

@@ -8,6 +8,7 @@ import {
 import { finalizeInstructionalPlan } from "./lessonSlides/lessonPlanner.ts";
 import { classifySlide } from "./lessonSlides/slideClassifier.ts";
 import { rewriteToFit, shortenTitle } from "./lessonSlides/contentCompressor.ts";
+import { normalizeVisibleMathText } from "./lessonSlides/latexText.ts";
 import type {
   AssessmentItem,
   DeckQualityScore,
@@ -199,7 +200,7 @@ type LegacyContext = {
 };
 
 export function normalizePlainText(value?: string, maxLength = 900) {
-  const normalized = (value ?? "")
+  const normalized = normalizeVisibleMathText(value)
     .replace(/-\s*[>¿]/g, " to ")
     .replace(/[→⇒]/g, " to ")
     .replace(/[–—]/g, "-")
@@ -372,6 +373,20 @@ function guidedExampleTitle(subjectKey: SubjectKey, topic: string, steps: string
   return `Worked Example ${index + 1}`;
 }
 
+function balancedStepGroups<T>(items: T[], maxPerGroup = 3) {
+  if (items.length <= maxPerGroup) return items.length ? [items] : [];
+  const groupCount = Math.ceil(items.length / maxPerGroup);
+  const baseSize = Math.floor(items.length / groupCount);
+  const largerGroups = items.length % groupCount;
+  let offset = 0;
+  return Array.from({ length: groupCount }, (_, index) => {
+    const size = baseSize + (index < largerGroups ? 1 : 0);
+    const group = items.slice(offset, offset + size);
+    offset += size;
+    return group;
+  });
+}
+
 function questionSlideTitle(
   prefix: "Check" | "Practice",
   subjectKey: SubjectKey,
@@ -409,9 +424,7 @@ function guidedExampleParts(
         .map((item) => normalizePlainText(item, 480))
         .filter(Boolean);
       const explanation = /^Step\s*\d+\s*:|^Final check\s*:/i.test(stepSections[0]) ? "" : stepSections.shift() ?? "";
-      const groups = Array.from({ length: Math.ceil(stepSections.length / 4) }, (_, groupIndex) =>
-        stepSections.slice(groupIndex * 4, groupIndex * 4 + 4)
-      );
+      const groups = balancedStepGroups(stepSections);
       return groups.map((steps, groupIndex) => ({
         explanation: groupIndex === 0 ? explanation : undefined,
         steps,
@@ -441,9 +454,7 @@ function guidedExampleParts(
   const steps = sections
     .map((section) => section.replace(/^Step\s*(\d+)\s*:\s*/i, "Step $1: ").replace(/^Final check\s*:\s*/i, "Final check: "))
     .slice(0, 7);
-  const groups = Array.from({ length: Math.ceil(steps.length / 4) }, (_, groupIndex) =>
-    steps.slice(groupIndex * 4, groupIndex * 4 + 4)
-  );
+  const groups = balancedStepGroups(steps);
   return groups.map((group, index) => ({
     explanation: index === 0 ? introduction : undefined,
     steps: group,
@@ -1405,7 +1416,14 @@ function fractionEquationSteps(value: string) {
     return [fractions[0], `(${leftNumerator} \\times ${numeratorFactor})/(${leftDenominator} \\times ${numeratorFactor})`, fractions[1]];
   }
 
-  return [`${fractions[0]} = ${fractions[1]}`, "Compare the same point", "Check with a visual model"];
+  const leftCrossProduct = leftNumerator * rightDenominator;
+  const rightCrossProduct = leftDenominator * rightNumerator;
+  const comparison = leftCrossProduct === rightCrossProduct ? "=" : "\\neq";
+  return [
+    `${leftNumerator} \\times ${rightDenominator} = ${leftCrossProduct}`,
+    `${leftDenominator} \\times ${rightNumerator} = ${rightCrossProduct}`,
+    `${fractions[0]} ${comparison} ${fractions[1]}`
+  ];
 }
 
 function subjectVisualSlides(subjectKey: SubjectKey, topic: string): LessonPlanSlide[] {
@@ -2811,7 +2829,7 @@ export function legacyLessonToSlidePlan({
 
   guidedExampleParts(lesson?.guidedExample, subjectKey, topic).forEach((part, index) => {
     const exampleText = [part.explanation, ...(part.steps ?? [])].filter(Boolean).join(" ");
-    const exampleSteps = (part.steps ?? []).map((item) => normalizePlainText(item, 220)).filter(Boolean).slice(0, 4);
+    const exampleSteps = (part.steps ?? []).map((item) => normalizePlainText(item, 220)).filter(Boolean).slice(0, 3);
     const equationSteps = subjectKey === "math" ? fractionEquationSteps(exampleText) : [];
     const exampleVisual: VisualSpec = equationSteps.length
       ? {

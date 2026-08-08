@@ -101,6 +101,25 @@ test("keeps equation and graph directions programmatic", () => {
   assert.equal(assets.some((asset) => asset.type === "latex"), true);
 });
 
+test("keeps all mathematics visuals programmatic even when an illustration is requested", () => {
+  const assets = assetsFromAiVisualPlan({
+    grade: "Grades 6-8",
+    slideTitles: ["Ratios in Context"],
+    subject: "Mathematics",
+    topic: "Ratios and proportions",
+    visualPlan: [{
+      description: "A classroom illustration showing two equivalent groups with captions.",
+      educationalPurpose: "Compare equivalent ratios.",
+      labels: ["2 to 3", "4 to 6"],
+      priority: "essential",
+      targetTitle: "Ratios in Context",
+      visualType: "student-friendly illustration"
+    }]
+  });
+
+  assert.equal(assets.some((asset) => asset.type === "image"), false);
+});
+
 test("uses distinctive topic words when matching a visual to a slide", () => {
   const assets = assetsFromAiVisualPlan({
     grade: "Grade 5",
