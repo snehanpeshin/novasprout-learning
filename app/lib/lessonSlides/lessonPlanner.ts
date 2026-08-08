@@ -337,7 +337,6 @@ function selectedVisual({
       type: "cover_illustration"
     }];
   }
-  if (selection === "icon_grid" && slide.slideType === "vocabulary") return [vocabularyVisual(slide, topic, conceptDefinitions)];
   if (
     electricity &&
     existing.length &&
