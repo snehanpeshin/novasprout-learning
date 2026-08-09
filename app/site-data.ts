@@ -8,10 +8,14 @@ import {
 
 const defaultBookingUrl = "https://calendly.com/novasprout-learning/free-15-min-intro-call";
 
-export const bookingUrl =
-  [process.env.NEXT_PUBLIC_BOOKING_URL, process.env.NEXT_PUBLIC_CALENDLY_SNEHAN].find((url) =>
-    url?.startsWith("https://")
-  ) ?? defaultBookingUrl;
+const configuredBookingUrl = [
+  process.env.NEXT_PUBLIC_BOOKING_URL,
+  process.env.NEXT_PUBLIC_CALENDLY_SNEHAN
+].find((url) => url?.startsWith("https://"));
+
+export const bookingUrl = configuredBookingUrl && !configuredBookingUrl.toLowerCase().includes("/microcd-labs")
+  ? configuredBookingUrl
+  : defaultBookingUrl;
 
 const defaultIntakeFormUrl =
   "https://docs.google.com/forms/d/e/1FAIpQLScxiEKJZqN7nWeSzq3b-zeU-jJAONPeak9hbGbiYa8QcdHYnw/viewform";

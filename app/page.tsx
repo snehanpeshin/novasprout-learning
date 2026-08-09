@@ -102,12 +102,13 @@ export default function Home() {
 
   return (
     <main className="ns-site" id="top">
+      <a className="ns-skip-link" href="#hero-title">Skip to main content</a>
       <SiteHeader />
 
       <section className="ns-hero" aria-labelledby="hero-title">
         <div className="ns-hero-copy">
           <p className="ns-eyebrow">Patient, live, and one-to-one</p>
-          <h1 id="hero-title">Patient, one-to-one tutoring matched to how your student learns.</h1>
+          <h1 id="hero-title" tabIndex={-1}>Patient, one-to-one support matched to how your student learns.</h1>
           <p className="ns-hero-lead">
             Tell us what’s getting in the way. We’ll recommend a patient tutor for the student’s subject, level, goals, and schedule—then you can meet in a free demo class before deciding.
           </p>
