@@ -7,7 +7,7 @@ Native SwiftUI app for iPhone and iPad. It uses the existing NovaSprout API for 
 1. Open `NovaSprout.xcodeproj` in Xcode.
 2. Select the `NovaSprout` scheme and an iPhone simulator.
 3. Press Run.
-4. Open the free sample lesson, or add a beta AI access code in Settings.
+4. Open the real PDF sample lesson, or add a beta AI access code in Settings.
 
 The production API base URL is set in `APIClient.swift`. Generated visual PDFs, lesson metadata, deck quality summaries, and quiz scores are stored locally on the device. The beta access code is stored in Keychain.
 
@@ -23,4 +23,4 @@ Version 1.1 uses the same structured visual lesson pipeline as the website. Comp
 6. Archive with a real device destination, then choose Distribute App and upload to App Store Connect.
 7. Test with internal TestFlight first. Give App Review a working beta account or access code in Review Notes.
 
-Live tutoring is a real-time person-to-person service and remains a separate booking/contact workflow. The iOS app contains no Stripe links and no advertising SDK.
+Live tutoring is a real-time person-to-person service and remains a separate booking/contact workflow. The iOS app contains no Stripe links. AdMob is limited to a banner outside active lessons and quizzes, and the User Messaging Platform handles consent where required.

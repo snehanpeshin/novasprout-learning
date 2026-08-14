@@ -20,9 +20,9 @@
 ## Build and review
 
 - Select the Karigari Home LLC signing team in Xcode.
-- For the July 2026 rejection resubmission, upload and select version `1.0 (6)`.
+- For this update, upload and select version `1.1 (8)`.
 - Test on at least one current iPhone and iPad simulator or device.
-- Verify the free sample, AI access, PDF lesson, timer, quiz, local library, email, phone, and Calendly links.
+- Verify the real PDF sample, AI access, timer, quiz, local library, email, phone, Calendly links, consent flow, and test banner.
 - Archive a Release build and upload it through Xcode Organizer.
 - Add a working review access code and concise test steps to App Review Information.
 - Use `AppStoreListing.md` for the subtitle, description, keywords, URLs, and review notes.
@@ -44,4 +44,5 @@
 - Do not select the Kids Category until parental gates, child-data handling, third-party SDK review, and age-appropriate requirements have been fully implemented and reviewed.
 - Keep prompts free of sensitive student information.
 - Confirm App Store privacy answers match actual server and OpenAI retention behavior.
-- Do not add Google Ads or third-party advertising tracking to the native app.
+- Confirm the AdMob app ID, App Store privacy labels, consent message, child-directed treatment, and general ad-content rating before submission.
+- Keep ads outside active lessons and quizzes. Do not enable interstitial ads for lesson or quiz transitions.

@@ -18,7 +18,7 @@ export default function PrivacyPolicy() {
         <p className="ns-eyebrow">Privacy Policy</p>
         <h1>How we protect student and parent information.</h1>
         <p>
-          Effective date: July 20, 2026. NovaSprout Learning is a brand of Karigari
+          Effective date: August 14, 2026. NovaSprout Learning is a brand of Karigari
           Home LLC. This Privacy Policy explains how NovaSprout Learning collects, uses,
           and protects information when families use our website, forms, booking links,
           mobile app, AI learning tools, online tutoring resources, and related services.
@@ -72,8 +72,9 @@ export default function PrivacyPolicy() {
           <p>
             Lesson requests are sent securely to NovaSprout servers and AI service providers to
             create the requested educational content. The mobile app does not contain our AI
-            provider credentials, does not display advertising, and does not use third-party
-            advertising trackers.
+            provider credentials. It may display Google AdMob advertising outside active lessons
+            and quizzes. Consent is requested where required, and ad requests are configured for
+            age-appropriate, limited-personalization treatment.
           </p>
           <p>
             AI lesson purchases and subscriptions are processed by Apple through StoreKit. We
@@ -107,8 +108,9 @@ export default function PrivacyPolicy() {
             Calendly for booking, Google Forms or similar
             tools for intake forms, Gmail or Google Workspace for email, Google Meet or Zoom
             for online sessions, YouTube for video resources, OpenAI for AI-assisted educational
-            content and images, and Google Ads or Google tags for website advertising and
-            measurement.
+            content and images, Google Ads or Google tags for website advertising and
+            measurement, Google AdSense for website advertising, and Google AdMob for optional
+            advertising in the mobile app.
           </p>
           <p>
             These services may process information according to their own privacy policies and

@@ -2,70 +2,90 @@ import Foundation
 
 enum SampleData {
     static let context = LessonContext(
-        grade: "Grades 3-5",
+        grade: "Grades 6-8",
         subject: "Mathematics",
-        topic: "Equivalent fractions"
+        topic: "Ratios and proportions"
     )
 
     static let lesson = GeneratedLesson(
-        conceptExplanation: "Equivalent fractions name the same amount even though they use different numbers. Multiplying or dividing the numerator and denominator by the same nonzero number keeps the fraction's value unchanged.",
+        conceptExplanation: "A ratio compares two quantities in a chosen order. Equivalent ratios keep the same multiplicative relationship, and a unit rate compares a quantity to one unit.",
         conceptModel: nil,
         customPlan: nil,
         duration: "20-minute lesson",
         fullLessonSegments: [
             LessonSegment(
-                activity: "Imagine two identical chocolate bars. One is divided into two equal pieces and the other into four equal pieces. One half covers the same amount as two fourths.",
-                time: "5-10 min",
-                title: "See the same amount"
+                activity: "Read ratios in words, fraction form, and colon form. Keep the quantities in the stated order.",
+                time: "3-7 min",
+                title: "Read a ratio"
             ),
             LessonSegment(
-                activity: "Use a multiplication pattern: one half becomes two fourths by multiplying both numbers by two. It becomes three sixths by multiplying both numbers by three.",
-                time: "10-15 min",
-                title: "Build equivalent fractions"
+                activity: "Use a table and double number line to show that multiplying both quantities by the same scale factor creates an equivalent ratio.",
+                time: "7-13 min",
+                title: "Build equivalent ratios"
+            ),
+            LessonSegment(
+                activity: "Find a unit rate, set up a proportion, and check the result against the original relationship.",
+                time: "13-18 min",
+                title: "Solve and check"
             )
         ],
-        guidedExample: "To find a fraction equivalent to three fifths, multiply the numerator and denominator by two: three times two is six, and five times two is ten. Therefore three fifths equals six tenths.",
+        guidedExample: "A recipe uses 2 cups of flour for 3 batches. For 12 batches, the scale factor is 4, so 2 times 4 equals 8 cups. Check: 8/12 simplifies to 2/3.",
         learningObjectives: [
-            "Recognize fractions that represent the same amount.",
-            "Generate an equivalent fraction using multiplication.",
-            "Explain an answer using a visual model or number pattern."
+            "Read and label an ordered ratio.",
+            "Generate equivalent ratios with one scale factor.",
+            "Find a unit rate and solve a simple proportion."
         ],
-        mode: "Sample lesson",
+        mode: "Real lesson preview",
         parentTutorNotes: nil,
         practiceQuestions: [
-            "Try: Complete 2/3 = ?/9. Hint: What multiplies 3 to make 9? Answer: 6/9.",
-            "Try: Is 4/8 equivalent to 1/2? Hint: Simplify 4/8. Answer: Yes, divide both numbers by 4."
+            "A cyclist travels 42 miles in 3 hours. Find the unit rate.",
+            "Complete 4/7 = x/21 and explain the scale factor.",
+            "Decide whether y = 3x + 1 is proportional."
         ],
-        prerequisiteCheck: ["Name the numerator and denominator in 3/4."],
-        quickAssessment: ["Write one fraction equivalent to 2/5 and explain your multiplier."],
-        recommendedNextSession: "Compare fractions with different denominators using benchmarks and visual models.",
-        studentFit: "A short, visual sample for an elementary learner.",
+        prerequisiteCheck: ["Simplify 6/9 and explain the operation used."],
+        quickAssessment: ["Explain how to check that two ratios are equivalent."],
+        recommendedNextSession: "Apply ratios to percent, scale drawings, and multi-step word problems.",
+        studentFit: "A visual Grade 6-8 sample built in the same PDF lesson format as a personalized NovaSprout lesson.",
         timedExam: TimedExam(
             durationMinutes: 4,
             passingScore: 67,
             questions: [
                 ExamQuestion(
-                    answerIndex: 1,
-                    explanation: "Multiplying both 1 and 3 by 2 gives 2/6.",
-                    options: ["1/6", "2/6", "3/6", "4/6"],
-                    question: "Which fraction is equivalent to 1/3?"
+                    answerIndex: 2,
+                    explanation: "Dividing 42 miles by 3 hours gives 14 miles per hour.",
+                    options: ["7 mph", "12 mph", "14 mph", "21 mph"],
+                    question: "A cyclist travels 42 miles in 3 hours. What is the unit rate?"
                 ),
                 ExamQuestion(
-                    answerIndex: 2,
-                    explanation: "Eight twelfths simplifies to two thirds when both numbers are divided by 4.",
-                    options: ["4/12", "6/12", "8/12", "10/12"],
-                    question: "Which fraction is equivalent to 2/3?"
+                    answerIndex: 1,
+                    explanation: "Seven is multiplied by 3 to make 21, so four must also be multiplied by 3 to make 12.",
+                    options: ["8", "12", "16", "18"],
+                    question: "Complete 4/7 = x/21. What is x?"
                 ),
                 ExamQuestion(
                     answerIndex: 0,
-                    explanation: "Equivalent fractions multiply or divide the numerator and denominator by the same nonzero number.",
-                    options: ["Use the same multiplier", "Change only the numerator", "Add the denominator", "Reverse both numbers"],
-                    question: "What rule keeps a fraction equivalent?"
+                    explanation: "A proportional relationship has a graph that passes through the origin. The +1 prevents that.",
+                    options: ["No, it does not pass through the origin", "Yes, every line is proportional", "Yes, because 3 is constant", "No, because x changes"],
+                    question: "Is y = 3x + 1 proportional?"
                 )
             ]
         ),
-        title: "Equivalent Fractions",
+        title: "Ratios: Compare, Scale, and Solve",
         visualPlan: nil,
-        warmUp: "Draw a rectangle, shade one half, and then divide each half into two equal pieces. How many fourths are shaded?"
+        warmUp: "Two blue counters and three coral counters are shown. Write the ratio of blue to coral in three ways."
+    )
+
+    static var pdfData: Data? {
+        guard let url = Bundle.main.url(
+            forResource: "NovaSprout-Ratios-Sample",
+            withExtension: "pdf"
+        ) else { return nil }
+        return try? Data(contentsOf: url)
+    }
+
+    static let deckSummary = DeckSummary(
+        pageCount: 13,
+        generatedImageCount: 0,
+        qualityWarnings: []
     )
 }

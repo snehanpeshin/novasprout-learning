@@ -12,6 +12,7 @@ import {
   Clock,
   Code2,
   FileCode2,
+  FileText,
   Images,
   LockKeyhole,
   Printer,
@@ -1752,8 +1753,21 @@ Interested in: Free trial / Paid AI-generated lessons
         <div className="section-heading">
           <p className="eyebrow">Start here</p>
           <h2>Open your AI Tutor.</h2>
-          <p>Use your access code or the email approved for your plan.</p>
+          <p>Preview a real lesson free, or use your approved access to create one for your own topic.</p>
         </div>
+        <a
+          className="ai-sample-preview"
+          href="/samples/novasprout-ratios-sample.pdf"
+          rel="noreferrer"
+          target="_blank"
+        >
+          <FileText aria-hidden="true" size={28} />
+          <span>
+            <strong>Open a real visual lesson</strong>
+            <small>Ratios and proportions · Grades 6-8 · PDF preview</small>
+          </span>
+          <ArrowRight aria-hidden="true" size={20} />
+        </a>
         <form className="ai-access-card" onSubmit={unlockTools}>
           <LockKeyhole aria-hidden="true" size={34} />
           <label>

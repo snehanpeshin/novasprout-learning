@@ -4,6 +4,7 @@ struct SettingsView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var history: LessonHistoryStore
     @EnvironmentObject private var purchases: PurchaseManager
+    @EnvironmentObject private var ads: AdMobManager
     @State private var showClearConfirmation = false
 
     var body: some View {
@@ -54,6 +55,13 @@ struct SettingsView: View {
                     }
                     Link(destination: URL(string: "https://www.novasproutlearning.com/privacy")!) {
                         Label("Privacy Policy", systemImage: "hand.raised")
+                    }
+                    if ads.isPrivacyOptionsRequired {
+                        Button {
+                            Task { await ads.presentPrivacyOptions() }
+                        } label: {
+                            Label("Ad Privacy Choices", systemImage: "checkmark.shield")
+                        }
                     }
                 }
 

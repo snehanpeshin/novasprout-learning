@@ -17,5 +17,7 @@ output/pdf/*.nav
 output/pdf/*.out
 output/pdf/*.snm
 output/pdf/*.toc
+output/pdf/novasprout-ratios-sample.pdf
+output/pdf/novasprout-ratios-sample.tex
 __pycache__/
 *.pyc

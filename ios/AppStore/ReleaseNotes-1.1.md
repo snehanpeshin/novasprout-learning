@@ -13,3 +13,5 @@
 - Added curriculum and child-safety checks for lesson topics and questions.
 - Added Apple In-App Purchase options for one AI lesson or monthly AI Tutor access.
 - Added purchase restoration and subscription management in Settings.
+- Replaced the lightweight sample with a complete 13-slide visual lesson, timer, and scored quiz.
+- Added a consent-aware, child-directed AdMob banner outside lessons and quizzes.

@@ -1364,6 +1364,42 @@ h3 {
   padding: 22px;
 }
 
+.ai-sample-preview {
+  align-items: center;
+  background: var(--white);
+  border: 1px solid #b9dcff;
+  border-radius: 8px;
+  color: var(--ink);
+  display: grid;
+  gap: 14px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  margin-top: 26px;
+  max-width: 620px;
+  padding: 17px 18px;
+}
+
+.ai-sample-preview > svg {
+  color: var(--blue);
+}
+
+.ai-sample-preview span {
+  display: grid;
+  gap: 3px;
+}
+
+.ai-sample-preview strong {
+  font-size: 0.98rem;
+}
+
+.ai-sample-preview small {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.ai-sample-preview:hover strong {
+  color: var(--blue);
+}
+
 .access-help-actions {
   align-items: center;
   display: flex;

@@ -55,6 +55,11 @@ export default function RootLayout({
           }}
         />
         <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18335791503" />
+        <script
+          async
+          crossOrigin="anonymous"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6605747981994820"
+        />
       </head>
       <body>
         {children}

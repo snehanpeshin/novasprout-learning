@@ -17,6 +17,7 @@ struct LearnView: View {
                     brandHeader
                     sampleLesson
                     accessCard
+                    NovaBannerAd()
                     lessonForm
                 }
                 .frame(maxWidth: 760)
@@ -72,7 +73,7 @@ struct LearnView: View {
                 Text("Create a focused visual lesson, study privately, then take a scored quiz.")
                     .font(.subheadline)
                     .foregroundStyle(NovaPalette.muted)
-                Text("Free sample included. Personalized AI lessons require an in-app purchase.")
+                Text("Real visual sample included. Personalized AI lessons require an in-app purchase.")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(NovaPalette.blue)
             }
@@ -83,9 +84,9 @@ struct LearnView: View {
         HStack(spacing: 14) {
             SubjectMark(subject: "Mathematics")
             VStack(alignment: .leading, spacing: 3) {
-                Text("Try a free sample")
+                Text("Open a real lesson preview")
                     .font(.headline)
-                Text("Equivalent fractions, with a short quiz")
+                Text("Ratios and proportions PDF, timer, and quiz")
                     .font(.subheadline)
                     .foregroundStyle(NovaPalette.muted)
             }

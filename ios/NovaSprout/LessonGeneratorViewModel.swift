@@ -93,9 +93,9 @@ final class LessonGeneratorViewModel: ObservableObject {
         playerConfiguration = LessonPlayerConfiguration(
             context: SampleData.context,
             lesson: SampleData.lesson,
-            pdfData: nil,
+            pdfData: SampleData.pdfData,
             savedLessonID: nil,
-            deckSummary: nil
+            deckSummary: SampleData.deckSummary
         )
     }
 

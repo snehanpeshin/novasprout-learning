@@ -4,8 +4,8 @@ These are preparation notes, not legal advice. Reconfirm them against the produc
 
 ## Tracking
 
-- Data used to track users: No.
-- App Tracking Transparency prompt required: No, provided no tracking SDK is added.
+- Data used to track users: No. NovaSprout configures the ad SDK for child-directed, general-audience content and does not request App Tracking Transparency permission.
+- Reconfirm the final App Store privacy labels against Google's current Mobile Ads SDK disclosure before submitting build 8.
 
 ## Data linked to the user
 
@@ -28,4 +28,6 @@ These are preparation notes, not legal advice. Reconfirm them against the produc
 ## Tracking and advertising
 
 - Purchase and lesson data are not used for cross-company tracking or advertising.
-- The native app contains no Google Ads tag or third-party advertising SDK.
+- Google AdMob may process device, ad-interaction, diagnostic, and approximate-location information for ad delivery, fraud prevention, consent, and measurement according to Google's SDK disclosure.
+- A banner may appear on the Learn screen after consent where required. Ads do not appear inside an active lesson or quiz.
+- The app requests child-directed treatment and a general maximum ad-content rating from the Mobile Ads SDK.

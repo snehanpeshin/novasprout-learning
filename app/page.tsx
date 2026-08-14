@@ -158,6 +158,7 @@ export default function Home() {
             <Smartphone aria-hidden="true" /> View on the App Store
           </a>
           <a className="ns-text-link" href="/ai-lesson-generator">Use AI Tutor on the web <ArrowRight aria-hidden="true" /></a>
+          <a className="ns-text-link" href="/samples/novasprout-ratios-sample.pdf" target="_blank" rel="noreferrer">Preview a real lesson <ArrowRight aria-hidden="true" /></a>
         </div>
       </section>
 
