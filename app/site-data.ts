@@ -8,10 +8,7 @@ import {
 
 const defaultBookingUrl = "https://calendly.com/novasprout-learning/free-15-min-intro-call";
 
-const configuredBookingUrl = [
-  process.env.NEXT_PUBLIC_BOOKING_URL,
-  process.env.NEXT_PUBLIC_CALENDLY_SNEHAN
-].find((url) => url?.startsWith("https://"));
+const configuredBookingUrl = process.env.NEXT_PUBLIC_BOOKING_URL;
 
 export const bookingUrl = configuredBookingUrl && !configuredBookingUrl.toLowerCase().includes("/microcd-labs")
   ? configuredBookingUrl
