@@ -63,7 +63,9 @@ struct LessonOverviewView: View {
                                     history: history
                                 )
                                 if viewModel.playerConfiguration != nil {
-                                    purchases.finishActiveLesson()
+                                    if !viewModel.isSamplePreview {
+                                        purchases.finishActiveLesson()
+                                    }
                                     dismiss()
                                 }
                             }
@@ -71,7 +73,9 @@ struct LessonOverviewView: View {
                             Label(
                                 viewModel.isBuildingDeck
                                     ? "Preparing Private Lesson"
-                                    : viewModel.errorMessage.isEmpty ? "Start Private Lesson" : "Retry Private Lesson",
+                                    : viewModel.errorMessage.isEmpty
+                                        ? viewModel.isSamplePreview ? "Open Free Private Lesson" : "Start Private Lesson"
+                                        : "Retry Private Lesson",
                                 systemImage: "play.rectangle.fill"
                             )
                                 .frame(maxWidth: .infinity)
@@ -80,7 +84,9 @@ struct LessonOverviewView: View {
                         .controlSize(.large)
                         .disabled(viewModel.isBuildingDeck)
 
-                        Text("This creates the visual PDF lesson. The scored quiz unlocks halfway through the lesson timer.")
+                        Text(viewModel.isSamplePreview
+                             ? "This is the complete visual lesson experience. The scored quiz unlocks halfway through the timer."
+                             : "This creates the visual PDF lesson. The scored quiz unlocks halfway through the lesson timer.")
                             .font(.caption)
                             .foregroundStyle(NovaPalette.muted)
                             .frame(maxWidth: .infinity, alignment: .center)

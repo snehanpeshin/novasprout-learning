@@ -1376,6 +1376,10 @@ h3 {
   margin-top: 26px;
   max-width: 620px;
   padding: 17px 18px;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  width: 100%;
 }
 
 .ai-sample-preview > svg {
@@ -1398,6 +1402,35 @@ h3 {
 
 .ai-sample-preview:hover strong {
   color: var(--blue);
+}
+
+.ai-sample-active {
+  align-items: center;
+  background: #eef8f5;
+  border: 1px solid #a9d9cb;
+  border-radius: 8px;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  margin: 26px auto 0;
+  max-width: 1180px;
+  padding: 16px 18px;
+}
+
+.ai-sample-active div {
+  display: grid;
+  gap: 3px;
+}
+
+.ai-sample-active strong {
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.ai-sample-active span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
 }
 
 .access-help-actions {
@@ -1521,6 +1554,15 @@ h3 {
 }
 
 @media (max-width: 620px) {
+  .ai-sample-active {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ai-sample-active .button {
+    width: 100%;
+  }
+
   .lesson-advanced-settings > div {
     grid-template-columns: 1fr;
   }
@@ -1903,8 +1945,13 @@ h3 {
 }
 
 .student-deck-header h2 {
+  color: var(--white);
   font-size: clamp(1.25rem, 2.2vw, 1.9rem);
   margin-bottom: 8px;
+}
+
+.student-deck-header > div {
+  min-width: 0;
 }
 
 .student-deck-header p {
@@ -3561,8 +3608,33 @@ footer div span:first-child {
   }
 
   .lesson-player,
-  .student-deck {
+  .lesson-player {
     overflow: auto;
+  }
+
+  .student-deck {
+    grid-template-rows: auto auto minmax(260px, 1fr) auto;
+    overflow: hidden;
+  }
+
+  .student-deck-header {
+    padding: 14px;
+  }
+
+  .student-deck-header h2 {
+    font-size: 1.05rem;
+    line-height: 1.22;
+    margin-bottom: 5px;
+    overflow-wrap: anywhere;
+  }
+
+  .student-deck-header p {
+    font-size: 0.8rem;
+  }
+
+  .compiled-pdf-primary iframe {
+    height: 100%;
+    min-height: 0;
   }
 
   .lesson-player-sidebar {
@@ -3574,6 +3646,37 @@ footer div span:first-child {
   .lesson-player-footer {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .student-deck .lesson-player-footer {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 10px;
+  }
+
+  .student-deck .lesson-player-footer .deck-ai-tools,
+  .student-deck .lesson-player-footer .pdf-timer-pill,
+  .student-deck .lesson-player-footer .pdf-lesson-note {
+    flex: none;
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .student-deck .lesson-player-footer .deck-stage,
+  .student-deck .lesson-player-footer .pdf-timer-pill {
+    justify-content: center;
+  }
+
+  .student-deck .lesson-player-footer .pdf-lesson-note {
+    font-size: 0.76rem;
+    text-align: center;
+  }
+
+  .student-deck .lesson-player-footer .button {
+    font-size: 0.82rem;
+    min-height: 42px;
+    padding: 9px 10px;
   }
 
   .compiled-deck-panel {

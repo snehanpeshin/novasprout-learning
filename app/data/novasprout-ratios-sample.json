@@ -1,0 +1,406 @@
+{
+  "quickAssessment": [
+    "What is the ratio of 6 red pens to 9 blue pens? Answer: 2:3. Why: both numbers divide by 3.",
+    "If a car drives 120 miles in 2 hours, what is the unit rate in miles per hour? Answer: 60 mph. Why: divide miles by hours.",
+    "True or false: 4:6 and 6:9 are equivalent ratios. Answer: true. Why: both simplify to 2:3."
+  ],
+  "duration": "30-minute lesson",
+  "fullLessonSegments": [
+    {
+      "time": "4 minutes",
+      "title": "big idea: ratios compare two quantities",
+      "activity": "A ratio compares how many of one thing there are compared to another, written as 3:2, 3 to 2, or 3/2. Ratios are unitless comparisons but use units when the quantities are different (for example, miles : hours). Use matching units and simplify by dividing both parts by the same number to make equivalent ratios easier to read."
+    },
+    {
+      "time": "5 minutes",
+      "title": "visualizing ratios with tape diagrams",
+      "activity": "Draw a tape diagram divided into equal parts to show a ratio such as 3:4: one row divided into 3 equal boxes for the first quantity and another row of 4 equal boxes for the second. A tape diagram helps compare sizes visually and supports finding unit amounts by grouping or splitting equal parts."
+    },
+    {
+      "time": "5 minutes",
+      "title": "unit rate: amount per one",
+      "activity": "A unit rate tells how much of one quantity matches one unit of the other (for example, miles per hour or price per item). Convert a ratio to a unit rate by dividing: if 9 miles in 3 hours, divide 9 ÷ 3 = 3 miles per 1 hour. Unit rates let you compare choices directly."
+    },
+    {
+      "time": "6 minutes",
+      "title": "proportions and solving with tables",
+      "activity": "A proportion says two ratios are equal, written a/b = c/d. Use a table or scale factor to find missing numbers: multiply or divide every part by the same factor. When pairs are unknown, cross-multiply: a·d = b·c, then solve the resulting equation."
+    },
+    {
+      "time": "6 minutes",
+      "title": "word problems and strategy",
+      "activity": "Read what the problem compares and label the two quantities. Choose whether to make a unit rate, set equivalent ratios in a table, or use cross-multiplication. Always check units and whether the question asks for per-1-unit or a scaled amount, then write a short sentence answer with units."
+    },
+    {
+      "time": "4 minutes",
+      "title": "practice summary and check",
+      "activity": "Try three short problems that mix simplifying ratios, finding unit rates, and solving proportions. For each, show the steps: draw a quick tape diagram if helpful, compute the unit rate or scale, and write a one-sentence answer with units. Review common mistakes below if any answers feel wrong."
+    }
+  ],
+  "customPlan": {
+    "weeklyPlan": [
+      "Day 1: Visual tape diagrams, simplifying ratios, unit-rate practice.",
+      "Day 2: Proportions via tables and cross-multiplication, targeted word problems.",
+      "Day 3: Mixed practice, speed work on unit rates, multi-step ratio problems.",
+      "Day 4: Real-world project: scale a simple map or recipe using ratios."
+    ],
+    "recommendedCadence": "3–4 short sessions per week (20–30 minutes each) to build fluency",
+    "summary": "Start with visual models to link concrete reasoning to unit rates, then practice solving proportions with tables and cross-multiplication. Mix short word problems that require translating words into ratio structure.",
+    "focusAreas": [
+      "Reading word problems to identify the two compared quantities",
+      "Converting ratios to unit rates and comparing options",
+      "Using tables and cross-multiplication to solve proportions"
+    ]
+  },
+  "studentFit": "Designed for grades 6–8 students who understand simple ratios and need clarity on unit rates and solving proportions in word problems.",
+  "conceptModel": {
+    "assessmentTargets": [
+      "Simplify ratios to lowest terms",
+      "Compute unit rates from given ratios and real contexts",
+      "Set up and solve proportions using tables and cross-multiplication",
+      "Translate word problems into ratio or proportion structure and answer with units"
+    ],
+    "formulas": [
+      {
+        "units": "unitless or 'A per B' (depends on quantities)",
+        "expression": "\\text{ratio} = \\frac{a}{b}",
+        "meaning": "Compare quantity a to quantity b; often written a:b, a to b, or a/b."
+      },
+      {
+        "units": "units of A per one unit of B (for example miles/hour)",
+        "expression": "\\text{unit rate} = \\frac{a}{b} \\text{ (when converted to per 1 of second quantity)}",
+        "meaning": "Amount of the first quantity for one unit of the second quantity."
+      },
+      {
+        "units": "unitless equality",
+        "expression": "\\frac{a}{b} = \\frac{c}{d}",
+        "meaning": "Two ratios are equivalent; this is a proportion."
+      },
+      {
+        "units": "algebraic equality used to solve for unknowns",
+        "expression": "a\\cdot d = b\\cdot c",
+        "meaning": "Cross-multiplication step used to solve a/b = c/d when numbers are nonzero."
+      }
+    ],
+    "nodes": [
+      {
+        "definition": "A ratio compares two quantities by division; it can be written a:b, a to b, or a/b.",
+        "id": "ratio",
+        "label": "ratio"
+      },
+      {
+        "definition": "An equivalent ratio is a scaled copy of a ratio found by multiplying or dividing both parts by the same nonzero number.",
+        "id": "equivalent_ratio",
+        "label": "equivalent ratio"
+      },
+      {
+        "definition": "A unit rate tells how much of the first quantity corresponds to exactly one unit of the second quantity (for example miles per 1 hour).",
+        "id": "unit_rate",
+        "label": "unit rate"
+      },
+      {
+        "definition": "A proportion states that two ratios are equal; use it to find a missing value using algebra or cross-multiplication.",
+        "id": "proportion",
+        "label": "proportion"
+      },
+      {
+        "definition": "A tape diagram (or bar model) is a visual rectangle divided into equal parts that represent ratio units to compare or scale quantities.",
+        "id": "tape_diagram",
+        "label": "tape diagram"
+      },
+      {
+        "definition": "Cross-multiplication multiplies the outer and inner pairs of a proportion to produce an equation that can be solved for a missing value.",
+        "id": "cross_multiplication",
+        "label": "cross-multiplication"
+      },
+      {
+        "definition": "A scale factor is the number you multiply parts of a ratio by to get an equivalent ratio or to scale quantities up or down.",
+        "id": "scale_factor",
+        "label": "scale factor"
+      }
+    ],
+    "relationships": [
+      {
+        "explanation": "Divide both parts of a ratio by the same number to get an equivalent, simplified ratio.",
+        "to": "equivalent_ratio",
+        "relationship": "produces when dividing both parts by same nonzero number",
+        "from": "ratio"
+      },
+      {
+        "explanation": "Convert a ratio to a unit rate by dividing the first quantity by the second to express per one unit.",
+        "to": "unit_rate",
+        "relationship": "calculated by dividing",
+        "from": "ratio"
+      },
+      {
+        "explanation": "If two ratios are equal, setting them as a proportion allows solving for a missing value using cross-multiplication.",
+        "to": "proportion",
+        "relationship": "formulates equality between",
+        "from": "ratio"
+      },
+      {
+        "explanation": "A tape diagram shows a ratio as equal parts so you can find one part (unit) and scale to a needed amount.",
+        "to": "tape_diagram",
+        "relationship": "visualizes",
+        "from": "ratio"
+      }
+    ],
+    "misconceptions": [
+      {
+        "correction": "You must divide both parts by the same nonzero number to simplify; do not divide only one part.",
+        "statement": "Incorrect: change only one number in a ratio to make it 'simpler.'"
+      },
+      {
+        "correction": "Unit rates are per one unit of the second quantity. If a problem asks for 'per 1' convert explicitly by dividing.",
+        "statement": "Incorrect: thinking a unit rate is always the smaller number in the pair."
+      },
+      {
+        "correction": "Cross-multiplication requires nonzero denominators and correctly matched pairs; always write the proportion carefully before multiplying.",
+        "statement": "Incorrect: cross-multiply without checking that the two ratios are set up correctly from the words."
+      }
+    ]
+  },
+  "practiceQuestions": [
+    "Try: Simplify the ratio 18:24. Hint: divide both numbers by the same common factor. Answer: 3:4. Why: divide both by 6 gives 3:4.",
+    "Try: A cyclist rides 45 miles in 3 hours. What is the unit rate in miles per hour? Hint: divide distance by time. Answer: 15 mph. Why: 45 ÷ 3 = 15.",
+    "Try: If 5 apples cost $7.50, what is the price per apple? Hint: divide total price by number of apples. Answer: $1.50 per apple. Why: 7.50 ÷ 5 = 1.50.",
+    "Try: Find x: 4/7 = x/28. Hint: use equivalent ratios or cross-multiply. Answer: x = 16. Why: multiply 4·28 ÷ 7 = 16.",
+    "Try: A recipe uses 2 cups sugar for every 5 cups flour. How many cups sugar are needed for 15 cups flour? Hint: scale the ratio to match 15 cups flour. Answer: 6 cups sugar. Why: scale factor 15 ÷ 5 = 3, so sugar 2·3 = 6.",
+    "Try: Which is the unit rate: 8 miles in 2 hours or 12 miles in 3 hours? Hint: compute miles per 1 hour for both. Answer: both are the same (4 mph). Why: 8 ÷ 2 = 4 and 12 ÷ 3 = 4."
+  ],
+  "prerequisiteCheck": [
+    "Can divide whole numbers and decimals accurately (needed for unit rate calculations).",
+    "Can simplify fractions by common factors (needed to simplify ratios).",
+    "Can read and label quantities in a short word problem (needed to set up ratios)."
+  ],
+  "timedExam": {
+    "questions": [
+      {
+        "options": [
+          "3:2",
+          "6:4",
+          "2:3",
+          "9:6"
+        ],
+        "explanation": "Divide both parts by 4: 12:8 → (12÷4):(8÷4) = 3:2.",
+        "question": "Simplify the ratio 12:8.",
+        "answerIndex": 0
+      },
+      {
+        "options": [
+          "45 mph",
+          "50 mph",
+          "75 mph",
+          "30 mph"
+        ],
+        "explanation": "Divide miles by hours: 150 ÷ 3 = 50 miles per hour.",
+        "question": "A car travels 150 miles in 3 hours. What is the unit rate in miles per hour?",
+        "answerIndex": 1
+      },
+      {
+        "options": [
+          "6",
+          "8",
+          "10",
+          "12"
+        ],
+        "explanation": "Use equivalent ratios: 2/5 = x/20, scale factor 20 ÷ 5 = 4 so x = 2·4 = 8.",
+        "question": "Solve for x: 2/5 = x/20.",
+        "answerIndex": 1
+      },
+      {
+        "options": [
+          "60 miles",
+          "75 miles",
+          "80 miles",
+          "90 miles"
+        ],
+        "explanation": "Scale 1 inch = 30 miles: 2.5 inches = 2.5·30 = 75 miles.",
+        "question": "A map uses a scale of 1 inch : 30 miles. How many miles does 2.5 inches represent?",
+        "answerIndex": 1
+      },
+      {
+        "options": [
+          "12",
+          "14",
+          "21",
+          "28"
+        ],
+        "explanation": "Set 7/x = 21/42. Simplify right side 21/42 = 1/2, so 7/x = 1/2 → x = 14.",
+        "question": "If 7/x = 21/42, what is x?",
+        "answerIndex": 1
+      },
+      {
+        "options": [
+          "$1.00",
+          "$1.25",
+          "$1.50",
+          "$1.75"
+        ],
+        "explanation": "Price per can = total price ÷ number of cans = 4.50 ÷ 3 = 1.50 dollars.",
+        "question": "A store sells 3 cans for $4.50. What is the price per can?",
+        "answerIndex": 2
+      }
+    ],
+    "passingScore": 70,
+    "durationMinutes": 12
+  },
+  "warmUp": "A bag holds 6 red marbles and 4 blue marbles. What is the ratio of red to blue? Write it in simplest form and explain how you simplified.",
+  "parentTutorNotes": "Focus on visual models for students who struggle with abstract fractions. Encourage tape diagrams and unit-rate division steps. Share which practice questions the student missed and whether errors were from arithmetic, setting up the ratio, or interpreting the words.",
+  "recommendedNextSession": "Bring the student's quiz results, incorrect problems, and any practiceQuestions they struggled with. A tutor should focus next on translating multi-step word problems and connecting unit-rate answers back to the original context.",
+  "mode": "Comprehensive lesson (self-guided)",
+  "visualPlan": [
+    {
+      "anchor": "big_idea",
+      "description": "Two horizontal bars stacked. Top bar divided into 3 equal boxes labeled '3 units (A)'; bottom bar divided into 4 equal boxes labeled '4 units (B)'. A bracket shows 'total A units' and another shows 'total B units'. An arrow shows dividing each part by common factor to produce 3:4 simplified label.",
+      "educationalPurpose": "Show what a ratio looks like visually and how simplifying works",
+      "equation": "",
+      "labels": [
+        "A units",
+        "B units",
+        "unit boxes"
+      ],
+      "layout": "full-width",
+      "priority": "high",
+      "steps": [
+        "Draw top bar with 3 equal boxes labeled A.",
+        "Draw bottom bar with 4 equal boxes labeled B.",
+        "Show how each box represents one unit and how unit rate could be found by dividing quantity by number of boxes."
+      ],
+      "targetTitle": "ratio tape diagram",
+      "visualType": "tape diagram"
+    },
+    {
+      "anchor": "concept",
+      "description": "A horizontal number line showing 0 to 3 hours marked. Above each hour mark show cumulative miles: 0, 30, 60, 90 (if example uses 90 miles in 3 hours). Highlight the slope from 0 to 1 hour and label '30 miles per 1 hour'.",
+      "educationalPurpose": "Illustrate converting a ratio to a unit rate",
+      "equation": "unit rate = distance ÷ time",
+      "labels": [
+        "hours (x-axis)",
+        "miles (y-axis)",
+        "unit rate at 1 hour"
+      ],
+      "layout": "paired with text",
+      "priority": "high",
+      "steps": [
+        "Plot cumulative miles against hours for the example.",
+        "Draw vertical drop to 1-hour mark and label the unit rate."
+      ],
+      "targetTitle": "unit rate visual — miles and hours",
+      "visualType": "data graph (linear)"
+    },
+    {
+      "anchor": "worked_example",
+      "description": "Two-column table: left column labels 'original' and 'scaled'; right column shows sugar and flour amounts. Use arrows to show scale factor and compute the new amounts. Include arithmetic steps for unit rate and scaling.",
+      "educationalPurpose": "Show step-by-step scaling and fraction arithmetic to solve a recipe problem",
+      "equation": "flour_new = flour_original ÷ flour_original_units × desired_flour_units",
+      "labels": [
+        "original sugar",
+        "original flour",
+        "scale factor",
+        "new amounts"
+      ],
+      "layout": "full-width",
+      "priority": "high",
+      "steps": [
+        "Write original ratio and compute unit per 1 unit of the second quantity.",
+        "Multiply unit by new amount of second quantity to get scaled first quantity."
+      ],
+      "targetTitle": "recipe proportion worked example",
+      "visualType": "proportion table"
+    },
+    {
+      "anchor": "lesson_segment",
+      "description": "Show a/b = c/d with arrows to a·d and b·c, then write equality a·d = b·c. Include note: 'only valid if b and d are not zero.'",
+      "educationalPurpose": "Explain cross-multiplication as an equality transformation",
+      "equation": "a/b = c/d ⇒ a·d = b·c",
+      "labels": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "a·d",
+        "b·c"
+      ],
+      "layout": "paired with short text",
+      "priority": "medium",
+      "steps": [
+        "Write the two ratios side-by-side.",
+        "Mark outer and inner products with colored outlines (also described in text).",
+        "Show resulting single-variable equation to solve."
+      ],
+      "targetTitle": "cross-multiplication diagram",
+      "visualType": "equation derivation"
+    },
+    {
+      "anchor": "misconception",
+      "description": "Two side-by-side short examples: left shows incorrect change of one part only, right shows correct dividing both parts by common factor. Label why right works.",
+      "educationalPurpose": "Compare wrong and right ways to simplify a ratio",
+      "equation": "",
+      "labels": [
+        "incorrect",
+        "correct"
+      ],
+      "layout": "small inline",
+      "priority": "medium",
+      "steps": [
+        "Show 10:15 → wrong: 10:5 (dividing only second part)",
+        "Show 10:15 → correct: 2:3 (divide both by 5)"
+      ],
+      "targetTitle": "comparison of correct vs incorrect simplification",
+      "visualType": "comparison model"
+    },
+    {
+      "anchor": "assessment",
+      "description": "Three small boxes each with: a tape diagram, a unit-rate prompt, and a proportion to solve. Each box includes small space for the student to write an answer.",
+      "educationalPurpose": "Give a short mixed-practice visual set to check understanding",
+      "equation": "",
+      "labels": [
+        "problem 1",
+        "problem 2",
+        "problem 3"
+      ],
+      "layout": "full-width",
+      "priority": "high",
+      "steps": [
+        "Prepare 3 mixed problems that mirror lesson practice.",
+        "Include quick hints on each card: 'divide', 'scale', or 'cross-multiply'."
+      ],
+      "targetTitle": "mixed practice cards",
+      "visualType": "practice card layout"
+    },
+    {
+      "anchor": "summary",
+      "description": "A vertical checklist with five short steps: read and label, choose unit-rate or proportion, make diagram/table, compute, check units and reasonableness.",
+      "educationalPurpose": "Summarize steps to solve ratio word problems",
+      "equation": "",
+      "labels": [
+        "step 1",
+        "step 2",
+        "step 3",
+        "step 4",
+        "step 5"
+      ],
+      "layout": "paired with summary text",
+      "priority": "high",
+      "steps": [
+        "Read and label quantities",
+        "Decide unit-rate or proportion",
+        "Represent visually or with a table",
+        "Compute and simplify",
+        "Write final answer with units"
+      ],
+      "targetTitle": "problem-solving checklist",
+      "visualType": "process checklist"
+    }
+  ],
+  "conceptExplanation": "A ratio compares two quantities by division and can be written as a:b, a to b, or a/b. Equivalent ratios are produced by multiplying or dividing both parts by the same nonzero number; this keeps the same relationship while changing scale. A unit rate expresses how much of the first quantity matches exactly one unit of the second (for example, miles per one hour or dollars per one item) and is found by dividing the first number by the second. A proportion states that two ratios are equal; solve proportions with tables that scale both parts or by cross-multiplying (a/b = c/d ⇒ a·d = b·c) and solving the resulting equation. In word problems, label the quantities clearly, decide whether a unit rate or a scaled proportion is required, create a short visual (tape diagram or table) when unsure, and always include correct units in the final answer.",
+  "learningObjectives": [
+    "Read and write ratios and equivalent ratios in simplest form",
+    "Compute unit rates from ratios and real situations",
+    "Set up and solve proportions using tables and cross-multiplication",
+    "Translate word problems into ratios or proportions and answer with correct units"
+  ],
+  "guidedExample": "Problem: A recipe needs 3 cups of flour for every 4 cups of sugar. (a) How much flour is needed for 10 cups of sugar? (b) What is the unit rate of flour per 1 cup sugar? Steps: 1) Identify the ratio: flour:sugar = 3:4. 2) Find unit rate flour per 1 cup sugar by dividing flour by sugar: 3 ÷ 4 = 0.75 cups flour per 1 cup sugar. 3) For 10 cups sugar, multiply the unit rate by 10: 0.75 × 10 = 7.5 cups flour. 4) Check by using proportional scaling: scale factor = 10 ÷ 4 = 2.5, flour = 3 × 2.5 = 7.5 — same result. Final answers: (a) 7.5 cups flour; (b) 0.75 cups flour per 1 cup sugar. Quick check: multiply sugar (10) by unit rate (0.75) and confirm units are cups of flour.",
+  "title": "Ratios and Proportions: Unit Rates and Word Problems"
+}

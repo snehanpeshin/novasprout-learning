@@ -21,6 +21,7 @@ import {
   X,
   type LucideIcon
 } from "lucide-react";
+import sampleLessonData from "../data/novasprout-ratios-sample.json";
 import { legacyLessonToSlidePlan } from "../lib/lessonSlidePlan";
 import { buildIntakeFormUrl, contactEmail } from "../site-data";
 
@@ -104,6 +105,24 @@ type LessonContext = {
   subject: string;
   topic: string;
 };
+
+const sampleLesson = sampleLessonData as GeneratedLesson;
+const sampleLessonContext: LessonContext = {
+  grade: "Grades 6-8",
+  subject: "Mathematics",
+  topic: "Ratios and proportions"
+};
+const sampleLessonPdfHref = "/samples/novasprout-ratios-sample.pdf";
+const sampleLessonPageCount = 36;
+
+function getLessonDurationMinutes(duration?: string) {
+  const match = duration?.match(/\d+/);
+  if (!match) {
+    return null;
+  }
+
+  return Math.max(1, Math.min(180, Number(match[0])));
+}
 
 type SlideAsset = {
   assetId?: string;
@@ -1007,25 +1026,36 @@ function StudentSlideDeck({
   accessToken,
   context,
   lesson,
-  onClose
+  onClose,
+  presetPdfHref
 }: {
   accessToken: string;
   context: LessonContext;
   lesson: GeneratedLesson;
   onClose: () => void;
+  presetPdfHref?: string;
 }) {
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [assetError, setAssetError] = useState("");
   const [assets, setAssets] = useState<SlideAsset[]>([]);
-  const [compiledDeck, setCompiledDeck] = useState<CompiledDeck | null>(null);
-  const [deckStage, setDeckStage] = useState("");
+  const [compiledDeck, setCompiledDeck] = useState<CompiledDeck | null>(
+    presetPdfHref
+      ? {
+          compilerStatus: "compiled",
+          pageCount: sampleLessonPageCount,
+          pdfUrl: presetPdfHref,
+          qualityWarnings: []
+        }
+      : null
+  );
+  const [deckStage, setDeckStage] = useState(presetPdfHref ? "Ready" : "");
   const [, setIsCompilingDeck] = useState(false);
   const [isFullPipelineRunning, setIsFullPipelineRunning] = useState(false);
   const [, setIsGeneratingImages] = useState(false);
   const [, setIsPlanningAssets] = useState(false);
   const [pdfPage, setPdfPage] = useState(1);
   const [quizLaunchCount, setQuizLaunchCount] = useState(0);
-  const hasStartedBuild = useRef(false);
+  const hasStartedBuild = useRef(Boolean(presetPdfHref));
   const theme = useMemo(() => getSubjectTheme(context.subject), [context.subject]);
 
   const slides = useMemo<LessonSlide[]>(() => {
@@ -1063,12 +1093,13 @@ function StudentSlideDeck({
   const compiledPageCount = compiledDeck?.pageCount ?? slides.length;
   const pdfViewerSrc = compiledPdfHref ? `${compiledPdfHref}#page=${pdfPage}` : "";
   const pdfViewerKey = `${compiledDeck?.pdfUrl ?? compiledDeck?.pdfSize ?? "compiled-pdf"}-${compiledPageCount}-${pdfPage}-${quizLaunchCount}`;
-  const totalLessonMinutes = Math.max(
+  const plannedSlideMinutes = Math.max(
     1,
     slides
       .filter((slide) => slide.title.toLowerCase() !== "exit quiz")
       .reduce((total, slide) => total + slide.minutes, 0)
   );
+  const totalLessonMinutes = getLessonDurationMinutes(lesson.duration) ?? plannedSlideMinutes;
   const totalLessonSeconds = totalLessonMinutes * 60;
   const [remainingSeconds, setRemainingSeconds] = useState(totalLessonSeconds);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -1308,13 +1339,17 @@ function StudentSlideDeck({
   }
 
   useEffect(() => {
+    if (presetPdfHref) {
+      return;
+    }
+
     if (hasStartedBuild.current) {
       return;
     }
 
     hasStartedBuild.current = true;
     void buildPdfLesson();
-  }, []);
+  }, [presetPdfHref]);
 
   useEffect(() => {
     setRemainingSeconds(totalLessonSeconds);
@@ -1553,6 +1588,7 @@ export default function AILessonGenerator() {
   const [lesson, setLesson] = useState<GeneratedLesson | null>(null);
   const [lessonText, setLessonText] = useState("");
   const [isDeckOpen, setIsDeckOpen] = useState(false);
+  const [isSampleMode, setIsSampleMode] = useState(false);
   const [examAnswers, setExamAnswers] = useState<Record<number, number>>({});
   const [examStartedAt, setExamStartedAt] = useState<number | null>(null);
   const [examSubmitted, setExamSubmitted] = useState(false);
@@ -1604,8 +1640,40 @@ export default function AILessonGenerator() {
     setError("");
   }
 
+  function openFreeSample() {
+    setGrade(sampleLessonContext.grade);
+    setSubject(sampleLessonContext.subject);
+    setTopic(sampleLessonContext.topic);
+    setMode("Comprehensive lesson");
+    setDuration(sampleLesson.duration ?? "30-minute lesson");
+    setLesson(sampleLesson);
+    setLessonText("");
+    setExamAnswers({});
+    setExamStartedAt(Date.now());
+    setExamSubmitted(false);
+    setError("");
+    setNotice("This complete sample was created by the same AI lesson and visual-PDF pipeline used for personalized lessons.");
+    setIsSampleMode(true);
+    setIsUnlocked(true);
+    setIsDeckOpen(false);
+  }
+
+  function leaveFreeSample() {
+    setIsDeckOpen(false);
+    setIsSampleMode(false);
+    setLesson(null);
+    setLessonText("");
+    setNotice("");
+    setError("");
+    setIsUnlocked(Boolean(accessToken.trim()));
+  }
+
   async function generateLesson(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!accessToken.trim()) {
+      setError("Personalized lessons require a purchase or approved access code.");
+      return;
+    }
     setError("");
     setNotice("");
     setLesson(null);
@@ -1709,6 +1777,7 @@ export default function AILessonGenerator() {
         throw new Error("The lesson service returned no lesson content.");
       }
       setLesson(generatedLesson);
+      setIsSampleMode(false);
       setLessonText(data.lessonText ?? "");
       setNotice(data.warning ?? "");
       if (generatedLesson?.timedExam?.questions?.length) {
@@ -1755,19 +1824,18 @@ Interested in: Free trial / Paid AI-generated lessons
           <h2>Open your AI Tutor.</h2>
           <p>Preview a real lesson free, or use your approved access to create one for your own topic.</p>
         </div>
-        <a
+        <button
           className="ai-sample-preview"
-          href="/samples/novasprout-ratios-sample.pdf"
-          rel="noreferrer"
-          target="_blank"
+          onClick={openFreeSample}
+          type="button"
         >
           <FileText aria-hidden="true" size={28} />
           <span>
-            <strong>Open a real visual lesson</strong>
-            <small>Ratios and proportions · Grades 6-8 · PDF preview</small>
+            <strong>Try a complete AI lesson free</strong>
+            <small>Review, 36-page visual lesson, timer, and scored quiz</small>
           </span>
           <ArrowRight aria-hidden="true" size={20} />
-        </a>
+        </button>
         <form className="ai-access-card" onSubmit={unlockTools}>
           <LockKeyhole aria-hidden="true" size={34} />
           <label>
@@ -1801,6 +1869,7 @@ Interested in: Free trial / Paid AI-generated lessons
           context={{ grade, subject, topic }}
           lesson={lesson}
           onClose={() => setIsDeckOpen(false)}
+          presetPdfHref={isSampleMode ? sampleLessonPdfHref : undefined}
         />
       ) : null}
       <section className="section demo-generator-section" id="generator">
@@ -1809,6 +1878,18 @@ Interested in: Free trial / Paid AI-generated lessons
         <h2>What would you like to learn?</h2>
         <p>Choose the basics. NovaSprout handles the lesson structure, visuals, practice, and quiz.</p>
       </div>
+
+      {isSampleMode ? (
+        <div className="ai-sample-active" role="status">
+          <div>
+            <strong>Complete AI-generated sample</strong>
+            <span>Explore the same lesson review, private PDF player, timer, and scored quiz used by personalized lessons.</span>
+          </div>
+          <button className="button secondary" onClick={leaveFreeSample} type="button">
+            Create My Own Lesson
+          </button>
+        </div>
+      ) : null}
 
       <div className="ai-generator-layout">
         <form className="ai-generator-form" onSubmit={generateLesson}>
@@ -1978,6 +2059,8 @@ Interested in: Free trial / Paid AI-generated lessons
             className="text-button"
             onClick={() => {
               window.localStorage.removeItem(accessStorageKey);
+              setIsSampleMode(false);
+              setLesson(null);
               setIsUnlocked(false);
               setAccessToken("");
             }}

@@ -9,6 +9,7 @@ final class LessonGeneratorViewModel: ObservableObject {
     @Published private(set) var isGenerating = false
     @Published private(set) var isBuildingDeck = false
     @Published private(set) var lastServerStatus: Int?
+    @Published private(set) var isSamplePreview = false
     @Published var errorMessage = ""
     @Published var showOverview = false
     @Published var playerConfiguration: LessonPlayerConfiguration?
@@ -42,6 +43,7 @@ final class LessonGeneratorViewModel: ObservableObject {
             }
             lesson = generated
             context = lessonContext
+            isSamplePreview = false
             showOverview = true
             isGenerating = false
             return true
@@ -61,6 +63,24 @@ final class LessonGeneratorViewModel: ObservableObject {
         guard let lesson, let context else { return }
         errorMessage = ""
         isBuildingDeck = true
+
+        if isSamplePreview {
+            guard let pdfData = SampleData.pdfData else {
+                errorMessage = "The free sample PDF could not be opened."
+                isBuildingDeck = false
+                return
+            }
+            playerConfiguration = LessonPlayerConfiguration(
+                context: context,
+                lesson: lesson,
+                pdfData: pdfData,
+                savedLessonID: nil,
+                deckSummary: SampleData.deckSummary
+            )
+            isBuildingDeck = false
+            return
+        }
+
         do {
             let result = try await APIClient.shared.buildDeck(
                 lesson: lesson,
@@ -90,13 +110,11 @@ final class LessonGeneratorViewModel: ObservableObject {
     }
 
     func openSample() {
-        playerConfiguration = LessonPlayerConfiguration(
-            context: SampleData.context,
-            lesson: SampleData.lesson,
-            pdfData: SampleData.pdfData,
-            savedLessonID: nil,
-            deckSummary: SampleData.deckSummary
-        )
+        lesson = SampleData.lesson
+        context = SampleData.context
+        isSamplePreview = true
+        errorMessage = ""
+        showOverview = true
     }
 
     func reset() {
@@ -105,6 +123,7 @@ final class LessonGeneratorViewModel: ObservableObject {
         stage = nil
         lastServerStatus = nil
         errorMessage = ""
+        isSamplePreview = false
         showOverview = false
         playerConfiguration = nil
     }

@@ -73,7 +73,7 @@ struct LearnView: View {
                 Text("Create a focused visual lesson, study privately, then take a scored quiz.")
                     .font(.subheadline)
                     .foregroundStyle(NovaPalette.muted)
-                Text("Real visual sample included. Personalized AI lessons require an in-app purchase.")
+                Text("Complete AI lesson sample included. Personalized lessons require an in-app purchase.")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(NovaPalette.blue)
             }
@@ -84,9 +84,9 @@ struct LearnView: View {
         HStack(spacing: 14) {
             SubjectMark(subject: "Mathematics")
             VStack(alignment: .leading, spacing: 3) {
-                Text("Open a real lesson preview")
+                Text("Try a complete AI lesson free")
                     .font(.headline)
-                Text("Ratios and proportions PDF, timer, and quiz")
+                Text("Review, 36-page visual PDF, timer, and scored quiz")
                     .font(.subheadline)
                     .foregroundStyle(NovaPalette.muted)
             }
