@@ -18,7 +18,7 @@ export default function PrivacyPolicy() {
         <p className="ns-eyebrow">Privacy Policy</p>
         <h1>How we protect student and parent information.</h1>
         <p>
-          Effective date: August 14, 2026. NovaSprout Learning is a brand of Karigari
+          Effective date: August 14, 2026. Updated October 12, 2026. NovaSprout Learning is a brand of Karigari
           Home LLC. This Privacy Policy explains how NovaSprout Learning collects, uses,
           and protects information when families use our website, forms, booking links,
           mobile app, AI learning tools, online tutoring resources, and related services.
@@ -54,7 +54,7 @@ export default function PrivacyPolicy() {
             <li>Respond to inquiries and schedule consultations.</li>
             <li>Understand student goals and recommend tutoring support.</li>
             <li>Provide online tutoring, notes, resources, and follow-up communication.</li>
-            <li>Generate requested AI lessons, educational visuals, quizzes, and lesson PDFs.</li>
+            <li>Generate requested AI lessons, educational visuals, narrated animations, quizzes, and lesson PDFs.</li>
             <li>Improve our website, services, and educational materials.</li>
             <li>Send service-related messages, reminders, and updates.</li>
             <li>Measure advertising performance and website activity.</li>
@@ -123,6 +123,7 @@ export default function PrivacyPolicy() {
           <h2>Website AI Tutor Purchases and Questions</h2>
           <p>Stripe processes website payments. We store payment records in Supabase and hashed lesson-usage counters in a server-only AWS DynamoDB ledger. Necessary secure cookies activate paid access and connect checkout to the purchasing browser. A private purchase access code can restore that access; keep it confidential.</p>
           <p>Lesson topics, grade preferences, and optional questions are sent to OpenAI. Background lesson generation uses OpenAI response storage so we can retrieve the completed lesson and ground follow-up tutoring in it. Guided questions and short conversation context are processed with response storage disabled. Do not include student names, contact details, or sensitive personal information in learning requests.</p>
+          <p>Personalized video storyboards and narration are generated from the completed lesson. The storyboard is temporarily cached on our servers and access expires with the lesson ticket; expired records are removed through automatic database cleanup. Narration buffers and video exports are prepared in your browser, and you can choose to save a copy. Video export captures the generated diagrams and AI voice, without recording the student's microphone, camera, or screen.</p>
           </article><article>
           <h2>Cookies and Advertising</h2>
           <p>

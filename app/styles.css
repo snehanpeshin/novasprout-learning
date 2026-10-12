@@ -3923,3 +3923,18 @@ footer div span:first-child {
 .video-pilot-transcript { margin-top:20px; line-height:1.7; }
 .video-pilot-transcript summary { cursor:pointer; font-weight:600; }
 @media(max-width:600px) { .lesson-video-pilot { margin:24px 16px; } .video-pilot-answers .button { flex:1 1 100%; } }
+
+.personalized-video-tutor { background:linear-gradient(135deg,#f2faf5,#eef4ff); border:1px solid #c6ddd3; border-radius:24px; padding:clamp(18px,3vw,30px); margin:24px 0; }
+.personalized-video-tutor h3 { font-size:clamp(25px,3vw,34px); margin:8px 0; }
+.video-format-label { font-size:14px; line-height:1.6; }
+.personalized-video-stage { margin:20px 0 12px; }
+.personalized-video-stage canvas { display:block; width:100%; max-width:760px; margin:auto; border-radius:18px; background:#f3faf6; }
+.personalized-video-caption { font-size:18px; line-height:1.75; padding:14px; background:#fff; border-radius:12px; }
+.personalized-video-controls { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:16px 0; }
+.personalized-video-check { margin:20px 0; background:#fff; padding:20px; border-radius:16px; }
+.personalized-video-check > div { display:grid; gap:12px; }
+.personalized-video-check .button { white-space:normal; justify-content:flex-start; text-align:left; }
+.personalized-video-check [aria-pressed="true"] { background:#dcefe4; border:2px solid #257653; }
+.personalized-video-transcript { margin:20px 0 0; line-height:1.7; }
+.personalized-video-transcript summary { cursor:pointer; font-weight:600; }
+@media(max-width:600px) { .personalized-video-controls .button { flex:1 1 100%; } }

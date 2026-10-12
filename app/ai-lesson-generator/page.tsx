@@ -22,7 +22,7 @@ export default function AILessonGeneratorPage() {
         <div className="ai-tutor-hero-copy">
         <p className="eyebrow">NovaSprout AI Tutor</p>
         <h1>Create a personalized lesson in minutes.</h1>
-        <p>Choose a topic. Listen to short explanations, reveal each step, and try activities with feedback.</p>
+        <p>Choose a topic. Get personalized explanations, narrated animations, and practice with feedback.</p>
         <div className="hero-actions">
           <a className="button primary" href="#generator">
             Create a Lesson
