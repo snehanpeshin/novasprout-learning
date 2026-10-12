@@ -1,4 +1,5 @@
 import test from "node:test";
+import sharp from "sharp";
 import assert from "node:assert/strict";
 import {DynamoDBDocumentClient,GetCommand,PutCommand,TransactWriteCommand} from "@aws-sdk/lib-dynamodb";
 import {POST as planRoute} from "../app/api/ai-video-plan/route.ts";
@@ -7,6 +8,7 @@ import {POST as audioRoute} from "../app/api/ai-video-audio/route.ts";
 import {validateVideoStoryboard,validVideoLesson} from "../app/lib/videoLesson.ts";
 import {hash,signClaims} from "../app/lib/webAiAccess.ts";
 Object.assign(process.env,{AI_WEB_ACCESS_SECRET:"test-video-key-with-at-least-32-characters",AI_LESSON_ACCESS_TOKEN:"private-video-test",OPENAI_API_KEY:"fake-only",AI_USAGE_TABLE:"video-test"});
+const jpeg=await sharp({create:{width:64,height:64,channels:3,background:"#317d61"}}).jpeg().toBuffer();
 const owner=hash("private-video-test"),responseId="resp_video_test";
 const check={question:"Which fraction equals one half?",options:["1/2","1/3","1/4","1/5"],answerIndex:0,explanation:"One of two equal parts is one half."};
 const scene={title:"One half",narration:"One of two equal parts makes one half. The equal pieces share the same whole.",caption:"1 of 2 equal parts is 1/2",visual:{kind:"fraction",representation:"bar",labels:["One whole"],values:[],total:2,selected:1,min:0,max:1}};
@@ -15,7 +17,7 @@ function request(body:unknown={},ticketOwner=owner){const ticket=signClaims({kin
 async function mocked(action:(state:any)=>Promise<void>,options:{cached?:boolean;sourceOwner?:string;failed?:boolean;invalid?:boolean;quota?:boolean;audioCached?:boolean;saveConflict?:boolean;imageCached?:boolean;imageFailed?:boolean;imageTooLarge?:boolean}={}){
  const originalFetch=globalThis.fetch,originalSend=DynamoDBDocumentClient.prototype.send,state={saved:null as any,writes:[] as any[],speech:[] as string[],generations:[] as any[]};
  DynamoDBDocumentClient.prototype.send=(async(command:any)=>{
-  if(command instanceof GetCommand&&options.imageCached&&command.input.Key.id===hash(`video:image:v1:${responseId}:0`))return {Item:{owner,image:"data:image/jpeg;base64,"+Buffer.from([255,216,255,...new Array(130).fill(0),255,217]).toString("base64"),expiresAt:Math.floor(Date.now()/1000)+100}};
+  if(command instanceof GetCommand&&options.imageCached&&command.input.Key.id===hash(`video:image:v1:${responseId}:0`))return {Item:{owner,image:"data:image/jpeg;base64,"+jpeg.toString("base64"),expiresAt:Math.floor(Date.now()/1000)+100}};
   if(command instanceof GetCommand&&options.audioCached&&command.input.Key.id!==hash("video:plan:v1:"+responseId))return {Item:{owner,audio:Buffer.from([73,68,51]).toString("base64"),expiresAt:Math.floor(Date.now()/1000)+100}};
   if(command instanceof GetCommand)return (options.cached||(options.saveConflict&&state.writes.some(w=>w.Item?.plan)))?{Item:{owner,plan,expiresAt:Math.floor(Date.now()/1000)+100}}:{};
   state.writes.push(command.input);
@@ -27,7 +29,7 @@ async function mocked(action:(state:any)=>Promise<void>,options:{cached?:boolean
   if(String(url).includes("responses/"))return Response.json({status:"completed",metadata:{novasprout_owner:options.sourceOwner||owner,grade:"Grade 4"},output_text:JSON.stringify({title:"Learn halves",conceptExplanation:"A half is one of two equal parts.",timedExam:{questions:[check]}})});
   if(String(url).endsWith("/responses")){state.generations.push(JSON.parse(init.body));return Response.json({status:"completed",output_text:JSON.stringify(options.invalid?{...storyboard,scenes:[{...scene,visual:{...scene.visual,total:0}},scene,scene]}:storyboard)});}
   if(String(url).includes("moderations"))return Response.json({results:[{flagged:false}]});
-  if(String(url).includes("images/generations")){state.generations.push(JSON.parse(init.body));return options.imageFailed?new Response("unavailable",{status:503}):Response.json({data:[{b64_json:options.imageTooLarge?"A".repeat(400004):Buffer.from([255,216,255,...new Array(130).fill(0),255,217]).toString("base64")}]});}
+  if(String(url).includes("images/generations")){state.generations.push(JSON.parse(init.body));return options.imageFailed?new Response("unavailable",{status:503}):Response.json({data:[{b64_json:options.imageTooLarge?"A".repeat(6000004):jpeg.toString("base64")}]});}
   if(String(url).includes("audio/speech")){state.speech.push(JSON.parse(init.body).input);return options.failed?new Response("unavailable",{status:503}):new Response(new Uint8Array([73,68,51]));}
   throw new Error("Unexpected provider request");
  };

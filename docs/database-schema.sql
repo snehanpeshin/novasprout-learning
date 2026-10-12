@@ -170,3 +170,29 @@ alter table public.demo_requests enable row level security;
 revoke all on table public.demo_requests from anon, authenticated;
 grant select, insert, update on table public.demo_requests to service_role;
 grant usage, select on sequence public.demo_requests_id_seq to service_role;
+-- Family portal records. These are server-only; the browser only receives a
+-- record selected by an opaque, HttpOnly portal cookie.
+create table if not exists public.tutor_match_requests (
+  id uuid primary key,
+  portal_access_hash text not null unique,
+  parent_name text not null,
+  parent_email text not null,
+  student_level text not null,
+  subject text not null check (subject in ('Math', 'Science & STEM', 'Coding & Data Skills', 'Study Skills')),
+  goal text not null,
+  availability text not null,
+  timezone text not null,
+  requested_plan text not null check (requested_plan in ('demo', 'single', 'monthly')),
+  status text not null default 'requested' check (status in ('requested', 'reviewing', 'matched', 'demo_scheduled', 'paid', 'active', 'closed')),
+  tutor_label text,
+  next_step text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists tutor_match_requests_access_idx on public.tutor_match_requests (portal_access_hash);
+create index if not exists tutor_match_requests_status_idx on public.tutor_match_requests (status, created_at desc);
+alter table public.tutor_match_requests enable row level security;
+revoke all on table public.tutor_match_requests from anon, authenticated;
+grant select, insert, update on table public.tutor_match_requests to service_role;
+create trigger set_tutor_match_requests_updated_at before update on public.tutor_match_requests for each row execute function public.set_updated_at();
+
