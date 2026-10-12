@@ -1,6 +1,7 @@
 "use client";
 import AiPaidPlans from "./AiPaidPlans";
 import AiCoach from "./AiCoach";
+import InteractiveLessonPlayer from "./InteractiveLessonPlayer";
 
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -1578,6 +1579,7 @@ export default function AILessonGenerator() {
   const [hasPaidAccess, setHasPaidAccess] = useState(false);
   const [lessonAllowance, setLessonAllowance] = useState<number | null>(null);
   const [currentLessonTicket, setCurrentLessonTicket] = useState("");
+  const [coachAttempt, setCoachAttempt] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [grade, setGrade] = useState("Grades 6-8");
@@ -2107,24 +2109,25 @@ Interested in: Free trial / Paid AI-generated lessons
               {lesson?.studentFit ? <p>{lesson.studentFit}</p> : null}
               {lesson ? (
                 <>
-                <LessonPlanPreview lesson={lesson} />
+                <InteractiveLessonPlayer key={isSampleMode ? "sample" : currentLessonTicket || lesson.title} lesson={lesson} accessToken={accessToken} lessonTicket={isSampleMode ? "" : currentLessonTicket} onAskTutor={!isSampleMode && currentLessonTicket ? question => {setCoachAttempt(question); document.getElementById("lesson-ai-coach")?.scrollIntoView({behavior:"smooth",block:"center"});} : undefined} />
+                <details className="lesson-plan-details"><summary>Preview the printable lesson</summary><LessonPlanPreview lesson={lesson} /></details>
                 <div className="lesson-launch-card">
                   <div>
                     <p className="eyebrow">Ready to learn</p>
-                    <h4>Build the visual private lesson.</h4>
-                    <p>The next step creates the illustrated slide deck, lesson timer, and scored quiz.</p>
+                    <h4>Keep a printable version.</h4>
+                    <p>Explore the interactive lesson above, or build an illustrated PDF to review offline.</p>
                   </div>
                   <div className="lesson-launch-actions">
                     <button className="button primary" onClick={() => setIsDeckOpen(true)} type="button">
                       <Images aria-hidden="true" size={18} />
-                      Build Private Lesson
+                      Build Printable Lesson
                     </button>
                     <a className="button secondary" href={liveTutorRequestHref} target="_blank" rel="noreferrer">
                       Request a Live Tutor
                     </a>
                   </div>
                 </div>
-                {!isSampleMode && currentLessonTicket && <AiCoach key={currentLessonTicket} accessToken={accessToken} lessonTicket={currentLessonTicket} />}
+                {!isSampleMode && currentLessonTicket && <AiCoach key={currentLessonTicket} accessToken={accessToken} lessonTicket={currentLessonTicket} suggestedQuestion={coachAttempt} />}
                 <details className="lesson-plan-details">
                   <summary>Review lesson plan</summary>
                   <div className="lesson-timeline">

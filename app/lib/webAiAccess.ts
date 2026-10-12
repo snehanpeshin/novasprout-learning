@@ -101,10 +101,10 @@ export function ticketClaims(request: Request) {
   const proof = verifyClaims(request.headers.get("x-ai-lesson-ticket") || "", "lesson");
   return proof?.owner === requestOwner(request) && proof.responseId ? proof : null;
 }
-export async function authorizeLessonStep(request: Request, step: "images" | "assets" | "coach", count = 1) {
+export async function authorizeLessonStep(request: Request, step: "images" | "assets" | "coach" | "audio", count = 1) {
   if (!webProof(request)) return true; // Preserve verified Apple purchases and private beta access.
   const ticket = ticketClaims(request); if (!ticket) return false;
-  const limit = step === "images" ? 3 : step === "assets" ? 2 : 10;
+  const limit = step === "images" ? 3 : step === "assets" ? 2 : step === "audio" ? 60 : 10;
   for (let i = 0; i < count; i++) if (!await takeBudget(`web:step:${ticket.responseId}:${step}`, limit, ticket.exp)) return false;
   return true;
 }

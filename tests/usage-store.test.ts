@@ -31,3 +31,8 @@ test("failed-response refund marker and decrement are one atomic transaction",as
 test("invalid allowances or expired lessons never write usage",async()=>{
   const {result,inputs}=await capture(()=>takeBudget("web:step:expired",0,Date.now()-1));assert.equal(result,false);assert.equal(inputs.length,0);
 });
+
+test("voice clip allowance does not increase purchase or subscription limits",async()=>{
+ const voice=await capture(()=>takeBudget("web:step:resp_123:audio",60,Date.now()+86400000));assert.equal(voice.result,true);assert.equal(voice.inputs[0].input.TransactItems[0].Update.ExpressionAttributeValues[":limit"],60);
+ const monthly=await capture(()=>takeBudget("web:month:sub:1",60,Date.now()+86400000));assert.equal(monthly.result,false);assert.equal(monthly.inputs.length,0);
+});

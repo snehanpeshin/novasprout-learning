@@ -16,7 +16,8 @@ async function transact(command: TransactWriteCommand) {
   return false;
 }
 export async function takeBudget(key: string, limit: number, expiresAt: number) {
-  if (!Number.isInteger(limit) || limit<1 || limit>20 || expiresAt<=Date.now()) return false;
+  const maximum = key.startsWith("web:step:") && key.endsWith(":audio") ? 60 : 20;
+  if (!Number.isInteger(limit) || limit<1 || limit>maximum || expiresAt<=Date.now()) return false;
   const durable = key.startsWith("web:purchase:");
   return transact(new TransactWriteCommand({ ClientRequestToken: crypto.randomUUID(), TransactItems:[{Update:{TableName:table(),Key:{id:id(key)},UpdateExpression:durable ? "SET #used = if_not_exists(#used, :zero) + :one" : "SET #used = if_not_exists(#used, :zero) + :one, #ttl = :ttl",ConditionExpression:"attribute_not_exists(#used) OR #used < :limit",ExpressionAttributeNames:durable ? {"#used":"used"} : {"#used":"used","#ttl":"expiresAt"},ExpressionAttributeValues:{":zero":0,":one":1,":limit":limit,...(durable ? {} : {":ttl":Math.floor(expiresAt/1000)+30*86400})}}}] }));
 }
