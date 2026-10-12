@@ -21,7 +21,7 @@ export default function AILessonGeneratorPage() {
         <div className="ai-tutor-hero-copy">
         <p className="eyebrow">NovaSprout AI Tutor</p>
         <h1>Create a personalized lesson in minutes.</h1>
-        <p>Choose a topic. Get a visual lesson, guided practice, and a scored quiz.</p>
+        <p>Choose a topic. Listen to short explanations, reveal each step, and try activities with feedback.</p>
         <div className="hero-actions">
           <a className="button primary" href="#generator">
             Create a Lesson
@@ -33,7 +33,7 @@ export default function AILessonGeneratorPage() {
         <aside className="ai-tutor-hero-preview" aria-label="Visual lesson, practice, and quiz">
           <img src="/novasprout-ai-tutor-app-icon.png" alt="NovaSprout AI Tutor" width={112} height={112} />
           <p className="eyebrow">NovaSprout AI Tutor</p>
-          <div><BookOpenCheck aria-hidden="true" /><span>Visual lesson</span></div>
+          <div><BookOpenCheck aria-hidden="true" /><span>Narrated learning</span></div>
           <div><GraduationCap aria-hidden="true" /><span>Guided practice</span></div>
           <div><Timer aria-hidden="true" /><span>Scored quiz</span></div>
         </aside>
@@ -48,7 +48,7 @@ export default function AILessonGeneratorPage() {
         <div>
           <BookOpenCheck aria-hidden="true" size={22} />
           <span>2</span>
-          <p>Create the visual lesson</p>
+          <p>Create your interactive lesson</p>
         </div>
         <div>
           <Timer aria-hidden="true" size={22} />

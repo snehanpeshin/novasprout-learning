@@ -3880,3 +3880,34 @@ footer div span:first-child {
 
 .ns-ai-tutor-page button:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
 .ns-ai-tutor-page .ai-sample-preview { max-width: none; }
+
+/* Interactive teaching studio: captions remain usable without audio or motion. */
+.interactive-tutor { margin: 24px 0; padding: clamp(18px,3vw,32px); border: 1px solid #c6ddd3; border-radius:24px; background:linear-gradient(135deg,#f4faf6,#eef4ff); color:#183829; }
+.interactive-tutor h3 { font-size:clamp(24px,3vw,34px); margin:8px 0; }
+.studio-progress { display:flex; gap:12px; align-items:center; margin:20px 0; flex-wrap:wrap; }
+.studio-progress progress { flex:1; min-width:120px; accent-color:#257653; }
+.studio-controls { display:flex; align-items:center; flex-wrap:wrap; gap:12px; font-size:13px; }
+.studio-scene { background:white; padding:clamp(16px,3vw,28px); border-radius:18px; margin:20px 0; min-height:240px; overflow-wrap:anywhere; }
+.studio-scene h4 { font-size:24px; margin:10px 0 20px; }
+.studio-beat { display:flex; align-items:flex-start; gap:14px; padding:14px 0; animation:studio-reveal .35s ease-out; }
+.studio-beat > span { flex-shrink:0; background:#e0f0e7; border-radius:50%; width:30px; height:30px; display:grid; place-items:center; font-weight:700; }
+.studio-beat p { margin:0; line-height:1.75; }
+.studio-question { font-size:19px; line-height:1.6; font-weight:600; }
+.studio-attempt { display:block; margin:18px 0; font-weight:600; }
+.studio-attempt textarea { display:block; width:100%; box-sizing:border-box; min-height:95px; padding:12px; border:1px solid #78998b; border-radius:12px; margin-top:8px; font:inherit; }
+.studio-options { border:0; padding:0; margin:20px 0; }
+.studio-options label { display:flex; align-items:center; gap:12px; padding:14px; margin:10px 0; border:1px solid #b3c8bd; border-radius:12px; cursor:pointer; }
+.studio-options input { accent-color:#257653; width:20px; height:20px; flex-shrink:0; }
+.studio-scene .button { margin:6px 8px 6px 0; white-space:normal; }
+.studio-feedback { background:#eaf4ee; border-left:4px solid #257653; padding:16px; margin:18px 0; line-height:1.7; border-radius:8px; }
+.studio-navigation { display:flex; justify-content:space-between; gap:12px; }
+.studio-help { font-size:14px; }
+@keyframes studio-reveal { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@media(prefers-reduced-motion:reduce) { .studio-beat { animation:none; } }
+
+.studio-watch { margin-top:12px; }
+.studio-connections { margin:18px 0; border:1px solid #b3c8bd; padding:16px; border-radius:12px; }
+.studio-connections details { padding:12px 0; }
+.studio-connections summary { cursor:pointer; font-weight:600; line-height:1.7; }
+
+.interactive-tutor { scroll-margin-top:100px; }
