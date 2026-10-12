@@ -40,7 +40,7 @@ export default function InteractiveLessonPlayer({lesson,accessToken,lessonTicket
     <header><p className="eyebrow">Listen · Explore · Try</p><h3>Your interactive lesson</h3><p>Short explanations, step reveals, and a turn for you to think. Take your time.</p></header>
     <div className="studio-progress"><progress value={index+1} max={moments.length} aria-label="Lesson position"/><span>Moment {index+1} of {moments.length}</span></div>
     <div className="studio-controls"><button type="button" className="button secondary" onClick={listen} disabled={busy}>{busy?"Preparing voice…":playing?"Stop voice":"Listen / replay"}</button><span>{lessonTicket?"AI-generated OpenAI voice":"Sample: your device’s synthetic voice"} · captions below</span></div>
-    {current.beats.length>1&&<button type="button" className="button secondary studio-watch" onClick={()=>{stop();setBeat(0);setWatching(!watching);}}>{watching?"Pause walkthrough":"Watch step-by-step"}</button>}
+    {current.beats.length>1&&<button type="button" className="button secondary studio-watch" onClick={()=>{if(watching){setWatching(false);}else{stop();if(beat>=current.beats.length-1)setBeat(0);setWatching(true);}}}>{watching?"Pause walkthrough":"Watch step-by-step"}</button>}
     {error&&<p role="status">{error}</p>}
     <article className="studio-scene" key={current.id}><p className="mini-label">{current.kind === "model" ? "I do: follow the reasoning" : current.kind === "practice" ? "You do: give it a try" : current.kind === "check" ? "Retrieval check" : "Explore the idea"}</p><h4>{current.title}</h4>
       {current.beats.slice(0,beat+1).map((text,i)=><div className="studio-beat" key={i}><span aria-hidden="true">{i+1}</span><p>{text}</p></div>)}
