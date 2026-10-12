@@ -43,3 +43,24 @@ export async function cachedVideoLesson(responseId:string,owner:string) {
 export async function saveVideoLesson(responseId:string,owner:string,plan:unknown,expiresAt:number) {
  await database.send(new PutCommand({TableName:table(),Item:{id:id("video:plan:v1:"+responseId),owner,plan,expiresAt:Math.floor(expiresAt/1000)},ConditionExpression:"attribute_not_exists(id)"}));
 }
+
+// A bounded MP3 fits beneath DynamoDB's 400 KB item limit after base64 encoding.
+export async function cachedVideoAudio(responseId:string,owner:string,sceneIndex:number):Promise<Buffer|null> {
+ const result=await database.send(new GetCommand({TableName:table(),Key:{id:id(`video:audio:v1:${responseId}:${sceneIndex}`)},ConsistentRead:true}));
+ const item=result.Item;
+ return item?.owner===owner&&Number(item.expiresAt)*1000>Date.now()&&typeof item.audio==="string" ? Buffer.from(item.audio,"base64") : null;
+}
+export async function saveVideoAudio(responseId:string,owner:string,sceneIndex:number,bytes:ArrayBuffer,expiresAt:number) {
+ if(bytes.byteLength>300000)return;
+ await database.send(new PutCommand({TableName:table(),Item:{id:id(`video:audio:v1:${responseId}:${sceneIndex}`),owner,audio:Buffer.from(bytes).toString("base64"),expiresAt:Math.floor(expiresAt/1000)}}));
+}
+
+export async function cachedVideoImage(responseId:string,owner:string,sceneIndex:number):Promise<string|null> {
+ const result=await database.send(new GetCommand({TableName:table(),Key:{id:id(`video:image:v1:${responseId}:${sceneIndex}`)},ConsistentRead:true}));
+ const item=result.Item;
+ return item?.owner===owner&&Number(item.expiresAt)*1000>Date.now()&&typeof item.image==="string" ? item.image : null;
+}
+export async function saveVideoImage(responseId:string,owner:string,sceneIndex:number,image:string,expiresAt:number) {
+ if(!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(image)||image.length>400025)throw new Error("Invalid bounded illustration");
+ await database.send(new PutCommand({TableName:table(),Item:{id:id(`video:image:v1:${responseId}:${sceneIndex}`),owner,image,expiresAt:Math.floor(expiresAt/1000)}}));
+}

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
-import { takeBudget, usedBudget, releaseBudget, refundFailedResponse } from "../app/lib/usageStore.ts";
+import { takeBudget, usedBudget, releaseBudget, refundFailedResponse, cachedVideoAudio, saveVideoAudio } from "../app/lib/usageStore.ts";
 process.env.AI_USAGE_TABLE="test-ledger";
 async function capture(action: () => Promise<any>, failure?: any) {
   const original=DynamoDBDocumentClient.prototype.send;const inputs:any[]=[];
@@ -35,4 +35,15 @@ test("invalid allowances or expired lessons never write usage",async()=>{
 test("voice clip allowance does not increase purchase or subscription limits",async()=>{
  const voice=await capture(()=>takeBudget("web:step:resp_123:audio",60,Date.now()+86400000));assert.equal(voice.result,true);assert.equal(voice.inputs[0].input.TransactItems[0].Update.ExpressionAttributeValues[":limit"],60);
  const monthly=await capture(()=>takeBudget("web:month:sub:1",60,Date.now()+86400000));assert.equal(monthly.result,false);assert.equal(monthly.inputs.length,0);
+});
+
+test("narration caches refuse wrong owners and expired records",async()=>{
+ const original=DynamoDBDocumentClient.prototype.send;
+ let item={owner:"other",audio:"SUQz",expiresAt:Math.floor(Date.now()/1000)+100};
+ DynamoDBDocumentClient.prototype.send=(async()=>({Item:item})) as any;
+ try{assert.equal(await cachedVideoAudio("resp","mine",0),null);item={...item,owner:"mine",expiresAt:1};assert.equal(await cachedVideoAudio("resp","mine",0),null);item={...item,expiresAt:Math.floor(Date.now()/1000)+100};assert.deepEqual(await cachedVideoAudio("resp","mine",0),Buffer.from("ID3"));}finally{DynamoDBDocumentClient.prototype.send=original;}
+});
+test("oversized narration is never written as an invalid DynamoDB item",async()=>{
+ const {inputs}=await capture(()=>saveVideoAudio("resp","owner",0,new ArrayBuffer(300001),Date.now()+10000));assert.equal(inputs.length,0);
+ const valid=await capture(()=>saveVideoAudio("resp","owner",0,new ArrayBuffer(300000),Date.now()+10000));assert.equal(valid.inputs.length,1);assert.equal(valid.inputs[0].input.Item.audio.length,400000);
 });
