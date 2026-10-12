@@ -1,0 +1,9 @@
+# Integrated tutor controls - October 12, 2026
+
+The generated lesson now has four accessible areas: Watch, Try, Ask and Save. Free samples retain Try and Save. Players stay mounted while their area is hidden, preserving progress, narration buffers, practice answers and video downloads. Changing areas stops voice and walkthrough playback. Arrow keys, Home and End operate the tab list.
+
+Watch starts narration and detailed pictures from one action, with pictures enabled by default and an opt-out before preparation. Main controls are Back, Play/Pause and Next. Speed, per-part pauses, individual scenes and caption/export settings are inside More options. Pictures and the transcript remain expandable. Preparation can continue while another area is open, but background completion cannot start hidden audio.
+
+Hint actions open Ask, seed the question and focus its input. Repeating the same hint after a previous response seeds it again. Save gathers the completed video, caption file, printable lesson and full written content. Parent purchasing and access controls sit in named parent sections; prices and purchase confirmation remain unchanged.
+
+Controls share the site's green palette, rounded shapes and visible focus outlines. Touch targets are at least 48 pixels tall. Desktop, 390-pixel mobile and 320-pixel narrow-phone fixture-based browser checks passed for one-click illustrated playback, automatic pause, preserved position, keyboard tabs, repeated hint handoff, downloads and no overflow/page errors. Fixtures reuse previously verified media and generate no extra API charges. All 190 existing tests passed. Production build/typecheck passed. Narrow-phone testing also found and fixed intrinsic form/grid overflow without clipping controls. Existing API behavior and access boundaries remain unchanged.
