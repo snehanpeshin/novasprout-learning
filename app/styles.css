@@ -3911,3 +3911,15 @@ footer div span:first-child {
 .studio-connections summary { cursor:pointer; font-weight:600; line-height:1.7; }
 
 .interactive-tutor { scroll-margin-top:100px; }
+
+.lesson-video-pilot { max-width:1100px; margin:36px auto; padding:clamp(18px,4vw,36px); border:1px solid #c6ddd3; border-radius:24px; background:#f4faf6; color:#183d35; }
+.lesson-video-pilot h2 { margin:8px 0; font-size:clamp(26px,3vw,36px); }
+.lesson-video-pilot video { display:block; width:100%; max-height:600px; background:#173d35; border-radius:18px; margin:24px 0; }
+.video-pilot-label { font-size:14px; }
+.video-pilot-question { background:#fff; border-radius:16px; padding:20px; }
+.video-pilot-answers { display:flex; gap:12px; flex-wrap:wrap; }
+.video-pilot-answers [aria-pressed="true"] { border:2px solid #257653; background:#dcefe4; }
+.video-pilot-feedback { background:#e3f1e9; padding:14px; border-radius:10px; line-height:1.65; }
+.video-pilot-transcript { margin-top:20px; line-height:1.7; }
+.video-pilot-transcript summary { cursor:pointer; font-weight:600; }
+@media(max-width:600px) { .lesson-video-pilot { margin:24px 16px; } .video-pilot-answers .button { flex:1 1 100%; } }
