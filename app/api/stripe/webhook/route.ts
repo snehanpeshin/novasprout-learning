@@ -13,6 +13,7 @@ type StripeEvent = {
 };
 
 type StripeCheckoutSession = {
+  payment_status?: string;
   amount_total?: number;
   currency?: string;
   customer?: string;
@@ -59,11 +60,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid Stripe signature" }, { status: 400 });
   }
 
-  const event = JSON.parse(payload) as StripeEvent;
+  let event: StripeEvent;
+  try { event = JSON.parse(payload) as StripeEvent; } catch { return NextResponse.json({ error: "Invalid event." }, { status: 400 }); }
 
   try {
-    if (event.type === "checkout.session.completed") {
+    if (["checkout.session.completed", "checkout.session.async_payment_succeeded"].includes(event.type)) {
       const session = event.data.object as StripeCheckoutSession;
+      if (session.payment_status !== "paid") return NextResponse.json({ received: true });
       await savePayment({
         amount: (session.amount_total ?? 0) / 100,
         currency: session.currency ?? "usd",

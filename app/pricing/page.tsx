@@ -37,7 +37,7 @@ export default function PricingPage() {
 
       <section className="ns-section ns-pricing-notes">
         <div><h2>What the class fee covers</h2><p>Live explanation, representative examples, guided practice, and a practical next step. The exact session length and meeting schedule are confirmed before payment.</p></div>
-        <div><h2>About the AI study tool</h2><p>The optional AI lesson generator is separate from live tutoring. Its access options are shown inside the tool and do not affect booking a human tutor.</p><a className="ns-text-link" href="/ai-lesson-generator">Open AI Study Tool <ArrowRight /></a></div>
+        <div><h2>About the AI study tool</h2><p>AI Tutor costs $2.99 for one lesson or $14.99/month for up to 20 lessons. It includes visual lessons, guided practice, quizzes, and follow-up hints. Monthly access renews until cancelled.</p><a className="ns-text-link" href="/ai-lesson-generator">Open AI Study Tool <ArrowRight /></a></div>
       </section>
 
       <section className="ns-demo-section" id="free-demo">

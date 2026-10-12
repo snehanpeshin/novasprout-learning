@@ -1,11 +1,13 @@
-import { NextResponse } from "next/server";
-import { aiAccessError, isAiAccessAllowed } from "../../../lib/aiAccess";
-import { extractAiLessonOutputText, parseAiLessonJson } from "../../../lib/aiLessonResponse";
+import { NextResponse } from "next/server.js";
+import { aiAccessError, isAiAccessAllowed } from "../../../lib/aiAccess.ts";
+import { extractAiLessonOutputText, parseAiLessonJson } from "../../../lib/aiLessonResponse.ts";
 import {
   criticalLessonValidationIssues,
   validateGeneratedLesson
-} from "../../../lib/aiLessonValidation";
-import { bridgeVisualPlanIntoLesson } from "../../../lib/visualPlanBridge";
+} from "../../../lib/aiLessonValidation.ts";
+import { bridgeVisualPlanIntoLesson } from "../../../lib/visualPlanBridge.ts";
+
+import { lessonTicket, refundFailedResponse, requestOwner } from "../../../lib/webAiAccess.ts";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -62,14 +64,16 @@ export async function GET(request: Request) {
       );
     }
 
+    if (payload?.metadata?.novasprout_owner !== requestOwner(request)) return NextResponse.json({ error: "This lesson belongs to a different purchase or access code." }, { status: 403 });
     const status = typeof payload?.status === "string" ? payload.status : "unknown";
     if (["queued", "in_progress"].includes(status)) {
-      return NextResponse.json({ responseId, status }, { headers: { "Cache-Control": "no-store" } });
+      return NextResponse.json({ responseId, status, lessonTicket: lessonTicket(request, responseId, payload.created_at) }, { headers: { "Cache-Control": "no-store" } });
     }
 
     if (status === "completed") {
       const lesson = parseAiLessonJson(extractAiLessonOutputText(payload));
       if (!lesson) {
+        await refundFailedResponse(responseId, payload.metadata.novasprout_budget || "");
         return NextResponse.json(
           { error: "The AI lesson finished but returned incomplete content. Please generate it again." },
           { status: 422 }
@@ -79,6 +83,7 @@ export async function GET(request: Request) {
       const validation = validateGeneratedLesson(lesson);
       const criticalValidationIssues = criticalLessonValidationIssues(validation.issues);
       if (criticalValidationIssues.length) {
+        await refundFailedResponse(responseId, payload.metadata.novasprout_budget || "");
         return NextResponse.json(
           {
             error: `The AI lesson could not be used safely: ${criticalValidationIssues.slice(0, 3).join(" ")}`,
@@ -92,6 +97,7 @@ export async function GET(request: Request) {
         {
           lesson: bridgeVisualPlanIntoLesson(lesson),
           responseId,
+          lessonTicket: lessonTicket(request, responseId, payload.created_at),
           status,
           validationWarnings: validation.issues
         },
@@ -99,6 +105,7 @@ export async function GET(request: Request) {
       );
     }
 
+    await refundFailedResponse(responseId, payload.metadata.novasprout_budget || "");
     const failureMessage =
       payload?.error?.message ??
       payload?.incomplete_details?.reason ??

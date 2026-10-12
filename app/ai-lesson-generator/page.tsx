@@ -14,10 +14,11 @@ export const metadata = {
 
 export default function AILessonGeneratorPage() {
   return (
-    <main className="landing-page ns-site">
+    <main className="landing-page ns-site ns-ai-tutor-page">
       <SiteHeader />
 
       <section className="ai-tutor-hero">
+        <div className="ai-tutor-hero-copy">
         <p className="eyebrow">NovaSprout AI Tutor</p>
         <h1>Create a personalized lesson in minutes.</h1>
         <p>Choose a topic. Get a visual lesson, guided practice, and a scored quiz.</p>
@@ -28,6 +29,14 @@ export default function AILessonGeneratorPage() {
           </a>
           <a className="button secondary" href="/pricing">View Live Tutoring</a>
         </div>
+        </div>
+        <aside className="ai-tutor-hero-preview" aria-label="Visual lesson, practice, and quiz">
+          <img src="/novasprout-ai-tutor-app-icon.png" alt="NovaSprout AI Tutor" width={112} height={112} />
+          <p className="eyebrow">NovaSprout AI Tutor</p>
+          <div><BookOpenCheck aria-hidden="true" /><span>Visual lesson</span></div>
+          <div><GraduationCap aria-hidden="true" /><span>Guided practice</span></div>
+          <div><Timer aria-hidden="true" /><span>Scored quiz</span></div>
+        </aside>
       </section>
 
       <section className="ai-tutor-steps" id="how-ai-tutor-works" aria-label="How the AI Tutor works">

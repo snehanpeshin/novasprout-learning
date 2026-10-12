@@ -13,7 +13,7 @@ type PlatformStatus = {
 function getPlatformStatus(paymentDatabaseConnected: boolean): PlatformStatus {
   const aiAccessConfigured = Boolean(
     process.env.AI_LESSON_ACCESS_TOKEN?.trim() ||
-      process.env.AI_LESSON_ALLOWED_EMAILS?.trim()
+      process.env.AI_WEB_ACCESS_SECRET?.trim() && process.env.AI_USAGE_TABLE?.trim()
   );
   const stripeConfigured = Boolean(
     process.env.STRIPE_SECRET_KEY?.trim() &&

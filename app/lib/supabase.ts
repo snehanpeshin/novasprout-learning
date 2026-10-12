@@ -52,7 +52,7 @@ function getSupabaseConfig() {
   return { serviceRoleKey, url: url.replace(/\/$/, "") };
 }
 
-async function supabaseFetch(path: string, init: RequestInit = {}) {
+export async function supabaseFetch(path: string, init: RequestInit = {}) {
   const { serviceRoleKey, url } = getSupabaseConfig();
   let response: Response;
 
@@ -92,9 +92,9 @@ async function supabaseFetch(path: string, init: RequestInit = {}) {
 }
 
 export async function savePayment(record: PaymentRecord) {
-  await supabaseFetch("stripe_payments", {
+  await supabaseFetch("stripe_payments?on_conflict=stripe_session_id", {
     body: JSON.stringify(record),
-    headers: { Prefer: "return=minimal" },
+    headers: { Prefer: "resolution=ignore-duplicates,return=minimal" },
     method: "POST"
   });
 }

@@ -57,6 +57,9 @@ export default function RefundPolicy() {
         </article>
 
         <article>
+          <h2>Website AI Lessons</h2>
+          <p>If the server cannot start a usable AI lesson, the lesson allowance is restored when that failure is confirmed. This restores a lesson credit, not a Stripe payment refund. Contact NovaSprout with your Stripe receipt for a payment-refund request or a lesson that remains stuck. Requests are reviewed individually. Cancel monthly renewal in Manage billing; paid access continues until the current period ends.</p>
+          </article><article>
           <h2>Technical Issues</h2>
           <p>
             If a session cannot happen because of a technical issue on our side, we will

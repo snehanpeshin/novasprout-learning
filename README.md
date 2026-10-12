@@ -1,6 +1,6 @@
 # NovaSprout Learning Starter Site
 
-This is a low-cost custom tutoring site for NovaSprout Learning. It is built as a static Next.js export so it can run cheaply on AWS Amplify without a backend, database, or custom server.
+This is a low-cost custom tutoring site for NovaSprout Learning. It runs on Next.js with AWS Amplify SSR hosting. Server routes provide Stripe checkout, verified AI lesson access, OpenAI lesson generation and guided tutoring. Paid website usage limits use a dedicated DynamoDB ledger; existing payment reports use Supabase.
 
 ## What is included
 
@@ -146,3 +146,5 @@ Stripe Checkout, Stripe Payment Links, webhooks, Supabase storage, and the admin
 docs/stripe-setup.md
 docs/database-schema.sql
 ```
+
+Paid website AI Tutor setup and verification are documented in [docs/web-ai-tutor.md](docs/web-ai-tutor.md).
