@@ -1,8 +1,6 @@
 "use client";
 import AiPaidPlans from "./AiPaidPlans";
-import AiCoach from "./AiCoach";
-import InteractiveLessonPlayer from "./InteractiveLessonPlayer";
-import PersonalizedVideoTutor from "./PersonalizedVideoTutor";
+import LessonExperience from "./LessonExperience";
 
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -1580,7 +1578,6 @@ export default function AILessonGenerator() {
   const [hasPaidAccess, setHasPaidAccess] = useState(false);
   const [lessonAllowance, setLessonAllowance] = useState<number | null>(null);
   const [currentLessonTicket, setCurrentLessonTicket] = useState("");
-  const [coachAttempt, setCoachAttempt] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [grade, setGrade] = useState("Grades 6-8");
@@ -1914,7 +1911,7 @@ Interested in: Free trial / Paid AI-generated lessons
         </div>
       ) : null}
 
-      <AiPaidPlans onAccessChange={(active, remaining) => { setHasPaidAccess(active); setLessonAllowance(remaining ?? null); }} />
+      <details className="ai-parent-tools" open={!lesson}><summary>For parents: plans and access</summary><AiPaidPlans onAccessChange={(active, remaining) => { setHasPaidAccess(active); setLessonAllowance(remaining ?? null); }} /></details>
       <div className="ai-generator-layout">
         <form className="ai-generator-form" onSubmit={generateLesson}>
           <label>
@@ -2079,7 +2076,7 @@ Interested in: Free trial / Paid AI-generated lessons
             {isGenerating ? "Creating your lesson..." : "Create My Lesson"}
             <ArrowRight aria-hidden="true" size={18} />
           </button>
-          <button
+          <details className="ai-parent-tools"><summary>For parents and tutors</summary><button
             className="text-button"
             onClick={() => {
               window.localStorage.removeItem(accessStorageKey);
@@ -2091,7 +2088,7 @@ Interested in: Free trial / Paid AI-generated lessons
             type="button"
           >
             Use a different access code
-          </button>
+          </button></details>
           <p className="generator-note">
             Full lessons can take 3-5 minutes and continue in the background. Keep this page open,
             and do not enter sensitive student information.
@@ -2100,7 +2097,7 @@ Interested in: Free trial / Paid AI-generated lessons
           {error ? <p className="form-error">{error}</p> : null}
         </form>
 
-        <article className="generated-lesson ai-output" aria-live="polite">
+        <article className="generated-lesson ai-output">
           {lesson || lessonText ? (
             <>
               <p className="mini-label">
@@ -2110,8 +2107,7 @@ Interested in: Free trial / Paid AI-generated lessons
               {lesson?.studentFit ? <p>{lesson.studentFit}</p> : null}
               {lesson ? (
                 <>
-                {!isSampleMode && currentLessonTicket && <PersonalizedVideoTutor key={currentLessonTicket} accessToken={accessToken} lessonTicket={currentLessonTicket} onAskTutor={question=>{setCoachAttempt(question); document.getElementById("lesson-ai-coach")?.scrollIntoView({behavior:"smooth",block:"center"});}} />}
-                <InteractiveLessonPlayer key={isSampleMode ? "sample" : currentLessonTicket || lesson.title} lesson={lesson} accessToken={accessToken} lessonTicket={isSampleMode ? "" : currentLessonTicket} onAskTutor={!isSampleMode && currentLessonTicket ? question => {setCoachAttempt(question); document.getElementById("lesson-ai-coach")?.scrollIntoView({behavior:"smooth",block:"center"});} : undefined} />
+                <LessonExperience key={isSampleMode ? "sample" : currentLessonTicket || lesson.title} lesson={lesson} accessToken={accessToken} lessonTicket={isSampleMode ? "" : currentLessonTicket} resources={<>
                 <details className="lesson-plan-details"><summary>Preview the printable lesson</summary><LessonPlanPreview lesson={lesson} /></details>
                 <div className="lesson-launch-card">
                   <div>
@@ -2122,16 +2118,15 @@ Interested in: Free trial / Paid AI-generated lessons
                   <div className="lesson-launch-actions">
                     <button className="button primary" onClick={() => setIsDeckOpen(true)} type="button">
                       <Images aria-hidden="true" size={18} />
-                      Build Printable Lesson
+                      Save a printable lesson
                     </button>
                     <a className="button secondary" href={liveTutorRequestHref} target="_blank" rel="noreferrer">
-                      Request a Live Tutor
+                      Ask a grown-up about a tutor
                     </a>
                   </div>
                 </div>
-                {!isSampleMode && currentLessonTicket && <AiCoach key={currentLessonTicket} accessToken={accessToken} lessonTicket={currentLessonTicket} suggestedQuestion={coachAttempt} />}
                 <details className="lesson-plan-details">
-                  <summary>Review lesson plan</summary>
+                  <summary>Read the full lesson</summary>
                   <div className="lesson-timeline">
                   <LessonSection label="Learning objectives">
                     <ListBlock items={lesson.learningObjectives} />
@@ -2233,6 +2228,7 @@ Interested in: Free trial / Paid AI-generated lessons
                   </LessonSection>
                   </div>
                 </details>
+                </>} />
                 </>
               ) : (
                 <pre className="lesson-text-fallback">{lessonText}</pre>

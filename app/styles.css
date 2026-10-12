@@ -3954,3 +3954,54 @@ footer div span:first-child {
 .personalized-video-gallery figure { margin:18px 0; }
 .personalized-video-gallery img { display:block; width:100%; max-width:720px; height:auto; border-radius:16px; }
 .personalized-video-gallery figcaption { margin:8px 0; line-height:1.6; }
+
+/* A shared, calm control system for the learning space. */
+.lesson-experience { margin:24px 0; border:1px solid #c9dfd4; border-radius:24px; background:#f6faf7; overflow:hidden; }
+.lesson-experience-heading { padding:24px 24px 8px; }
+.lesson-experience-heading h3 { margin:6px 0; font-size:clamp(24px,3vw,32px); }
+.lesson-experience-heading p { line-height:1.6; }
+.lesson-experience-tabs { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; padding:12px 20px 20px; }
+.lesson-experience-tabs button { display:flex; align-items:center; justify-content:center; gap:10px; min-height:76px; padding:12px; background:#fff; color:#294d40; border:2px solid #d0e0d8; border-radius:16px; text-align:left; cursor:pointer; }
+.lesson-experience-tabs button[aria-selected="true"] { color:#fff; background:#24694f; border-color:#24694f; box-shadow:0 4px 0 #174832; }
+.lesson-experience-tabs strong { display:block; font-size:18px; }
+.lesson-experience-tabs small { display:block; font-size:12px; margin-top:3px; }
+.lesson-experience [role="tabpanel"] { padding:0 20px 20px; }
+.lesson-experience [role="tabpanel"][hidden] { display:none; }
+.lesson-experience .personalized-video-tutor,.lesson-experience .interactive-tutor,.lesson-experience .ai-coach { margin:0; border:0; border-radius:18px; box-shadow:none; }
+.lesson-experience .personalized-video-tutor { background:#edf6f1; }
+#generator .button,.lesson-experience button,.lesson-experience summary { min-height:48px; border-radius:14px; }
+#generator .button,.lesson-experience button { white-space:normal; line-height:1.35; }
+#generator .button:disabled,.lesson-experience button:disabled { cursor:not-allowed; opacity:0.55; }
+.lesson-experience :is(button,a,input,select,textarea,summary):focus-visible { outline:3px solid #286db4; outline-offset:4px; }
+.lesson-experience :is(summary,label) { font-size:16px; }
+.lesson-experience summary { display:flex; align-items:center; padding:12px 14px; border:1px solid #cedfd5; background:#fff; cursor:pointer; gap:10px; }
+.lesson-experience summary::before { content:"+"; font-weight:700; font-size:22px; color:#24694f; }
+.lesson-experience details[open]>summary::before { content:"-"; }
+.video-start-card { display:grid; gap:16px; padding:20px; border-radius:18px; background:#fff; margin-top:20px; }
+.video-start-card label { display:flex; align-items:center; gap:10px; min-height:44px; }
+.video-start-card input,.personalized-video-controls input[type="checkbox"] { width:22px; height:22px; accent-color:#24694f; }
+.video-start-card .button { font-size:19px; min-height:56px!important; }
+.video-main-controls { display:grid; grid-template-columns:minmax(70px,1fr) minmax(110px,2fr) minmax(70px,1fr); gap:10px; margin:16px 0; }
+.video-main-controls .button { justify-content:center; min-height:54px; }
+.video-more-options { margin:20px 0; }
+.video-more-options[open] { padding-bottom:14px; }
+.lesson-experience .personalized-video-progress { font-size:14px; }
+.lesson-experience .personalized-video-progress input { min-height:40px; }
+.lesson-experience .studio-controls { display:flex; gap:12px; flex-wrap:wrap; }
+.lesson-experience .studio-options label { min-height:48px; padding:12px; cursor:pointer; }
+.lesson-experience .studio-navigation { gap:12px; }
+.lesson-experience .studio-navigation .button { min-width:100px; }
+.lesson-experience textarea { font-size:16px; line-height:1.6; }
+@media(max-width:600px) { .lesson-experience-tabs { grid-template-columns:repeat(2,minmax(0,1fr)); padding:12px; } .lesson-experience-tabs button { min-height:72px; } .lesson-experience [role="tabpanel"] { padding:0 12px 12px; } .lesson-experience-heading { padding:18px 18px 6px; } .lesson-experience .personalized-video-tutor,.lesson-experience .interactive-tutor,.lesson-experience .ai-coach { padding:16px; } .video-main-controls { gap:8px; } .lesson-experience .personalized-video-caption { font-size:16px; } }
+
+.lesson-save-video { background:#fff; padding:20px; border-radius:18px; margin-bottom:18px; }
+.lesson-save-video .button { margin:8px 8px 0 0; }
+
+.ai-parent-tools { margin:16px 0; border:1px solid #d0dcd6; border-radius:14px; background:#fafcfb; padding:12px; }
+.ai-parent-tools>summary { cursor:pointer; min-height:44px; display:list-item; padding:10px; font-weight:600; color:#36584a; }
+
+@media(max-width:380px) { .video-main-controls { grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) minmax(0,1fr); } .video-main-controls .button { min-width:0; padding:12px 6px; } }
+
+#generator .ai-generator-form,#generator .generated-lesson { min-width:0; }
+#generator .ai-generator-form :is(select,input:not([type="checkbox"]):not([type="radio"]),textarea) { min-width:0; max-width:100%; width:100%; box-sizing:border-box; }
+@media(max-width:980px) { #generator .ai-generator-layout { grid-template-columns:minmax(0,1fr); } }
