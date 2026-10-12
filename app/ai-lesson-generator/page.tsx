@@ -1,5 +1,6 @@
 import { ArrowRight, BookOpenCheck, CalendarCheck, GraduationCap, Timer } from "lucide-react";
 import AILessonGenerator from "../components/AILessonGenerator";
+import LessonVideoPilot from "../components/LessonVideoPilot";
 import Footer from "../components/Footer";
 import SiteHeader from "../components/SiteHeader";
 import TrackedLink from "../components/TrackedLink";
@@ -56,6 +57,8 @@ export default function AILessonGeneratorPage() {
           <p>Learn, practice, and take the quiz</p>
         </div>
       </section>
+
+      <LessonVideoPilot />
 
       <div id="generator">
         <AILessonGenerator />
