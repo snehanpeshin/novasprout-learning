@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 const database = DynamoDBDocumentClient.from(new DynamoDBClient({ region: process.env.AI_USAGE_REGION || "us-east-1", maxAttempts: 3 }), { marshallOptions: { removeUndefinedValues: true } });
 function table() { const name=process.env.AI_USAGE_TABLE; if (!name) throw new Error("The usage ledger is unavailable."); return name; }
 function id(value: string) { return crypto.createHash("sha256").update(value).digest("hex"); }
@@ -34,4 +34,12 @@ export async function refundFailedResponse(responseId: string, budgetKey: string
     {Put:{TableName:table(),Item:{id:id("refund:"+responseId),budget:id(budgetKey)},ConditionExpression:"attribute_not_exists(id)"}},
     {Update:{TableName:table(),Key:{id:id(budgetKey)},UpdateExpression:"SET #used = #used - :one",ConditionExpression:"#used >= :one",ExpressionAttributeNames:{"#used":"used"},ExpressionAttributeValues:{":one":1}}}
   ]}));
+}
+
+export async function cachedVideoLesson(responseId:string,owner:string) {
+ const result=await database.send(new GetCommand({TableName:table(),Key:{id:id("video:plan:v1:"+responseId)},ConsistentRead:true}));
+ return result.Item?.owner===owner&&Number(result.Item.expiresAt)*1000>Date.now() ? result.Item.plan : null;
+}
+export async function saveVideoLesson(responseId:string,owner:string,plan:unknown,expiresAt:number) {
+ await database.send(new PutCommand({TableName:table(),Item:{id:id("video:plan:v1:"+responseId),owner,plan,expiresAt:Math.floor(expiresAt/1000)},ConditionExpression:"attribute_not_exists(id)"}));
 }

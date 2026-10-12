@@ -2,6 +2,7 @@
 import AiPaidPlans from "./AiPaidPlans";
 import AiCoach from "./AiCoach";
 import InteractiveLessonPlayer from "./InteractiveLessonPlayer";
+import PersonalizedVideoTutor from "./PersonalizedVideoTutor";
 
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -2109,6 +2110,7 @@ Interested in: Free trial / Paid AI-generated lessons
               {lesson?.studentFit ? <p>{lesson.studentFit}</p> : null}
               {lesson ? (
                 <>
+                {!isSampleMode && currentLessonTicket && <PersonalizedVideoTutor key={currentLessonTicket} accessToken={accessToken} lessonTicket={currentLessonTicket} onAskTutor={question=>{setCoachAttempt(question); document.getElementById("lesson-ai-coach")?.scrollIntoView({behavior:"smooth",block:"center"});}} />}
                 <InteractiveLessonPlayer key={isSampleMode ? "sample" : currentLessonTicket || lesson.title} lesson={lesson} accessToken={accessToken} lessonTicket={isSampleMode ? "" : currentLessonTicket} onAskTutor={!isSampleMode && currentLessonTicket ? question => {setCoachAttempt(question); document.getElementById("lesson-ai-coach")?.scrollIntoView({behavior:"smooth",block:"center"});} : undefined} />
                 <details className="lesson-plan-details"><summary>Preview the printable lesson</summary><LessonPlanPreview lesson={lesson} /></details>
                 <div className="lesson-launch-card">
