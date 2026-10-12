@@ -2,7 +2,11 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2, Clock3, CreditCard, Sparkles, UsersRound } from "lucide-react";
-import { tutorPlans, tutorSubjects, type TutorMatchSummary, type TutorPlan, type TutorSubject } from "../lib/tutorMatch";
+const tutorSubjects = ["Math", "Science & STEM", "Coding & Data Skills", "Study Skills"] as const;
+const tutorPlans = ["demo", "single", "monthly"] as const;
+type TutorPlan = typeof tutorPlans[number];
+type TutorMatchStatus = "requested" | "reviewing" | "matched" | "demo_scheduled" | "paid" | "active" | "closed";
+type TutorMatchSummary = { id: string; status: TutorMatchStatus; subject: string; studentLevel: string; requestedPlan: TutorPlan; tutorLabel: string | null; nextStep: string | null; updatedAt: string; };
 
 const planCopy: Record<TutorPlan, { label: string; detail: string; productKey?: "tutoring_session" | "monthly_subscription" }> = {
   demo: { label: "Free tutor match and demo", detail: "Meet a recommended tutor before making any purchase." },
