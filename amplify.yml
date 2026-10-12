@@ -24,6 +24,9 @@ frontend:
         - if [ -n "$APPLE_IAP_MONTHLY_PRODUCT_ID" ]; then printf "APPLE_IAP_MONTHLY_PRODUCT_ID=%s\n" "$APPLE_IAP_MONTHLY_PRODUCT_ID" >> .env.production; fi
         - env | grep -e STRIPE_NOVASPROUT_ >> .env.production
         - env | grep -e NEXT_PUBLIC_ >> .env.production
+        - if [ -n "$AI_WEB_ACCESS_SECRET" ]; then printf "AI_WEB_ACCESS_SECRET=%s\n" "$AI_WEB_ACCESS_SECRET" >> .env.production; fi
+        - if [ -n "$AI_USAGE_TABLE" ]; then printf "AI_USAGE_TABLE=%s\n" "$AI_USAGE_TABLE" >> .env.production; fi
+        - if [ -n "$AI_USAGE_REGION" ]; then printf "AI_USAGE_REGION=%s\n" "$AI_USAGE_REGION" >> .env.production; fi
         - npm run build
   artifacts:
     baseDirectory: .next

@@ -1,23 +1,17 @@
+import crypto from "node:crypto";
+import { getWebAccess } from "./webAiAccess.ts";
 export async function isAiAccessAllowed(
   request: Request,
   { consumeSingleLesson = false }: { consumeSingleLesson?: boolean } = {}
 ) {
   const providedAccess = request.headers.get("x-ai-access-token")?.trim() ?? "";
   const expectedToken = process.env.AI_LESSON_ACCESS_TOKEN?.trim() ?? "";
-  const allowedEmails = new Set(
-    (process.env.AI_LESSON_ALLOWED_EMAILS ?? "")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean)
-  );
 
-  if (expectedToken && providedAccess === expectedToken) {
+  if (expectedToken && Buffer.byteLength(providedAccess) === Buffer.byteLength(expectedToken) && crypto.timingSafeEqual(Buffer.from(providedAccess), Buffer.from(expectedToken))) {
     return true;
   }
 
-  if (providedAccess.includes("@") && allowedEmails.has(providedAccess.toLowerCase())) {
-    return true;
-  }
+  if (await getWebAccess(request)) return true;
 
   const appleJws = request.headers.get("x-apple-transaction-jws")?.trim() ?? "";
   if (!appleJws) return false;
@@ -33,4 +27,4 @@ export async function isAiAccessAllowed(
 }
 
 export const aiAccessError =
-  "Start with the free sample, purchase one AI lesson, subscribe, or enter a NovaSprout beta access code.";
+  "Start with the free sample, purchase one AI lesson, subscribe on the website, or enter a private NovaSprout access code.";

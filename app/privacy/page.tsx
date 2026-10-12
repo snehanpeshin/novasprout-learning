@@ -120,6 +120,10 @@ export default function PrivacyPolicy() {
         </article>
 
         <article>
+          <h2>Website AI Tutor Purchases and Questions</h2>
+          <p>Stripe processes website payments. We store payment records in Supabase and hashed lesson-usage counters in a server-only AWS DynamoDB ledger. Necessary secure cookies activate paid access and connect checkout to the purchasing browser. A private purchase access code can restore that access; keep it confidential.</p>
+          <p>Lesson topics, grade preferences, and optional questions are sent to OpenAI. Background lesson generation uses OpenAI response storage so we can retrieve the completed lesson and ground follow-up tutoring in it. Guided questions and short conversation context are processed with response storage disabled. Do not include student names, contact details, or sensitive personal information in learning requests.</p>
+          </article><article>
           <h2>Cookies and Advertising</h2>
           <p>
             Optional Google Ads and analytics storage is denied by default. If you select

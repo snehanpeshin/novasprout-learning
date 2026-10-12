@@ -18,7 +18,7 @@ export default function TermsOfUse() {
         <p className="ns-eyebrow">Terms of Use</p>
         <h1>Clear expectations for tutoring and learning tools.</h1>
         <p>
-          Effective date: July 28, 2026. These terms apply to NovaSprout Learning, a
+          Effective date: October 11, 2026. These terms apply to NovaSprout Learning, a
           brand of Karigari Home LLC, including its website, tutoring services,
           educational resources, mobile app, and AI-assisted learning tools.
         </p>
@@ -47,6 +47,10 @@ export default function TermsOfUse() {
         </article>
 
         <article>
+          <h2>Website AI Tutor Plans</h2>
+          <p>One personalized AI lesson costs $2.99. Monthly AI Tutor costs $14.99 per month, renews automatically until cancelled, and includes up to 20 lessons in each paid billing period. Unused monthly lessons do not roll over. Cancel through Manage billing; cancellation takes effect at the end of the paid period.</p>
+          <p>Each lesson includes up to 10 guided tutor questions within 24 hours of generation and up to three generated images; precise diagrams may use deterministic rendering. Saved downloads remain on your device. A private access code restores website purchases. Parents or guardians must make purchases for minors. App Store purchases are managed separately through Apple.</p>
+          </article><article>
           <h2>User Materials</h2>
           <p>
             You retain ownership of homework, prompts, documents, and other material you submit.

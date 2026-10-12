@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess";
 
+import { authorizeLessonStep, ticketClaims, webProof } from "../../lib/webAiAccess.ts";
+
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
@@ -66,6 +68,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: aiAccessError }, { status: 401 });
   }
 
+  if (webProof(request) && !ticketClaims(request)) return NextResponse.json({ error: "Create a lesson before generating its images." }, { status: 401 });
+
   let body: ImageAssetRequest;
   try {
     body = (await request.json()) as ImageAssetRequest;
@@ -95,6 +99,7 @@ export async function POST(request: Request) {
   try {
     const results = await Promise.allSettled(
       imageAssets.map(async (asset) => {
+        if (!await authorizeLessonStep(request, "images")) throw new Error("This lesson includes up to three generated images.");
         const imageModel = process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-1";
         const configuredQuality = process.env.OPENAI_IMAGE_QUALITY?.trim().toLowerCase();
         const imageQuality = ["low", "medium", "high"].includes(configuredQuality ?? "")

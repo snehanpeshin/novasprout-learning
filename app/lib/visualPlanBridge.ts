@@ -66,7 +66,7 @@ function decodeVisualPlan(value: unknown) {
  * Restores the visual plan carried by released app versions, then removes the
  * compatibility record before the concept graph reaches the lesson engine.
  */
-export function restoreVisualPlanFromLesson<T extends VisualPlanLesson>(lesson: T): T {
+export function restoreVisualPlanFromLesson<T extends VisualPlanLesson>(lesson: T): T & VisualPlanLesson {
   const conceptModel = lesson.conceptModel;
   const relationships = Array.isArray(conceptModel?.relationships) ? conceptModel.relationships : [];
   const bridgeRelationship = relationships.find((relationship) =>

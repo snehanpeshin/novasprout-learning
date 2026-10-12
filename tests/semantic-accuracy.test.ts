@@ -24,9 +24,9 @@ function slide(overrides: Partial<LessonPlanSlide> = {}): LessonPlanSlide {
 
 const historyGraph = {
   nodes: [
-    { definition: "Conditions surrounding an event.", label: "historical context" },
-    { definition: "Information from a source that supports a claim.", label: "source evidence" },
-    { definition: "A result that follows an event or decision.", label: "consequence" }
+    { id: "historical-context", definition: "Conditions surrounding an event.", label: "historical context" },
+    { id: "source-evidence", definition: "Information from a source that supports a claim.", label: "source evidence" },
+    { id: "consequence", definition: "A result that follows an event or decision.", label: "consequence" }
   ],
   relationships: [
     { explanation: "Historical context helps explain why causes produce consequences.", from: "historical context", relationship: "helps explain", to: "consequence" }

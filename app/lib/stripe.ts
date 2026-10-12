@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-export type CheckoutProductKey = "tutoring_session" | "monthly_subscription";
+export type CheckoutProductKey = "tutoring_session" | "monthly_subscription" | "ai_lesson" | "ai_subscription";
 
 type CheckoutConfig = {
   dbaName: string;
@@ -11,6 +11,8 @@ type CheckoutConfig = {
 
 export function getCheckoutConfig(productKey: CheckoutProductKey): CheckoutConfig {
   const configs: Record<CheckoutProductKey, CheckoutConfig> = {
+    ai_lesson: { dbaName: "NovaSprout Learning", mode: "payment", priceId: process.env.STRIPE_NOVASPROUT_AI_LESSON_PRICE_ID, productName: "NovaSprout One AI Lesson" },
+    ai_subscription: { dbaName: "NovaSprout Learning", mode: "subscription", priceId: process.env.STRIPE_NOVASPROUT_AI_MONTHLY_PRICE_ID, productName: "NovaSprout Monthly AI Tutor" },
     tutoring_session: {
       dbaName: "NovaSprout Learning",
       mode: "payment",
@@ -30,10 +32,12 @@ export function getCheckoutConfig(productKey: CheckoutProductKey): CheckoutConfi
 
 export async function createCheckoutSession({
   origin,
-  productKey
+  productKey,
+  browserNonce
 }: {
   origin: string;
   productKey: CheckoutProductKey;
+  browserNonce?: string;
 }) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   const config = getCheckoutConfig(productKey);
@@ -46,18 +50,22 @@ export async function createCheckoutSession({
     throw new Error(`Missing Stripe price ID for ${productKey}`);
   }
 
+  const isAi = productKey === "ai_lesson" || productKey === "ai_subscription";
   const body = new URLSearchParams({
     mode: config.mode,
-    success_url: `${origin}/pricing?checkout=success`,
-    cancel_url: `${origin}/pricing?checkout=cancelled`,
+    success_url: isAi ? `${origin}/ai-lesson-generator?checkout_session_id={CHECKOUT_SESSION_ID}` : `${origin}/pricing?checkout=success`,
+    cancel_url: isAi ? `${origin}/ai-lesson-generator?checkout=cancelled` : `${origin}/pricing?checkout=cancelled`,
     "line_items[0][price]": config.priceId,
     "line_items[0][quantity]": "1",
     "metadata[dba_name]": config.dbaName,
     "metadata[product_name]": config.productName,
     "custom_text[submit][message]": `${config.dbaName} is a brand of Karigari Home LLC.`,
-    allow_promotion_codes: "true"
+    allow_promotion_codes: isAi ? "false" : "true"
   });
 
+  body.set("metadata[product_key]", productKey);
+  if (browserNonce) body.set("metadata[browser_nonce]", browserNonce);
+  if (isAi) body.set("payment_method_types[0]", "card");
   if (config.mode === "payment") {
     body.set("customer_creation", "always");
     body.set("payment_intent_data[metadata][dba_name]", config.dbaName);
@@ -73,7 +81,7 @@ export async function createCheckoutSession({
       Authorization: `Bearer ${secretKey}`,
       "Content-Type": "application/x-www-form-urlencoded"
     },
-    method: "POST"
+    method: "POST", signal: AbortSignal.timeout(15000)
   });
 
   if (!response.ok) {
@@ -97,23 +105,13 @@ export function verifyStripeSignature({
     return false;
   }
 
-  const parts = Object.fromEntries(
-    signatureHeader.split(",").map((part) => {
-      const [key, value] = part.split("=");
-      return [key, value];
-    })
-  );
-  const timestamp = parts.t;
-  const expectedSignature = parts.v1;
-
-  if (!timestamp || !expectedSignature) {
-    return false;
-  }
-
-  const signedPayload = `${timestamp}.${payload}`;
-  const digest = crypto.createHmac("sha256", secret).update(signedPayload).digest("hex");
-  const expected = Buffer.from(expectedSignature, "hex");
-  const actual = Buffer.from(digest, "hex");
-
-  return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+  const parts = signatureHeader.split(",").map(part => part.split("=", 2));
+  const timestamp = parts.find(([key]) => key === "t")?.[1];
+  if (!timestamp || !/^\d+$/.test(timestamp) || Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false;
+  const digest = crypto.createHmac("sha256", secret).update(`${timestamp}.${payload}`).digest();
+  return parts.filter(([key]) => key === "v1").some(([, value]) => {
+    if (!/^[a-f0-9]{64}$/i.test(value || "")) return false;
+    const actual = Buffer.from(value, "hex");
+    return actual.length === digest.length && crypto.timingSafeEqual(actual, digest);
+  });
 }

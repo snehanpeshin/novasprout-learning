@@ -6,6 +6,8 @@ import { assetsFromAiVisualPlan } from "../../lib/aiSlideAssets.ts";
 import { deterministicAssetPlan, mergeFallbackImages } from "../../lib/deterministicSlideAssets.ts";
 import { restoreVisualPlanFromLesson } from "../../lib/visualPlanBridge.ts";
 
+import { authorizeLessonStep, ticketClaims, webProof } from "../../lib/webAiAccess.ts";
+
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
@@ -136,6 +138,8 @@ export async function POST(request: Request) {
   if (!(await isAiAccessAllowed(request))) {
     return NextResponse.json({ error: aiAccessError }, { status: 401 });
   }
+
+  if (!await authorizeLessonStep(request, "assets")) return NextResponse.json({ error: "This lesson's visual planning allowance is used up or the lesson ticket is missing." }, { status: 402 });
 
   let body: SlideAssetRequest;
   try {

@@ -45,7 +45,7 @@ const request = {
 
 test("electricity deck satisfies the semantic and visual acceptance path", () => {
   const plan = legacyLessonToSlidePlan({ context: request.context, lesson: request.lesson });
-  const visualTypes = new Set(plan.slides.flatMap((slide) => slide.visuals.map((visual) => visual.type)));
+  const visualTypes = new Set<string>(plan.slides.flatMap((slide) => slide.visuals.map((visual) => visual.type)));
   for (const required of [
     "cover_illustration",
     "circuit_diagram",

@@ -1,4 +1,6 @@
 "use client";
+import AiPaidPlans from "./AiPaidPlans";
+import AiCoach from "./AiCoach";
 
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -1024,12 +1026,14 @@ function LessonPlayer({
 
 function StudentSlideDeck({
   accessToken,
+  lessonTicket,
   context,
   lesson,
   onClose,
   presetPdfHref
 }: {
   accessToken: string;
+  lessonTicket: string;
   context: LessonContext;
   lesson: GeneratedLesson;
   onClose: () => void;
@@ -1181,7 +1185,8 @@ function StudentSlideDeck({
         }),
         headers: {
           "Content-Type": "application/json",
-          "x-ai-access-token": accessToken.trim()
+          "x-ai-access-token": accessToken.trim(),
+          "x-ai-lesson-ticket": lessonTicket
         },
         method: "POST"
       }, assetPlanningTimeoutMs);
@@ -1215,7 +1220,8 @@ function StudentSlideDeck({
         body: JSON.stringify({ assets: inputAssets }),
         headers: {
           "Content-Type": "application/json",
-          "x-ai-access-token": accessToken.trim()
+          "x-ai-access-token": accessToken.trim(),
+          "x-ai-lesson-ticket": lessonTicket
         },
         method: "POST"
       }, imageGenerationTimeoutMs);
@@ -1272,7 +1278,8 @@ function StudentSlideDeck({
         }),
         headers: {
           "Content-Type": "application/json",
-          "x-ai-access-token": accessToken.trim()
+          "x-ai-access-token": accessToken.trim(),
+          "x-ai-lesson-ticket": lessonTicket
         },
         method: "POST"
       });
@@ -1568,6 +1575,9 @@ function StudentSlideDeck({
 }
 
 export default function AILessonGenerator() {
+  const [hasPaidAccess, setHasPaidAccess] = useState(false);
+  const [lessonAllowance, setLessonAllowance] = useState<number | null>(null);
+  const [currentLessonTicket, setCurrentLessonTicket] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [grade, setGrade] = useState("Grades 6-8");
@@ -1600,7 +1610,7 @@ export default function AILessonGenerator() {
     const savedToken = window.localStorage.getItem(accessStorageKey);
     if (savedToken) {
       setAccessToken(savedToken);
-      setIsUnlocked(true);
+      fetch("/api/ai-access/verify", { method: "POST", headers: { "x-ai-access-token": savedToken } }).then(response => { if (response.ok) setIsUnlocked(true); }).catch(() => {});
     }
   }, []);
 
@@ -1627,17 +1637,20 @@ export default function AILessonGenerator() {
     );
   }
 
-  function unlockTools(event: FormEvent<HTMLFormElement>) {
+  async function unlockTools(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const cleanedToken = accessToken.trim();
     if (!cleanedToken) {
-      setError("Enter the AI access code or approved paid-user email.");
+      setError("Enter your private AI access code.");
       return;
     }
 
-    window.localStorage.setItem(accessStorageKey, cleanedToken);
-    setIsUnlocked(true);
-    setError("");
+    try {
+      const response = await fetch("/api/ai-access/verify", { method: "POST", headers: { "x-ai-access-token": cleanedToken } });
+      if (!response.ok) { setError("That private access code could not be verified."); return; }
+      window.localStorage.setItem(accessStorageKey, cleanedToken);
+      setIsUnlocked(true); setError("");
+    } catch { setError("Access verification is temporarily unavailable."); }
   }
 
   function openFreeSample() {
@@ -1665,13 +1678,13 @@ export default function AILessonGenerator() {
     setLessonText("");
     setNotice("");
     setError("");
-    setIsUnlocked(Boolean(accessToken.trim()));
+    setIsUnlocked(hasPaidAccess || Boolean(accessToken.trim()));
   }
 
   async function generateLesson(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!accessToken.trim()) {
-      setError("Personalized lessons require a purchase or approved access code.");
+    if (!hasPaidAccess && !accessToken.trim()) {
+      setError("Personalized lessons require a purchase or private access code.");
       return;
     }
     setError("");
@@ -1712,6 +1725,8 @@ export default function AILessonGenerator() {
         method: "POST"
       });
       let data = await readLessonApiResponse(startResponse);
+      let activeTicket = (data as { lessonTicket?: string }).lessonTicket || "";
+      setCurrentLessonTicket(activeTicket);
 
       if (!startResponse.ok) {
         throw new Error(
@@ -1759,6 +1774,8 @@ export default function AILessonGenerator() {
           temporaryFailures = 0;
           if (statusData.lesson || statusData.lessonText) {
             data = statusData;
+            activeTicket = (statusData as { lessonTicket?: string }).lessonTicket || activeTicket;
+            setCurrentLessonTicket(activeTicket);
             break;
           }
 
@@ -1788,6 +1805,7 @@ export default function AILessonGenerator() {
       setError(generatorError instanceof Error ? generatorError.message : "Could not generate a lesson.");
     } finally {
       setIsGenerating(false);
+      window.dispatchEvent(new Event("novasprout-access-refresh"));
     }
   }
 
@@ -1836,13 +1854,14 @@ Interested in: Free trial / Paid AI-generated lessons
           </span>
           <ArrowRight aria-hidden="true" size={20} />
         </button>
+        <AiPaidPlans onAccessChange={(active, remaining) => { setHasPaidAccess(active); setLessonAllowance(remaining ?? null); if (active) setIsUnlocked(true); }} />
         <form className="ai-access-card" onSubmit={unlockTools}>
           <LockKeyhole aria-hidden="true" size={34} />
           <label>
-            Access code or approved email
+            Private access code
             <input
               onChange={(event) => setAccessToken(event.target.value)}
-              placeholder="Enter code or email"
+              placeholder="Enter a private code"
               type="text"
               value={accessToken}
             />
@@ -1866,6 +1885,7 @@ Interested in: Free trial / Paid AI-generated lessons
       {lesson && isDeckOpen ? (
         <StudentSlideDeck
           accessToken={accessToken}
+          lessonTicket={currentLessonTicket}
           context={{ grade, subject, topic }}
           lesson={lesson}
           onClose={() => setIsDeckOpen(false)}
@@ -1891,6 +1911,7 @@ Interested in: Free trial / Paid AI-generated lessons
         </div>
       ) : null}
 
+      <AiPaidPlans onAccessChange={(active, remaining) => { setHasPaidAccess(active); setLessonAllowance(remaining ?? null); }} />
       <div className="ai-generator-layout">
         <form className="ai-generator-form" onSubmit={generateLesson}>
           <label>
@@ -2051,7 +2072,7 @@ Interested in: Free trial / Paid AI-generated lessons
               value={studentQuestion}
             />
           </label>
-          <button className="button primary full" disabled={isGenerating || topic.trim().length < 3} type="submit">
+          <button className="button primary full" disabled={isGenerating || topic.trim().length < 3 || (hasPaidAccess && lessonAllowance === 0)} type="submit">
             {isGenerating ? "Creating your lesson..." : "Create My Lesson"}
             <ArrowRight aria-hidden="true" size={18} />
           </button>
@@ -2103,6 +2124,7 @@ Interested in: Free trial / Paid AI-generated lessons
                     </a>
                   </div>
                 </div>
+                {!isSampleMode && currentLessonTicket && <AiCoach key={currentLessonTicket} accessToken={accessToken} lessonTicket={currentLessonTicket} />}
                 <details className="lesson-plan-details">
                   <summary>Review lesson plan</summary>
                   <div className="lesson-timeline">
