@@ -8,17 +8,19 @@ const database = DynamoDBDocumentClient.from(new DynamoDBClient({ region: proces
 
 export const tutorSubjects = ["Math", "Science & STEM", "Coding & Data Skills", "Study Skills"] as const;
 export const tutorPlans = ["demo", "single", "monthly"] as const;
+export const tutorTimings = ["within_24_hours", "this_week", "planning_ahead"] as const;
 export type TutorSubject = typeof tutorSubjects[number];
 export type TutorPlan = typeof tutorPlans[number];
+export type TutorTiming = typeof tutorTimings[number];
 type TutorMatchStatus = "requested" | "reviewing" | "matched" | "demo_scheduled" | "paid" | "active" | "closed";
 
 export type TutorMatchSummary = {
   id: string; status: TutorMatchStatus; subject: TutorSubject; studentLevel: string;
-  requestedPlan: TutorPlan; tutorLabel: string | null; nextStep: string | null; updatedAt: string;
+  requestedPlan: TutorPlan; timing: TutorTiming; tutorLabel: string | null; nextStep: string | null; updatedAt: string;
 };
 export type TutorMatchRequest = {
   availability: string; email: string; goal: string; name: string; plan: TutorPlan;
-  studentLevel: string; subject: TutorSubject; timezone: string;
+  studentLevel: string; subject: TutorSubject; timezone: string; timing: TutorTiming;
 };
 export const tutorPortalCookie = "novasprout_tutor_portal";
 
@@ -39,12 +41,13 @@ export function cleanTutorMatchRequest(input: Record<string, unknown>): TutorMat
   const clean = (value: unknown, maximum: number) => typeof value === "string" ? value.trim().slice(0, maximum) : "";
   const subject = clean(input.subject, 60) as TutorSubject;
   const plan = clean(input.plan, 20) as TutorPlan;
+  const timing = clean(input.timing, 30) as TutorTiming;
   const match = {
     availability: clean(input.availability, 120), email: clean(input.email, 120).toLowerCase(),
     goal: clean(input.goal, 500), name: clean(input.name, 80), plan,
-    studentLevel: clean(input.studentLevel, 60), subject, timezone: clean(input.timezone, 80)
+    studentLevel: clean(input.studentLevel, 60), subject, timezone: clean(input.timezone, 80), timing
   };
-  if (!match.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(match.email) || !match.studentLevel || !match.goal || !match.availability || !match.timezone || !tutorSubjects.includes(subject) || !tutorPlans.includes(plan)) return null;
+  if (!match.name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(match.email) || !match.studentLevel || !match.goal || !match.availability || !match.timezone || !tutorSubjects.includes(subject) || !tutorPlans.includes(plan) || !tutorTimings.includes(timing)) return null;
   return match;
 }
 
@@ -61,6 +64,7 @@ export async function createTutorMatch(request: TutorMatchRequest) {
       parentEmail: request.email,
       parentName: request.name,
       requestedPlan: request.plan,
+      timing: request.timing,
       studentLevel: request.studentLevel,
       subject: request.subject,
       availability: request.availability,
@@ -83,6 +87,7 @@ export async function getTutorMatch(accessToken: string | undefined): Promise<Tu
     id: item.id,
     nextStep: typeof item.nextStep === "string" ? item.nextStep : null,
     requestedPlan: item.requestedPlan as TutorPlan,
+    timing: tutorTimings.includes(item.timing as TutorTiming) ? item.timing as TutorTiming : "planning_ahead",
     status: item.status as TutorMatchStatus,
     studentLevel: String(item.studentLevel || ""),
     subject: item.subject as TutorSubject,

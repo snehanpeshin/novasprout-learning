@@ -3,7 +3,6 @@ import { ArrowRight, Check, ShieldCheck } from "lucide-react";
 import ContactForm from "../components/ContactForm";
 import Footer from "../components/Footer";
 import SiteHeader from "../components/SiteHeader";
-import { intakeFormUrl } from "../site-data";
 
 export const metadata: Metadata = {
   title: "Online Tutoring Pricing | NovaSprout Learning",
@@ -17,9 +16,9 @@ export default function PricingPage() {
       <SiteHeader />
       <section className="ns-page-hero">
         <p className="ns-eyebrow">Clear tutoring pricing</p>
-        <h1>Meet the tutor first. Continue for $20 per class.</h1>
-        <p>The Free Demo Class helps the family and tutor understand the goal and decide whether the teaching fit feels right.</p>
-        <a className="ns-button ns-button-primary" href={intakeFormUrl} target="_blank" rel="noreferrer">Request a Free Demo Class <ArrowRight aria-hidden="true" /></a>
+        <h1>Get the right support for the time you have.</h1>
+        <p>Request a short-notice tutor match for a live class, or begin a personalized AI lesson immediately while you choose a matching-call time.</p>
+        <div className="ns-actions"><a className="ns-button ns-button-primary" href="/portal">Find a tutor fast <ArrowRight aria-hidden="true" /></a><a className="ns-button ns-button-secondary" href="/ai-lesson-generator">Start an AI lesson</a></div>
       </section>
 
       <section className="ns-section ns-pricing-detail">
@@ -37,7 +36,7 @@ export default function PricingPage() {
 
       <section className="ns-section ns-pricing-notes">
         <div><h2>What the class fee covers</h2><p>Live explanation, representative examples, guided practice, and a practical next step. The exact session length and meeting schedule are confirmed before payment.</p></div>
-        <div><h2>About the AI study tool</h2><p>AI Tutor costs $2.99 for one lesson or $14.99/month for up to 20 lessons. It includes visual lessons, guided practice, quizzes, and follow-up hints. Monthly access renews until cancelled.</p><a className="ns-text-link" href="/ai-lesson-generator">Open AI Study Tool <ArrowRight /></a></div>
+        <div><h2>Need help before a live class?</h2><p>AI Tutor costs $2.99 for one lesson or $14.99/month for up to 20 lessons. It provides a personalized visual lesson, guided practice, quiz, and follow-up hints right away. It is a useful bridge while a tutor match is being reviewed.</p><a className="ns-text-link" href="/ai-lesson-generator">Open AI Study Tool <ArrowRight /></a></div>
       </section>
 
       <section className="ns-demo-section" id="free-demo">

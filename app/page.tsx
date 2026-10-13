@@ -21,14 +21,14 @@ import {
 import ContactForm from "./components/ContactForm";
 import Footer from "./components/Footer";
 import SiteHeader from "./components/SiteHeader";
-import { bookingUrl, generalFaqs, intakeFormUrl, subjectTracks } from "./site-data";
+import { bookingUrl, generalFaqs, subjectTracks } from "./site-data";
 
 const appStoreUrl = "https://apps.apple.com/us/app/novasprout-ai-tutor/id6793519745";
 
 export const metadata: Metadata = {
   title: "Personalized Online Tutoring | NovaSprout Learning",
   description:
-    "Patient one-to-one online tutoring matched to the student’s subject, level, goals, and schedule. Request a Free Demo Class before deciding.",
+    "Find short-notice online tutoring or start a personalized AI lesson now. NovaSprout matches support to the student's subject, level, goals, and schedule.",
   alternates: { canonical: "/" },
   openGraph: {
     title: "Personalized Online Tutoring | NovaSprout Learning",
@@ -107,19 +107,19 @@ export default function Home() {
 
       <section className="ns-hero" aria-labelledby="hero-title">
         <div className="ns-hero-copy">
-          <p className="ns-eyebrow">Patient, live, and one-to-one</p>
-          <h1 id="hero-title" tabIndex={-1}>Patient, one-to-one support matched to how your student learns.</h1>
+          <p className="ns-eyebrow">Live help when the deadline is close</p>
+          <h1 id="hero-title" tabIndex={-1}>Find a tutor for this week, or start learning now.</h1>
           <p className="ns-hero-lead">
-            Tell us what’s getting in the way. We’ll recommend a patient tutor for the student’s subject, level, goals, and schedule—then you can meet in a free demo class before deciding.
+            Share the subject, level, deadline, and available times. We’ll review the fit for a live tutor, while NovaSprout AI Tutor gives the student a personal lesson and practice right away.
           </p>
           <div className="ns-actions">
-            <a className="ns-button ns-button-primary" href={intakeFormUrl} target="_blank" rel="noreferrer">Request a Free Demo Class <ArrowRight aria-hidden="true" /></a>
-            <a className="ns-button ns-button-secondary" href="#subjects">Explore Subjects</a>
+            <a className="ns-button ns-button-primary" href="/portal">Find a tutor fast <ArrowRight aria-hidden="true" /></a>
+            <a className="ns-button ns-button-secondary" href="/ai-lesson-generator">Start an AI lesson now</a>
           </div>
           <div className="ns-reassurance" aria-label="NovaSprout tutoring highlights">
             <span><BadgeCheck aria-hidden="true" />Qualifications and experience reviewed</span>
             <span><SearchCheck aria-hidden="true" />Matched by subject and level</span>
-            <span><CalendarCheck aria-hidden="true" />Meet before deciding</span>
+            <span><CalendarCheck aria-hidden="true" />Choose a matching-call time</span>
           </div>
         </div>
         <figure className="ns-hero-visual">
@@ -132,6 +132,15 @@ export default function Home() {
           />
           <figcaption><span>Live online</span> Calm explanations, useful practice, and room to ask questions.</figcaption>
         </figure>
+      </section>
+
+      <section className="ns-section ns-urgency-grid" aria-labelledby="right-now-title">
+        <div className="ns-section-heading ns-centered"><p className="ns-eyebrow">Choose the right first step</p><h2 id="right-now-title">What does the student need right now?</h2></div>
+        <div className="ns-three-grid">
+          <article><span>01</span><h3>A test, project, or deadline this week</h3><p>Tell us the deadline and available times. We will use them to review a short-notice tutor match.</p><a href="/portal">Request a tutor match <ArrowRight aria-hidden="true" /></a></article>
+          <article><span>02</span><h3>Homework help today</h3><p>Create a visual, guided AI lesson and practice at the student’s own pace while a live class is being arranged.</p><a href="/ai-lesson-generator">Open AI Tutor <ArrowRight aria-hidden="true" /></a></article>
+          <article><span>03</span><h3>A steady plan for a recurring challenge</h3><p>Request an ongoing tutor match for clear explanations, practice, and a schedule that fits the family.</p><a href="/portal">Build a learning plan <ArrowRight aria-hidden="true" /></a></article>
+        </div>
       </section>
 
       <section className="ns-trust-strip" aria-label="A lower-risk way to begin">
@@ -201,7 +210,7 @@ export default function Home() {
         <div className="ns-tutor-review">
           <BadgeCheck aria-hidden="true" />
           <p><strong>Before a recommendation:</strong> NovaSprout reviews the tutor’s submitted background, subjects and levels, relevant experience, availability, and teaching approach against the student request.</p>
-          <a className="ns-button ns-button-primary" href={intakeFormUrl} target="_blank" rel="noreferrer">Request a Free Demo Class <ArrowRight aria-hidden="true" /></a>
+          <a className="ns-button ns-button-primary" href="/portal">Find a tutor fast <ArrowRight aria-hidden="true" /></a>
         </div>
       </section>
 
