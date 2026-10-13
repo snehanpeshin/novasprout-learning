@@ -1,5 +1,10 @@
 import crypto from "node:crypto";
-import { supabaseFetch } from "./supabase";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+
+const database = DynamoDBDocumentClient.from(new DynamoDBClient({ region: process.env.AI_USAGE_REGION || "us-east-1", maxAttempts: 3 }), {
+  marshallOptions: { removeUndefinedValues: true }
+});
 
 export const tutorSubjects = ["Math", "Science & STEM", "Coding & Data Skills", "Study Skills"] as const;
 export const tutorPlans = ["demo", "single", "monthly"] as const;
@@ -21,6 +26,15 @@ export function hashPortalAccess(value: string) {
   return crypto.createHash("sha256").update(value).digest("hex");
 }
 
+function table() {
+  const name = process.env.AI_USAGE_TABLE;
+  if (!name) throw new Error("The family portal is temporarily unavailable.");
+  return name;
+}
+
+function recordId(accessToken: string) {
+  return "tutor:match:v1:" + hashPortalAccess(accessToken);
+}
 export function cleanTutorMatchRequest(input: Record<string, unknown>): TutorMatchRequest | null {
   const clean = (value: unknown, maximum: number) => typeof value === "string" ? value.trim().slice(0, maximum) : "";
   const subject = clean(input.subject, 60) as TutorSubject;
@@ -36,37 +50,54 @@ export function cleanTutorMatchRequest(input: Record<string, unknown>): TutorMat
 
 export async function createTutorMatch(request: TutorMatchRequest) {
   const accessToken = crypto.randomBytes(32).toString("base64url");
-  const id = crypto.randomUUID();
-  await supabaseFetch("tutor_match_requests", {
-    body: JSON.stringify({
-      id, parent_email: request.email, parent_name: request.name, portal_access_hash: hashPortalAccess(accessToken),
-      requested_plan: request.plan, student_level: request.studentLevel, subject: request.subject,
-      availability: request.availability, goal: request.goal, timezone: request.timezone
-    }),
-    headers: { Prefer: "return=minimal" }, method: "POST"
-  });
+  const id = recordId(accessToken);
+  const now = new Date().toISOString();
+  await database.send(new PutCommand({
+    TableName: table(),
+    Item: {
+      id,
+      type: "tutor-match",
+      status: "requested",
+      parentEmail: request.email,
+      parentName: request.name,
+      requestedPlan: request.plan,
+      studentLevel: request.studentLevel,
+      subject: request.subject,
+      availability: request.availability,
+      goal: request.goal,
+      timezone: request.timezone,
+      createdAt: now,
+      updatedAt: now
+    },
+    ConditionExpression: "attribute_not_exists(id)"
+  }));
   return { accessToken, id };
 }
 
 export async function getTutorMatch(accessToken: string | undefined): Promise<TutorMatchSummary | null> {
   if (!accessToken || accessToken.length < 40 || accessToken.length > 100) return null;
-  const response = await supabaseFetch(
-    `tutor_match_requests?portal_access_hash=eq.${encodeURIComponent(hashPortalAccess(accessToken))}&select=id,status,subject,student_level,requested_plan,tutor_label,next_step,updated_at&limit=1`
-  );
-  const rows = await response.json() as Array<{
-    id: string; status: TutorMatchStatus; subject: TutorSubject; student_level: string; requested_plan: TutorPlan;
-    tutor_label: string | null; next_step: string | null; updated_at: string;
-  }>;
-  const row = rows[0];
-  return row ? {
-    id: row.id, nextStep: row.next_step, requestedPlan: row.requested_plan, status: row.status,
-    studentLevel: row.student_level, subject: row.subject, tutorLabel: row.tutor_label, updatedAt: row.updated_at
-  } : null;
+  const result = await database.send(new GetCommand({ TableName: table(), Key: { id: recordId(accessToken) }, ConsistentRead: true }));
+  const item = result.Item;
+  if (!item || item.type !== "tutor-match" || !tutorSubjects.includes(item.subject as TutorSubject) || !tutorPlans.includes(item.requestedPlan as TutorPlan)) return null;
+  return {
+    id: item.id,
+    nextStep: typeof item.nextStep === "string" ? item.nextStep : null,
+    requestedPlan: item.requestedPlan as TutorPlan,
+    status: item.status as TutorMatchStatus,
+    studentLevel: String(item.studentLevel || ""),
+    subject: item.subject as TutorSubject,
+    tutorLabel: typeof item.tutorLabel === "string" ? item.tutorLabel : null,
+    updatedAt: String(item.updatedAt || "")
+  };
 }
 
 export async function markTutorMatchPaid(id: string) {
-  if (!/^[0-9a-f-]{36}$/i.test(id)) return;
-  await supabaseFetch(`tutor_match_requests?id=eq.${encodeURIComponent(id)}`, {
-    body: JSON.stringify({ status: "paid" }), headers: { Prefer: "return=minimal" }, method: "PATCH"
-  });
+  if (!id.startsWith("tutor:match:v1:")) return;
+  await database.send(new UpdateCommand({
+    TableName: table(),
+    Key: { id },
+    UpdateExpression: "SET #status = :status, #updatedAt = :updatedAt",
+    ExpressionAttributeNames: { "#status": "status", "#updatedAt": "updatedAt" },
+    ExpressionAttributeValues: { ":status": "paid", ":updatedAt": new Date().toISOString() }
+  }));
 }
