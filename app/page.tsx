@@ -124,8 +124,8 @@ export default function Home() {
         </div>
         <figure className="ns-hero-visual">
           <Image
-            src="/novasprout-live-tutoring-hero.png"
-            alt="A student working through geometry with a live online tutor"
+            src="/novasprout-clear-crayon-hero.png"
+            alt="Two children learning together with crayons and a friendly sprout character"
             fill
             priority
             sizes="(max-width: 800px) 100vw, 52vw"

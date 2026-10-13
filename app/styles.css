@@ -3850,6 +3850,14 @@ footer div span:first-child {
 .ns-ai-tutor-page { background: #f7f9fc; color: #172d48; }
 .ns-ai-tutor-page .ai-tutor-hero { display: grid; grid-template-columns: 1.4fr 1fr; align-items: center; gap: 56px; max-width: 1120px; margin: 0 auto; padding: 76px 28px 52px; text-align: left; }
 .ns-ai-tutor-page .ai-tutor-hero { display: block; max-width: 760px; padding-bottom: 30px; }
+.ns-ai-tutor-page { background-color: #fffaf0; background-image: radial-gradient(#f5d776 1px, transparent 1px), radial-gradient(#bddfcf 1px, transparent 1px); background-position: 0 0, 14px 14px; background-size: 28px 28px; }
+.ns-ai-tutor-page .ai-tutor-hero { align-items: center; display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .8fr); gap: 28px; max-width: 1120px; }
+.clear-hero-art { border: 4px solid #fff; border-radius: 28px; box-shadow: 0 12px 0 #f1ca5a, 0 22px 40px rgba(89, 69, 35, .16); display: block; height: auto; max-width: 100%; transform: rotate(1deg); }
+.ns-ai-tutor-page .demo-generator-section { background: rgba(255,255,255,.95); border: 2px solid #ead9a5; border-radius: 28px; box-shadow: 0 10px 0 rgba(240, 202, 90, .45); margin-top: 12px; }
+.ns-ai-tutor-page .ai-generator-form { border-color: #d7e5bd; }
+.ns-ai-tutor-page .ai-generator-form .button.primary, .ns-ai-tutor-page .hero-actions .button.primary { box-shadow: 0 4px 0 #bf7b48; }
+.ns-site .ns-subject-card, .ns-site .ns-problem-grid article, .ns-site .ns-three-grid article { border-radius: 22px; }
+@media (max-width: 760px) { .ns-ai-tutor-page .ai-tutor-hero { display: grid; grid-template-columns: 1fr; } .clear-hero-art { max-width: 520px; } }
 .ns-ai-tutor-page .ai-tutor-hero h1 { font-size: clamp(36px, 4vw, 60px); line-height: 1.08; letter-spacing: -2px; max-width: 680px; }
 .ns-ai-tutor-page .ai-tutor-hero-copy > p:not(.eyebrow) { font-size: 19px; max-width: 560px; line-height: 1.65; }
 .ns-ai-tutor-page .hero-actions { justify-content: flex-start; gap: 12px; }

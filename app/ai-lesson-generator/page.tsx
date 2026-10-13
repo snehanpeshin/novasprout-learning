@@ -30,6 +30,7 @@ export default function AILessonGeneratorPage() {
           <a className="button secondary" href="/portal">Find a tutor this week</a>
         </div>
         </div>
+        <img className="clear-hero-art" src="/novasprout-clear-crayon-hero.png" alt="Two children learning together with crayons and a friendly sprout character" />
       </section>
 
       <div id="generator">
