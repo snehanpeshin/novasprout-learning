@@ -1915,14 +1915,6 @@ Interested in: Free trial / Paid AI-generated lessons
       <div className="ai-generator-layout">
         <form className="ai-generator-form" onSubmit={generateLesson}>
           <label>
-            Output type
-            <select onChange={(event) => setMode(event.target.value)} value={mode}>
-              {modes.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label>
             Grade or class
             <select onChange={(event) => setGrade(event.target.value)} value={grade}>
               {grades.map((item) => (
@@ -1972,14 +1964,6 @@ Interested in: Free trial / Paid AI-generated lessons
           </div>
           <p className="generator-note">Interdisciplinary and advanced topics are welcome. The lesson adapts to the selected level.</p>
           <label>
-            Student level
-            <select onChange={(event) => setLevel(event.target.value)} value={level}>
-              {levels.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label>
             Goal
             <select onChange={(event) => setGoal(event.target.value)} value={goal}>
               {goals.map((item) => (
@@ -1987,41 +1971,15 @@ Interested in: Free trial / Paid AI-generated lessons
               ))}
             </select>
           </label>
-          <label>
-            Lesson length
-            <select onChange={(event) => setDuration(event.target.value)} value={duration}>
-              {durations.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Teaching style
-            <select onChange={(event) => setTeachingStyle(event.target.value)} value={teachingStyle}>
-              {teachingStyles.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Difficulty
-            <select onChange={(event) => setDifficulty(event.target.value)} value={difficulty}>
-              {difficulties.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Language
-            <select onChange={(event) => setLessonLanguage(event.target.value)} value={lessonLanguage}>
-              {languages.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
           <details className="lesson-advanced-settings">
-            <summary>Lesson emphasis</summary>
+            <summary>Customize this lesson</summary>
             <div>
+              <label>Student level<select onChange={(event) => setLevel(event.target.value)} value={level}>{levels.map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label>Lesson length<select onChange={(event) => setDuration(event.target.value)} value={duration}>{durations.map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label>Teaching style<select onChange={(event) => setTeachingStyle(event.target.value)} value={teachingStyle}>{teachingStyles.map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label>Difficulty<select onChange={(event) => setDifficulty(event.target.value)} value={difficulty}>{difficulties.map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label>Language<select onChange={(event) => setLessonLanguage(event.target.value)} value={lessonLanguage}>{languages.map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label>Output type<select onChange={(event) => setMode(event.target.value)} value={mode}>{modes.map((item) => <option key={item}>{item}</option>)}</select></label>
               <label>
                 Depth
                 <select onChange={(event) => setDepth(event.target.value)} value={depth}>
@@ -2046,11 +2004,9 @@ Interested in: Free trial / Paid AI-generated lessons
                   <option value="intensive">Intensive</option>
                 </select>
               </label>
-            </div>
-          </details>
-          <fieldset className="lesson-include-field">
-            <legend>Include in lesson</legend>
-            <div>
+              <fieldset className="lesson-include-field">
+                <legend>Include in lesson</legend>
+                <div>
               {lessonIncludes.map((item) => (
                 <label key={item}>
                   <input
@@ -2061,8 +2017,10 @@ Interested in: Free trial / Paid AI-generated lessons
                   <span>{item}</span>
                 </label>
               ))}
+                </div>
+              </fieldset>
             </div>
-          </fieldset>
+          </details>
           <label>
             Student question or learning need
             <textarea

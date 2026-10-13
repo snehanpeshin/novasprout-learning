@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpenCheck, CalendarCheck, GraduationCap, Timer } from "lucide-react";
+import { ArrowRight, CalendarCheck } from "lucide-react";
 import AILessonGenerator from "../components/AILessonGenerator";
 import LessonVideoPilot from "../components/LessonVideoPilot";
 import Footer from "../components/Footer";
@@ -20,8 +20,8 @@ export default function AILessonGeneratorPage() {
       <section className="ai-tutor-hero">
         <div className="ai-tutor-hero-copy">
         <p className="eyebrow">NovaSprout AI Tutor</p>
-        <h1>Create a personalized lesson in minutes.</h1>
-        <p>Choose a topic. Get personalized explanations, narrated animations, and practice with feedback.</p>
+        <h1>Tell us what you want to learn.</h1>
+        <p>Choose a grade, subject, and topic. NovaSprout creates the explanation, visual learning, practice, and quiz.</p>
         <div className="hero-actions">
           <a className="button primary" href="#generator">
             Create a Lesson
@@ -30,38 +30,13 @@ export default function AILessonGeneratorPage() {
           <a className="button secondary" href="/portal">Find a tutor this week</a>
         </div>
         </div>
-        <aside className="ai-tutor-hero-preview" aria-label="Visual lesson, practice, and quiz">
-          <img src="/novasprout-ai-tutor-app-icon.png" alt="NovaSprout AI Tutor" width={112} height={112} />
-          <p className="eyebrow">NovaSprout AI Tutor</p>
-          <div><BookOpenCheck aria-hidden="true" /><span>Narrated learning</span></div>
-          <div><GraduationCap aria-hidden="true" /><span>Guided practice</span></div>
-          <div><Timer aria-hidden="true" /><span>Scored quiz</span></div>
-        </aside>
       </section>
-
-      <section className="ai-tutor-steps" id="how-ai-tutor-works" aria-label="How the AI Tutor works">
-        <div>
-          <GraduationCap aria-hidden="true" size={22} />
-          <span>1</span>
-          <p>Choose grade and topic</p>
-        </div>
-        <div>
-          <BookOpenCheck aria-hidden="true" size={22} />
-          <span>2</span>
-          <p>Create your interactive lesson</p>
-        </div>
-        <div>
-          <Timer aria-hidden="true" size={22} />
-          <span>3</span>
-          <p>Learn, practice, and take the quiz</p>
-        </div>
-      </section>
-
-      <LessonVideoPilot />
 
       <div id="generator">
         <AILessonGenerator />
       </div>
+
+      <details className="ai-video-preview"><summary>See a 34-second sample video lesson</summary><LessonVideoPilot /></details>
 
       <section className="booking-section ai-tutor-help">
         <div className="booking-copy">

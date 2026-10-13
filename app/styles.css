@@ -3849,6 +3849,7 @@ footer div span:first-child {
 
 .ns-ai-tutor-page { background: #f7f9fc; color: #172d48; }
 .ns-ai-tutor-page .ai-tutor-hero { display: grid; grid-template-columns: 1.4fr 1fr; align-items: center; gap: 56px; max-width: 1120px; margin: 0 auto; padding: 76px 28px 52px; text-align: left; }
+.ns-ai-tutor-page .ai-tutor-hero { display: block; max-width: 760px; padding-bottom: 30px; }
 .ns-ai-tutor-page .ai-tutor-hero h1 { font-size: clamp(36px, 4vw, 60px); line-height: 1.08; letter-spacing: -2px; max-width: 680px; }
 .ns-ai-tutor-page .ai-tutor-hero-copy > p:not(.eyebrow) { font-size: 19px; max-width: 560px; line-height: 1.65; }
 .ns-ai-tutor-page .hero-actions { justify-content: flex-start; gap: 12px; }
@@ -3913,6 +3914,9 @@ footer div span:first-child {
 .interactive-tutor { scroll-margin-top:100px; }
 
 .lesson-video-pilot { max-width:1100px; margin:36px auto; padding:clamp(18px,4vw,36px); border:1px solid #c6ddd3; border-radius:24px; background:#f4faf6; color:#183d35; }
+.ai-video-preview { max-width: 1100px; margin: 0 auto 36px; padding: 0 28px; }
+.ai-video-preview > summary { color: #294d40; cursor: pointer; font-weight: 750; padding: 14px 0; }
+.ai-video-preview .lesson-video-pilot { margin: 14px 0 0; }
 .lesson-video-pilot h2 { margin:8px 0; font-size:clamp(26px,3vw,36px); }
 .lesson-video-pilot video { display:block; width:100%; max-height:600px; background:#173d35; border-radius:18px; margin:24px 0; }
 .video-pilot-label { font-size:14px; }
