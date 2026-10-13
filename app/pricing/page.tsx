@@ -36,7 +36,7 @@ export default function PricingPage() {
 
       <section className="ns-section ns-pricing-notes">
         <div><h2>What the class fee covers</h2><p>Live explanation, representative examples, guided practice, and a practical next step. The exact session length and meeting schedule are confirmed before payment.</p></div>
-        <div><h2>Need help before a live class?</h2><p>AI Tutor costs $2.99 for one lesson or $14.99/month for up to 20 lessons. It provides a personalized visual lesson, guided practice, quiz, and follow-up hints right away. It is a useful bridge while a tutor match is being reviewed.</p><a className="ns-text-link" href="/ai-lesson-generator">Open AI Study Tool <ArrowRight /></a></div>
+        <div><h2>Need help before a live class?</h2><p>NovaSprout Clear costs $2.99 for one concept guide or $14.99/month for up to 20 guides. It provides a short visual explanation, guided practice, quiz, and follow-up hints right away. It is a useful bridge while a tutor match is being reviewed.</p><a className="ns-text-link" href="/ai-lesson-generator">Open NovaSprout Clear <ArrowRight /></a></div>
       </section>
 
       <section className="ns-demo-section" id="free-demo">

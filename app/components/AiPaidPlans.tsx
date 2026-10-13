@@ -27,7 +27,7 @@ export default function AiPaidPlans({ onAccessChange }: { onAccessChange: (activ
           url.searchParams.delete("checkout_session_id");
           window.history.replaceState({}, "", url.toString());
           if (!response.ok) throw new Error(data.error || "Payment could not be verified.");
-          if (alive) setMessage("Payment verified. Your AI Tutor is ready.");
+          if (alive) setMessage("Payment verified. NovaSprout Clear is ready.");
         }
         if (alive) await refresh();
       } catch (error) { if (alive) setMessage(error instanceof Error ? error.message : "Could not activate access."); }
@@ -68,15 +68,15 @@ export default function AiPaidPlans({ onAccessChange }: { onAccessChange: (activ
       if (!response.ok) throw new Error(data.error || "Could not open billing."); window.location.assign(data.url);
     } catch (error) { setMessage(error instanceof Error ? error.message : "Could not open billing."); setBusy(false); }
   }
-  return <section className="ai-paid-plans" aria-label="AI Tutor paid plans">
-    <h3>AI Tutor plans</h3>
-    <p>One AI lesson is $2.99. Monthly AI Tutor is $14.99/month for up to 20 lessons per billing month. Each lesson includes a personalized narrated animation, guided practice, a quiz, a visual PDF, and up to 10 tutor questions within 24 hours of generation.</p>
+  return <section className="ai-paid-plans" aria-label="NovaSprout Clear plans">
+    <h3>NovaSprout Clear plans</h3>
+    <p>One concept guide is $2.99. Monthly NovaSprout Clear is $14.99/month for up to 20 guides per billing month. Each guide includes a visual explanation, guided practice, a quick quiz, a visual PDF, and up to 10 follow-up questions within 24 hours of generation.</p>
     <p>Monthly access renews automatically until cancelled. Cancel in Manage billing; access continues through the paid period. Unused monthly lessons do not roll over. AI can make mistakes; review important answers with a parent or tutor.</p>
-    {access.active && <div className="ai-access-status" role="status"><strong>{access.plan === "monthly" ? "Monthly AI Tutor" : "One AI lesson"}: {access.remaining} lessons available</strong>{access.renewalDate && <p>Current period ends {new Date(access.renewalDate).toLocaleDateString()}.</p>}<button className="button secondary" disabled={busy} onClick={refresh} type="button">Refresh allowance</button><button className="button secondary" onClick={saveAccess} type="button">Save private access code</button><button className="button secondary" disabled={busy} onClick={billing} type="button">Manage billing</button></div>}
+    {access.active && <div className="ai-access-status" role="status"><strong>{access.plan === "monthly" ? "Monthly NovaSprout Clear" : "One concept guide"}: {access.remaining} guides available</strong>{access.renewalDate && <p>Current period ends {new Date(access.renewalDate).toLocaleDateString()}.</p>}<button className="button secondary" disabled={busy} onClick={refresh} type="button">Refresh allowance</button><button className="button secondary" onClick={saveAccess} type="button">Save private access code</button><button className="button secondary" disabled={busy} onClick={billing} type="button">Manage billing</button></div>}
     <label className="ai-parent-confirm"><input type="checkbox" checked={parentConfirmed} onChange={event => setParentConfirmed(event.target.checked)} /> I am 18 or older, or a parent/guardian purchasing for a learner.</label>
     <div className="ai-plan-grid">
-      <article className="ai-plan-card"><span className="eyebrow">One focused session</span><h4>One AI lesson</h4><p className="ai-plan-price">$2.99 <small>one time</small></p><p>A personalized visual lesson, guided practice, and a scored quiz.</p><button className="button primary full" disabled={busy || !parentConfirmed || (access.plan === "monthly")} onClick={() => purchase("ai_lesson")} type="button">Buy one lesson — $2.99</button></article>
-      <article className="ai-plan-card ai-plan-monthly"><span className="eyebrow">Keep learning</span><h4>Monthly AI Tutor</h4><p className="ai-plan-price">$14.99 <small>/ month</small></p><p>Up to 20 lessons per billing month, with guided tutor questions.</p><button className="button primary full" disabled={busy || !parentConfirmed || access.plan === "monthly"} onClick={() => purchase("ai_subscription")} type="button">Subscribe — $14.99/month</button></article>
+      <article className="ai-plan-card"><span className="eyebrow">One focused guide</span><h4>One concept guide</h4><p className="ai-plan-price">$2.99 <small>one time</small></p><p>A short visual explanation, guided practice, and a scored check.</p><button className="button primary full" disabled={busy || !parentConfirmed || (access.plan === "monthly")} onClick={() => purchase("ai_lesson")} type="button">Buy one guide — $2.99</button></article>
+      <article className="ai-plan-card ai-plan-monthly"><span className="eyebrow">Keep learning</span><h4>Monthly NovaSprout Clear</h4><p className="ai-plan-price">$14.99 <small>/ month</small></p><p>Up to 20 concept guides per billing month, with follow-up questions.</p><button className="button primary full" disabled={busy || !parentConfirmed || access.plan === "monthly"} onClick={() => purchase("ai_subscription")} type="button">Subscribe — $14.99/month</button></article>
     </div>
     <details><summary>Restore a website purchase</summary><label>Private purchase access code<textarea value={recovery} onChange={event => setRecovery(event.target.value)} maxLength={2000} /></label><button className="button secondary" disabled={busy || !recovery.trim()} onClick={restore} type="button">Restore purchase</button><p>This restores website purchases. App Store purchases remain in the iOS app. If you lost the code, contact NovaSprout with your Stripe receipt.</p></details>
     {message && <p role="status">{message}</p>}

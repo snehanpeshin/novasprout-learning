@@ -29,7 +29,7 @@ export default function Footer() {
           <a href="/#how-it-works">How It Works</a>
           <a href="/#tutors">Tutor experience</a>
           <a href="/resources">Learning Resources</a>
-          <a href="/ai-lesson-generator">AI Study Tool</a>
+          <a href="/ai-lesson-generator">NovaSprout Clear</a>
           <a href={appStoreUrl} target="_blank" rel="noreferrer">NovaSprout AI Tutor app</a>
         </div>
         <div>

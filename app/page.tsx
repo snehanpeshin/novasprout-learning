@@ -110,7 +110,7 @@ export default function Home() {
           <p className="ns-eyebrow">Live help when the deadline is close</p>
           <h1 id="hero-title" tabIndex={-1}>Find a tutor for this week, or start learning now.</h1>
           <p className="ns-hero-lead">
-            Share the subject, level, deadline, and available times. We’ll review the fit for a live tutor, while NovaSprout AI Tutor gives the student a personal lesson and practice right away.
+            Share the subject, level, deadline, and available times. We’ll review the fit for a live tutor, while NovaSprout Clear helps the student make a difficult concept click right away.
           </p>
           <div className="ns-actions">
             <a className="ns-button ns-button-primary" href="/portal">Find a tutor fast <ArrowRight aria-hidden="true" /></a>
@@ -138,7 +138,7 @@ export default function Home() {
         <div className="ns-section-heading ns-centered"><p className="ns-eyebrow">Choose the right first step</p><h2 id="right-now-title">What does the student need right now?</h2></div>
         <div className="ns-three-grid">
           <article><span>01</span><h3>A test, project, or deadline this week</h3><p>Tell us the deadline and available times. We will use them to review a short-notice tutor match.</p><a href="/portal">Request a tutor match <ArrowRight aria-hidden="true" /></a></article>
-          <article><span>02</span><h3>Homework help today</h3><p>Create a visual, guided AI lesson and practice at the student’s own pace while a live class is being arranged.</p><a href="/ai-lesson-generator">Open AI Tutor <ArrowRight aria-hidden="true" /></a></article>
+          <article><span>02</span><h3>Homework help today</h3><p>Use NovaSprout Clear for a short visual concept guide and practice while a live class is being arranged.</p><a href="/ai-lesson-generator">Open NovaSprout Clear <ArrowRight aria-hidden="true" /></a></article>
           <article><span>03</span><h3>A steady plan for a recurring challenge</h3><p>Request an ongoing tutor match for clear explanations, practice, and a schedule that fits the family.</p><a href="/portal">Build a learning plan <ArrowRight aria-hidden="true" /></a></article>
         </div>
       </section>
@@ -159,14 +159,14 @@ export default function Home() {
         />
         <div className="ns-app-copy">
           <p className="ns-eyebrow">Now on the App Store</p>
-          <h2 id="app-title">Meet NovaSprout AI Tutor.</h2>
-          <p>Build personalized lessons, visual slide decks, practice, and timed checks in the NovaSprout iOS app.</p>
+          <h2 id="app-title">Meet NovaSprout Clear.</h2>
+          <p>Use short visual concept guides, practice, and quick checks on the web. The NovaSprout iOS app also offers deeper personalized lessons.</p>
         </div>
         <div className="ns-app-actions">
           <a className="ns-button ns-button-primary" href={appStoreUrl} target="_blank" rel="noreferrer">
             <Smartphone aria-hidden="true" /> View on the App Store
           </a>
-          <a className="ns-text-link" href="/ai-lesson-generator">Use AI Tutor on the web <ArrowRight aria-hidden="true" /></a>
+          <a className="ns-text-link" href="/ai-lesson-generator">Use NovaSprout Clear on the web <ArrowRight aria-hidden="true" /></a>
           <a className="ns-text-link" href="/samples/novasprout-ratios-sample.pdf" target="_blank" rel="noreferrer">Preview a real lesson <ArrowRight aria-hidden="true" /></a>
         </div>
       </section>

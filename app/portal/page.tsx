@@ -6,7 +6,7 @@ import SiteHeader from "../components/SiteHeader";
 
 export const metadata: Metadata = {
   title: "Family Portal | NovaSprout Learning",
-  description: "Request short-notice online tutoring, schedule a matching call, and start with NovaSprout AI Tutor while you wait.",
+  description: "Request short-notice online tutoring, schedule a matching call, and start with NovaSprout Clear while you wait.",
   alternates: { canonical: "/portal" }
 };
 

@@ -1829,7 +1829,7 @@ Interested in: Free trial / Paid AI-generated lessons
       `Student level: ${level}`,
       `Teaching style: ${teachingStyle}`,
       `Difficulty: ${difficulty}`,
-      `Suggested next session: ${lesson?.recommendedNextSession ?? "Lesson plan generated in NovaSprout AI Tutor."}`
+      `Suggested next session: ${lesson?.recommendedNextSession ?? "Concept guide generated in NovaSprout Clear."}`
     ].join("\n"),
     subject
   });
@@ -1839,8 +1839,8 @@ Interested in: Free trial / Paid AI-generated lessons
       <section className="section demo-generator-section" id="generator">
         <div className="section-heading">
           <p className="eyebrow">Start here</p>
-          <h2>Open your AI Tutor.</h2>
-          <p>Preview a real lesson free, or use your approved access to create one for your own topic.</p>
+          <h2>Open NovaSprout Clear.</h2>
+          <p>Preview a real concept guide free, or use approved access to clarify the student's own topic.</p>
         </div>
         <button
           className="ai-sample-preview"
@@ -1849,8 +1849,8 @@ Interested in: Free trial / Paid AI-generated lessons
         >
           <FileText aria-hidden="true" size={28} />
           <span>
-            <strong>Try a complete AI lesson free</strong>
-            <small>Review, 36-page visual lesson, timer, and scored quiz</small>
+            <strong>Try a concept guide free</strong>
+            <small>See a visual explanation, practice, and a scored check</small>
           </span>
           <ArrowRight aria-hidden="true" size={20} />
         </button>
@@ -1894,9 +1894,9 @@ Interested in: Free trial / Paid AI-generated lessons
       ) : null}
       <section className="section demo-generator-section" id="generator">
       <div className="section-heading">
-        <p className="eyebrow">Create a lesson</p>
-        <h2>What would you like to learn?</h2>
-        <p>Choose the basics. NovaSprout handles the lesson structure, visuals, practice, and quiz.</p>
+        <p className="eyebrow">Clarify a concept</p>
+        <h2>What is the confusing part?</h2>
+        <p>Choose the basics. NovaSprout Clear handles the explanation, visual learning, practice, and check.</p>
       </div>
 
       {isSampleMode ? (

@@ -6,9 +6,9 @@ import SiteHeader from "../components/SiteHeader";
 import TrackedLink from "../components/TrackedLink";
 
 export const metadata = {
-  title: "AI Study Tool | NovaSprout Learning",
+  title: "NovaSprout Clear | AI Concept Guide",
   description:
-    "Create a personalized visual study lesson and scored quiz with NovaSprout's optional AI learning tool.",
+    "NovaSprout Clear creates short, visual AI concept guides with practice and a quick check for understanding.",
   alternates: { canonical: "/ai-lesson-generator" }
 };
 
@@ -19,12 +19,12 @@ export default function AILessonGeneratorPage() {
 
       <section className="ai-tutor-hero">
         <div className="ai-tutor-hero-copy">
-        <p className="eyebrow">NovaSprout AI Tutor</p>
-        <h1>Tell us what you want to learn.</h1>
-        <p>Choose a grade, subject, and topic. NovaSprout creates the explanation, visual learning, practice, and quiz.</p>
+        <p className="eyebrow">NovaSprout Clear · AI concept guide</p>
+        <h1>Make the difficult part click.</h1>
+        <p>Choose a grade, subject, and topic. NovaSprout Clear creates a short visual explanation, practice, and a quick check.</p>
         <div className="hero-actions">
           <a className="button primary" href="#generator">
-            Create a Lesson
+            Clarify a concept
             <ArrowRight aria-hidden="true" size={18} />
           </a>
           <a className="button secondary" href="/portal">Find a tutor this week</a>
