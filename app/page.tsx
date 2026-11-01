@@ -19,6 +19,7 @@ import {
   Video
 } from "lucide-react";
 import ContactForm from "./components/ContactForm";
+import MasteryLearningApproach from "./components/MasteryLearningApproach";
 import Footer from "./components/Footer";
 import SiteHeader from "./components/SiteHeader";
 import { bookingUrl, generalFaqs, subjectTracks } from "./site-data";
@@ -110,7 +111,7 @@ export default function Home() {
           <p className="ns-eyebrow">Live help when the deadline is close</p>
           <h1 id="hero-title" tabIndex={-1}>Find a tutor for this week, or start learning now.</h1>
           <p className="ns-hero-lead">
-            Share the subject, level, deadline, and available times. We’ll review the fit for a live tutor, while NovaSprout Clear helps the student make a difficult concept click right away.
+            Share the subject, level, deadline, and available times. We’ll review the fit for a live tutor, while NovaSprout Clear guides an attempt, offers feedback, and checks understanding one step at a time.
           </p>
           <div className="ns-actions">
             <a className="ns-button ns-button-primary" href="/portal">Find a tutor fast <ArrowRight aria-hidden="true" /></a>
@@ -322,6 +323,7 @@ export default function Home() {
         <ContactForm />
       </section>
 
+      <MasteryLearningApproach />
       <Footer />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
     </main>

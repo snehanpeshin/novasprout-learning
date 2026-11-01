@@ -1,6 +1,7 @@
 import { ArrowRight, CalendarCheck } from "lucide-react";
 import AILessonGenerator from "../components/AILessonGenerator";
 import LessonVideoPilot from "../components/LessonVideoPilot";
+import MasteryLearningApproach from "../components/MasteryLearningApproach";
 import Footer from "../components/Footer";
 import SiteHeader from "../components/SiteHeader";
 import TrackedLink from "../components/TrackedLink";
@@ -21,7 +22,7 @@ export default function AILessonGeneratorPage() {
         <div className="ai-tutor-hero-copy">
         <p className="eyebrow">NovaSprout Clear · AI concept guide</p>
         <h1>Make the difficult part click.</h1>
-        <p>Choose a grade, subject, and topic. NovaSprout Clear creates a short visual explanation, practice, and a quick check.</p>
+        <p>Choose a grade, subject, and topic. NovaSprout Clear guides you through a short explanation, your own attempt, targeted feedback, and fresh checks. Save the lesson to review tomorrow.</p>
         <div className="hero-actions">
           <a className="button primary" href="#generator">
             Clarify a concept
@@ -54,6 +55,7 @@ export default function AILessonGeneratorPage() {
         </div>
       </section>
 
+      <MasteryLearningApproach />
       <Footer />
     </main>
   );

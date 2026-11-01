@@ -19,8 +19,8 @@ export default function AiCoach({ accessToken, lessonTicket, suggestedQuestion, 
     } catch (error) { setError(error instanceof Error ? error.message : "The tutor is unavailable."); }
     finally { setBusy(false); }
   }
-  return <section className="ai-coach" id="lesson-ai-coach"><h3>Let's figure it out</h3><p>Tell me what feels tricky or show me what you tried. We will work through it one step at a time. You can ask up to 10 questions.</p>
-    {feedback && <div className="ai-coach-feedback" aria-live="polite"><p>{feedback.reply}</p><h4>A small hint</h4><p>{feedback.hint}</p><h4>Check your understanding</h4><p>{feedback.checkQuestion}</p></div>}
+  return <section className="ai-coach" id="lesson-ai-coach"><h3>Let's figure it out</h3><p>Show your attempt or tell me where you got stuck. I will help repair the missing step, then ask a fresh question. Try that question without hints before replying. You can ask up to 10 questions; AI feedback can be wrong.</p>
+    {feedback && <div className="ai-coach-feedback" aria-live="polite"><p>{feedback.reply}</p><h4>A small hint</h4><p>{feedback.hint}</p><h4>Try a fresh check on your own</h4><p>{feedback.checkQuestion}</p></div>}
     <form onSubmit={ask}><label>Your question or attempt<textarea ref={input} required minLength={2} maxLength={1200} value={question} onChange={event=>setQuestion(event.target.value)} placeholder="I tried this step, but I’m not sure why..." /></label><button className="button primary" disabled={busy || question.trim().length<2} type="submit">{busy ? "Thinking..." : "Get a hint"}</button></form>{error && <p role="status">{error}</p>}
   </section>;
 }

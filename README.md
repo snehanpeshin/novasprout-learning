@@ -148,3 +148,9 @@ docs/database-schema.sql
 ```
 
 Paid website AI Tutor setup and verification are documented in [docs/web-ai-tutor.md](docs/web-ai-tutor.md).
+
+## Mastery-learning approach
+
+The website presents Bloom-inspired practice, feedback, correction, fresh checks, and next-day retrieval. In the Try view, a submitted wrong multiple-choice answer does not unlock Next; the learner reviews feedback and corrects it. First submissions are retained separately from corrected answers. Written practice remains an explicitly labeled self-check. The coach requests an attempt, targets the misconception, and asks a fresh check without its solution. These are instructional design choices, not evidence of a two-sigma effect.
+
+Evaluate unaided learning rather than chat engagement: compare equivalent pre/post tests, record help used and first attempts, and measure delayed retention and transfer with unseen items. A controlled comparison with the current experience, suitable consent, and uncertainty reporting is needed before making learning-gain claims. In-session practice summaries are not a longitudinal assessment system.

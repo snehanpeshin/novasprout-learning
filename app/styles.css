@@ -3857,7 +3857,7 @@ footer div span:first-child {
 .ns-ai-tutor-page .ai-generator-form { border-color: #d7e5bd; }
 .ns-ai-tutor-page .ai-generator-form .button.primary, .ns-ai-tutor-page .hero-actions .button.primary { box-shadow: 0 4px 0 #bf7b48; }
 .ns-site .ns-subject-card, .ns-site .ns-problem-grid article, .ns-site .ns-three-grid article { border-radius: 22px; }
-@media (max-width: 760px) { .ns-ai-tutor-page .ai-tutor-hero { display: grid; grid-template-columns: 1fr; } .clear-hero-art { max-width: 520px; } }
+@media (max-width: 760px) { .ns-ai-tutor-page .ai-tutor-hero { display: grid; grid-template-columns: 1fr; } .clear-hero-art { width: 100%; max-width: min(100%, 520px); transform: none; } }
 
 /* NovaSprout crayon-paper theme */
 :root { --crayon-paper: #fffaf0; --crayon-ink: #31455a; --crayon-green: #4e9874; --crayon-blue: #5da6cf; --crayon-yellow: #f3c755; --crayon-coral: #ed886f; --crayon-purple: #9b8acb; }
@@ -4110,3 +4110,14 @@ body { background-color: var(--crayon-paper); background-image: radial-gradient(
 .ns-urgency-grid .ns-three-grid article a svg { height: 16px; vertical-align: middle; width: 16px; }
 @media (max-width: 640px) { .ns-choice-grid, .ns-portal-details, .ns-portal-summary { grid-template-columns: 1fr; } .ns-portal-details label:nth-of-type(5), .ns-portal-details label:nth-of-type(6) { grid-column: auto; } }
 
+
+/* Mastery-learning approach */
+.ns-mastery { background: #f5faf5; border-block: 1px solid #c7dbc8; }
+.ns-mastery-cycle { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:24px; padding-left:24px; margin-block:28px; }
+.ns-mastery-cycle li { padding-inline:8px; }
+.ns-mastery p { line-height:1.65; }
+.ns-mastery details { background:#fffdf7; border:1px solid #b9cbb9; border-radius:16px; padding:20px; }
+.ns-mastery summary { cursor:pointer; font-weight:700; }
+.ns-mastery a { text-decoration:underline; text-underline-offset:3px; }
+@media(max-width:800px) { .ns-mastery-cycle { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:500px) { .ns-mastery-cycle { grid-template-columns:1fr; } }

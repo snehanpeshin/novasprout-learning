@@ -9,3 +9,12 @@ The website now prioritizes a captioned learning journey over long text slides. 
 - Narration uses only server-verified lesson content, one visible step at a time. Browser playback and cached replay pass with a real audio clip; the learner attempt transfers into the coach form.
 
 The walkthrough is a progressive browser animation, not a downloadable generated video. Typed practice uses self-comparison plus the optional AI coach; it is not automatically graded. No microphone recording is used.
+
+## Bloom-inspired learning update — 2026-11-01
+
+- 195 regression tests pass, including new first-attempt versus correction bookkeeping.
+- Production build and type checks pass. Existing unrelated CSS autoprefixer warning remains.
+- Desktop (1440 px) and mobile (390 px): all six sample quiz questions were deliberately answered incorrectly, blocked Next, and unlocked only after correction; the summary retained 0 first-try correct and 6 corrected.
+- Homepage and concept page: approach section present, research limitation visible on expansion, no horizontal overflow. Mobile concept illustration sizing corrected.
+- Next-day review questions separate prompts from optional answer comparisons.
+- New coach and generator instructions were inspected; no paid live AI generation was performed for this update. Prompt adherence and learning gains still require evaluation. No claim of a demonstrated two-sigma gain is made.
