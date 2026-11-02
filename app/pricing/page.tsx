@@ -1,49 +1,6 @@
-import type { Metadata } from "next";
-import { ArrowRight, Check, ShieldCheck } from "lucide-react";
-import ContactForm from "../components/ContactForm";
-import Footer from "../components/Footer";
+import {ArrowRight} from "lucide-react";
 import SiteHeader from "../components/SiteHeader";
-
-export const metadata: Metadata = {
-  title: "Online Tutoring Pricing | NovaSprout Learning",
-  description: "Start with a Free Demo Class, then continue with one-to-one online tutoring for $20 per class and a first paid-session fit guarantee.",
-  alternates: { canonical: "/pricing" }
-};
-
-export default function PricingPage() {
-  return (
-    <main className="ns-site ns-simple-page">
-      <SiteHeader />
-      <section className="ns-page-hero">
-        <p className="ns-eyebrow">Clear tutoring pricing</p>
-        <h1>Get the right support for the time you have.</h1>
-        <p>Request a short-notice tutor match for a live class, or begin a personalized AI lesson immediately while you choose a matching-call time.</p>
-        <div className="ns-actions"><a className="ns-button ns-button-primary" href="/portal">Find a tutor fast <ArrowRight aria-hidden="true" /></a><a className="ns-button ns-button-secondary" href="/ai-lesson-generator">Start an AI lesson</a></div>
-      </section>
-
-      <section className="ns-section ns-pricing-detail">
-        <div className="ns-pricing-steps">
-          <article><span>01</span><p className="ns-card-kicker">Start here</p><h2>Free Demo Class</h2><strong>$0</strong><ul><li><Check />Discuss the student’s needs</li><li><Check />Experience the teaching approach</li><li><Check />No paid commitment</li></ul></article>
-          <article className="is-featured"><span>02</span><p className="ns-card-kicker">Continue when ready</p><h2>Live tutoring</h2><strong>$20 <small>per class</small></strong><ul><li><Check />One-to-one online teaching</li><li><Check />Guided practice and feedback</li><li><Check />Follow-up notes or next steps</li></ul></article>
-          <article><span>03</span><p className="ns-card-kicker">As needed</p><h2>Ongoing schedule</h2><strong>$20 <small>per class</small></strong><ul><li><Check />Same flat per-class rate</li><li><Check />Schedule based on availability</li><li><Check />Continue only while useful</li></ul></article>
-        </div>
-      </section>
-
-      <section className="ns-guarantee-band">
-        <ShieldCheck aria-hidden="true" />
-        <div><p className="ns-eyebrow">First paid-session fit guarantee</p><h2>A lower-risk first step.</h2><p>If the first paid tutoring session is not a good fit, contact us within 24 hours. We will offer a refund for that session or a replacement session.</p><a href="/refund-policy">Read the full Refund Policy <ArrowRight aria-hidden="true" /></a></div>
-      </section>
-
-      <section className="ns-section ns-pricing-notes">
-        <div><h2>What the class fee covers</h2><p>Live explanation, representative examples, guided practice, and a practical next step. The exact session length and meeting schedule are confirmed before payment.</p></div>
-        <div><h2>Need help before a live class?</h2><p>NovaSprout Clear costs $2.99 for one concept guide or $14.99/month for up to 20 guides. It provides a short visual explanation, guided practice, quiz, and follow-up hints right away. It is a useful bridge while a tutor match is being reviewed.</p><a className="ns-text-link" href="/ai-lesson-generator">Open NovaSprout Clear <ArrowRight /></a></div>
-      </section>
-
-      <section className="ns-demo-section" id="free-demo">
-        <div className="ns-demo-copy"><p className="ns-eyebrow">Free Demo Class</p><h2>Tell us what support would help.</h2><p>We’ll use the subject, level, goals, and schedule to review the request before the demo.</p></div>
-        <ContactForm />
-      </section>
-      <Footer />
-    </main>
-  );
-}
+import Footer from "../components/Footer";
+import AiPlanOverview from "../components/AiPlanOverview";
+export const metadata={title:"AI Tutor Pricing | NovaSprout Learning",description:"Explore a free sample, choose one AI lesson for $2.99, or get up to 20 lessons per month for $14.99. Human tutoring is optional.",alternates:{canonical:"/pricing"}};
+export default function PricingPage(){return <main className="ns-site ns-simple-page"><SiteHeader/><section className="ns-page-hero"><p className="ns-eyebrow">NovaSprout Clear · AI tutor pricing</p><h1>Start with the idea you want to understand.</h1><p>Explore the free sample, then choose a single personalized lesson or a monthly AI plan.</p><div className="ns-actions"><a className="ns-button ns-button-primary" href="/ai-lesson-generator">Open AI Tutor <ArrowRight/></a><a className="ns-button ns-button-secondary" href="/ai-lesson-generator?sample=1#generator">Try the free sample</a></div></section><AiPlanOverview/><section className="ns-section ns-pricing-notes"><div><h2>What each personalized lesson includes</h2><p>A visual explanation, guided practice, a quiz, a visual PDF, and up to 10 follow-up questions within 24 hours of generation. AI can make mistakes; review important reasoning with a trusted adult, teacher, or tutor.</p></div><div><h2>Keep your access handy</h2><p>Save your private website purchase code to restore access in another browser. Manage your monthly subscription from the AI tutor page. Website plans and App Store purchases are separate.</p></div></section><section className="ns-section ns-human-optional"><div><p className="ns-eyebrow">Optional human support</p><h2>Prefer a live one-to-one session?</h2><p>Start with a free demo class. Human tutoring is $20 per class, with session details confirmed before payment. The first paid-session fit guarantee applies to human tutoring; see the refund policy for terms.</p></div><div><a className="ns-button ns-button-secondary" href="/human-tutoring">Explore human tutoring <ArrowRight/></a><p><a className="ns-text-link" href="/refund-policy">Refund policy</a></p></div></section><Footer/></main>}

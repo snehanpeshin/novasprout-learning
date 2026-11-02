@@ -14,6 +14,7 @@ export default function SiteHeader() {
           <span>NovaSprout <em>Learning</em></span>
         </a>
 
+        <a className="ns-header-ai-cta ns-button ns-button-primary" href="/ai-lesson-generator">AI Tutor <span aria-hidden="true">↗</span></a>
         <button
           className="ns-menu-button"
           type="button"
@@ -26,15 +27,11 @@ export default function SiteHeader() {
         </button>
 
         <nav className={open ? "ns-nav is-open" : "ns-nav"} id="site-navigation" aria-label="Main navigation">
-          <a href="/#subjects" onClick={() => setOpen(false)}>Subjects</a>
+          <a href="/ai-lesson-generator" onClick={() => setOpen(false)}>AI Tutor</a>
           <a href="/#how-it-works" onClick={() => setOpen(false)}>How It Works</a>
-          <a href="/pricing" onClick={() => setOpen(false)}>Pricing</a>
-          <a href="/#tutors" onClick={() => setOpen(false)}>Tutors</a>
-          <a className="ns-nav-secondary" href="/become-a-tutor" onClick={() => setOpen(false)}>Become a Tutor</a>
-          <a className="ns-nav-secondary" href="/portal" onClick={() => setOpen(false)}>Family Portal</a>
-          <a className="ns-button ns-button-primary ns-nav-cta" href="/portal" onClick={() => setOpen(false)}>
-            Find a tutor fast
-          </a>
+          <a href="/pricing" onClick={() => setOpen(false)}>AI Pricing</a>
+          <a className="ns-nav-secondary" href="/human-tutoring" onClick={() => setOpen(false)}>Human Support</a>
+          <a className="ns-button ns-button-primary ns-nav-cta" href="/ai-lesson-generator" onClick={() => setOpen(false)}>Start with AI Tutor</a>
         </nav>
       </div>
     </header>

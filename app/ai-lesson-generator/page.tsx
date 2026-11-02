@@ -7,7 +7,7 @@ import SiteHeader from "../components/SiteHeader";
 import TrackedLink from "../components/TrackedLink";
 
 export const metadata = {
-  title: "NovaSprout Clear | AI Concept Guide",
+  title: "NovaSprout Clear | Your AI Tutor",
   description:
     "NovaSprout Clear creates short, visual AI concept guides with practice and a quick check for understanding.",
   alternates: { canonical: "/ai-lesson-generator" }
@@ -20,7 +20,7 @@ export default function AILessonGeneratorPage() {
 
       <section className="ai-tutor-hero">
         <div className="ai-tutor-hero-copy">
-        <p className="eyebrow">NovaSprout Clear · AI concept guide</p>
+        <p className="eyebrow">NovaSprout Clear · Your AI tutor</p>
         <h1>Make the difficult part click.</h1>
         <p>Choose a grade, subject, and topic. NovaSprout Clear guides you through a short explanation, your own attempt, targeted feedback, and fresh checks. Save the lesson to review tomorrow.</p>
         <div className="hero-actions">
@@ -28,7 +28,7 @@ export default function AILessonGeneratorPage() {
             Clarify a concept
             <ArrowRight aria-hidden="true" size={18} />
           </a>
-          <a className="button secondary" href="/portal">Find a tutor this week</a>
+          <a className="button secondary" href="/ai-lesson-generator?sample=1#generator">Explore the free sample</a>
         </div>
         </div>
         <img className="clear-hero-art" src="/novasprout-clear-crayon-hero.png" alt="Two children learning together with crayons and a friendly sprout character" />
@@ -43,13 +43,13 @@ export default function AILessonGeneratorPage() {
       <section className="booking-section ai-tutor-help">
         <div className="booking-copy">
           <p className="eyebrow">Need human help?</p>
-          <h2>Need a tutor for this week?</h2>
-          <p>Send the subject, deadline, and available times through the family portal. You can keep learning here while NovaSprout reviews the live-tutor fit.</p>
+          <h2>Want extra human support?</h2>
+          <p>The AI tutor works independently. If you want a person to help with a persistent gap or learning plan, you can request human tutoring separately.</p>
         </div>
         <div className="booking-actions">
-          <TrackedLink className="button primary full" eventName="tutor_portal_click" href="/portal">
+          <TrackedLink className="button primary full" eventName="human_support_click" href="/human-tutoring">
             <CalendarCheck aria-hidden="true" size={18} />
-            Find a tutor fast
+            Explore optional human support
             <ArrowRight aria-hidden="true" size={18} />
           </TrackedLink>
         </div>

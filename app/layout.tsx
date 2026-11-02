@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
+import AiTutorPromo from "./components/AiTutorPromo";
 import CookieConsent from "./components/CookieConsent";
 import "./styles.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.novasproutlearning.com"),
-  title: "Personalized Online Tutoring | NovaSprout Learning",
+  title: "NovaSprout AI Tutor | Learn One Step at a Time",
   description:
-    "Personalized one-to-one online tutoring in math, science, coding, data skills, and study skills. Begin with a Free Demo Class.",
+    "Learn with NovaSprout Clear: visual AI lessons, guided practice, feedback, and checks for understanding. Human tutoring is optional.",
   applicationName: "NovaSprout Learning",
   category: "education",
   icons: { icon: "/novasprout-logo.png", apple: "/novasprout-logo.png" },
@@ -63,6 +64,7 @@ export default function RootLayout({
       </head>
       <body>
         {children}
+        <AiTutorPromo />
         <CookieConsent />
       </body>
     </html>

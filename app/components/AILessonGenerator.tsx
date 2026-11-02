@@ -1671,6 +1671,21 @@ export default function AILessonGenerator() {
     setIsDeckOpen(false);
   }
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("sample") === "1") openFreeSample();
+    if (params.get("promo") === "NovaSprout2026") {
+      const promo = "NovaSprout2026";
+      setNotice("Checking your demo code…");
+      fetch("/api/ai-access/verify", {method:"POST",headers:{"x-ai-access-token":promo}})
+        .then(async response => {if (!response.ok) throw new Error("This demo code could not be activated. Explore the free sample or choose an AI plan instead.");
+          setAccessToken(promo); setIsUnlocked(true); setError("");
+          try { window.localStorage.setItem(accessStorageKey, promo); } catch {}
+          setNotice("NovaSprout2026 demo access is ready. Choose your topic and create an AI lesson.");
+        }).catch(error => {setNotice("");setError(error instanceof Error ? error.message : "Demo access is temporarily unavailable. Try the free sample.");});
+    }
+  }, []);
+
   function leaveFreeSample() {
     setIsDeckOpen(false);
     setIsSampleMode(false);

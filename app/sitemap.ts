@@ -13,6 +13,7 @@ const routes = [
   "/become-a-tutor",
   "/resources",
   "/ai-lesson-generator",
+  "/human-tutoring",
   "/privacy",
   "/terms",
   "/refund-policy"
@@ -23,6 +24,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${siteUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: route === "" ? "weekly" : "monthly",
-    priority: route === "" ? 1 : route.includes("tutoring") || route === "/contact" ? 0.85 : 0.7
+    priority: route === "" ? 1 : route === "/ai-lesson-generator" ? 0.95 : route === "/pricing" ? 0.9 : 0.7
   }));
 }
