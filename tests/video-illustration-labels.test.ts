@@ -1,0 +1,7 @@
+import test from "node:test";import assert from "node:assert/strict";import {illustrationLabels} from "../app/lib/videoLessonCanvas.ts";
+const scene:any={title:"Equal shares",visual:{kind:"fraction",selected:1,total:4,labels:[]}};
+test("legacy fraction scenes still receive an exact illustration label",()=>assert.deepEqual(illustrationLabels(scene),["1/4 equal parts of one whole"]));
+test("illustration keys retain the source concept labels",()=>assert.deepEqual(illustrationLabels({...scene,visual:{...scene.visual,labels:["Numerator","Denominator"]}}),["Numerator","Denominator"]));
+
+import {drawVideoScene} from "../app/lib/videoLessonCanvas.ts";
+test("illustrated scenes draw their full label key within the canvas",()=>{const text:{value:string;y:number}[]=[];const ctx:any=new Proxy({measureText:(s:string)=>({width:s.length*7}),fillText:(value:string,_x:number,y:number)=>text.push({value,y})},{get:(target,key)=>key in target?(target as any)[key]:()=>{}});const canvas:any={height:0,getContext:()=>ctx};drawVideoScene(canvas,{...scene,narration:"An example",caption:"One quarter",visual:{...scene.visual,representation:"bar",labels:["Selected share","One whole"]}},0,3,0,true,{naturalWidth:100,naturalHeight:100} as any,true);assert(text.some(x=>x.value==="Illustration key"));assert(text.some(x=>x.value==="1. Selected share"));assert(text.some(x=>x.value==="2. One whole"));assert(text.every(x=>x.y<canvas.height/2));});
