@@ -1927,7 +1927,8 @@ Interested in: Free trial / Paid AI-generated lessons
       ) : null}
 
       <details className="ai-parent-tools" open={!lesson}><summary>For parents: plans and access</summary><AiPaidPlans onAccessChange={(active, remaining) => { setHasPaidAccess(active); setLessonAllowance(remaining ?? null); }} /></details>
-      <div className="ai-generator-layout">
+      <div className={lesson ? "ai-generator-layout has-lesson" : "ai-generator-layout"}>
+        <details className="lesson-setup" open={!lesson}><summary>{lesson ? "Create another lesson" : "Choose your topic"}</summary>
         <form className="ai-generator-form" onSubmit={generateLesson}>
           <label>
             Grade or class
@@ -2068,7 +2069,7 @@ Interested in: Free trial / Paid AI-generated lessons
           </p>
           {notice ? <p className="generator-note">{notice}</p> : null}
           {error ? <p className="form-error">{error}</p> : null}
-        </form>
+        </form></details>
 
         <article className="generated-lesson ai-output">
           {lesson || lessonText ? (

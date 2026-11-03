@@ -18,27 +18,13 @@ export default function AILessonGeneratorPage() {
     <main className="landing-page ns-site ns-ai-tutor-page">
       <SiteHeader />
 
-      <section className="ai-tutor-hero">
-        <div className="ai-tutor-hero-copy">
-        <p className="eyebrow">NovaSprout Clear · Your AI tutor</p>
-        <h1>Make the difficult part click.</h1>
-        <p>Choose a grade, subject, and topic. NovaSprout Clear guides you through a short explanation, your own attempt, targeted feedback, and fresh checks. Save the lesson to review tomorrow.</p>
-        <div className="hero-actions">
-          <a className="button primary" href="#generator">
-            Clarify a concept
-            <ArrowRight aria-hidden="true" size={18} />
-          </a>
-          <a className="button secondary" href="/ai-lesson-generator?sample=1#generator">Explore the free sample</a>
-        </div>
-        </div>
-        <img className="clear-hero-art" src="/novasprout-clear-crayon-hero.png" alt="Two children learning together with crayons and a friendly sprout character" />
-      </section>
-
+      <section className="ns-tutor-intro"><p className="eyebrow">NovaSprout Clear · Your AI tutor</p><h1>Press play. See the idea.</h1><p>Watch a short animation, then create a lesson on your own topic.</p></section>
+      <section className="ns-feature-player" aria-label="Try the animated tutor"><LessonVideoPilot compact /></section>
       <div id="generator">
         <AILessonGenerator />
       </div>
 
-      <details className="ai-video-preview"><summary>See a 34-second sample video lesson</summary><LessonVideoPilot /></details>
+
 
       <section className="booking-section ai-tutor-help">
         <div className="booking-copy">
