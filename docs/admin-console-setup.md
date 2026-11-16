@@ -69,3 +69,11 @@ customer.subscription.deleted
 
 The admin dashboard will remain empty if NovaSprout does not use Stripe. The
 login and platform-status section will still work.
+
+## AI tutor activity and presentations
+
+After entering the admin token, the console shows the last 14 UTC days of successful lesson completions, guided replies, video plans, scene illustrations, and scene narrations. Tracking begins with this release; previous usage is not backfilled. Static sample playback and cached outputs are excluded. These counts are usage, not unique students, revenue, or demonstrated learning gains.
+
+Reporting uses the existing AI_USAGE_TABLE and AI_USAGE_REGION. The application uses GetItem and TransactWriteItems, already used by the usage ledger. Aggregate counters and hashed event markers contain no lesson content or student identities. Duplicate response polling counts once, and reporting failures do not block lesson delivery. Refresh reads stored counters without generating AI content. Payment reporting remains separate and requires valid Supabase credentials.
+
+The presentation panel opens a free sample and the live tutor in separate tabs and gives a short demonstration sequence. Learner access requires its own eligible purchase or private access code; the admin token grants only admin access.

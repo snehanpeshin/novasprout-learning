@@ -60,6 +60,7 @@ export async function supabaseFetch(path: string, init: RequestInit = {}) {
     response = await fetch(`${url}/rest/v1/${path}`, {
       ...init,
       cache: "no-store",
+      signal: init.signal ?? AbortSignal.timeout(8000),
       headers: {
         apikey: serviceRoleKey,
         Authorization: `Bearer ${serviceRoleKey}`,

@@ -1,3 +1,4 @@
+import { recordTutorActivity } from "../../lib/tutorAnalytics.ts";
 import { NextResponse } from "next/server.js";
 import { checkCurriculumTopic, checkKidSafeContent } from "../../lib/curriculumGuard.ts";
 import { aiAccessError, isAiAccessAllowed } from "../../lib/aiAccess.ts";
@@ -1091,6 +1092,7 @@ Keep claims cautious. Do not promise grades, test scores, admissions results, di
           { status: 422 }
         );
       }
+      await recordTutorActivity("lessons", responseId);
       return NextResponse.json({
         lesson: bridgeVisualPlanIntoLesson(lesson),
         lessonTicket: lessonTicket(request, responseId, responsePayload?.created_at),

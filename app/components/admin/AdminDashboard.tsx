@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AdminTutorOverview from "./AdminTutorOverview";
 
 type Metrics = {
   activeSubscriptions: Array<{
@@ -56,12 +57,17 @@ const stateLabels: Record<PlatformState, string> = {
 
 export default function AdminDashboard() {
   const [token, setToken] = useState("");
+  const [activeToken, setActiveToken] = useState("");
+  const [refresh, setRefresh] = useState(0);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   async function loadMetrics() {
     setIsLoading(true);
+    setMetrics(null);
+    setActiveToken(token.trim());
+    setRefresh(value => value + 1);
     setError(null);
 
     try {
@@ -99,21 +105,25 @@ export default function AdminDashboard() {
         </a>
         <p className="eyebrow">Admin</p>
         <h1>Admin console</h1>
-        <p>Enter the admin token to load payment metrics and review the NovaSprout platform controls.</p>
-        <div className="admin-login">
+        <p>Enter the admin token to review AI tutor activity, present the tutor, and load payment reports.</p>
+        <form className="admin-login" onSubmit={event => { event.preventDefault(); void loadMetrics(); }}>
           <input
+            aria-label="Admin token"
+            autoComplete="current-password"
             onChange={(event) => setToken(event.target.value)}
             placeholder="Admin token"
             type="password"
             value={token}
           />
-          <button className="button primary" disabled={!token || isLoading} onClick={loadMetrics} type="button">
-            {isLoading ? "Loading..." : "Load dashboard"}
+          <button className="button primary" disabled={!token.trim() || isLoading} type="submit">
+            {isLoading ? "Loading..." : activeToken ? "Refresh dashboard" : "Load dashboard"}
           </button>
-        </div>
+          {activeToken ? <button className="button secondary" disabled={isLoading} type="button" onClick={() => { setToken(""); setActiveToken(""); setMetrics(null); setError(null); }}>Sign out</button> : null}
+        </form>
         {error ? <p className="form-error">{error}</p> : null}
       </section>
 
+      {activeToken ? <AdminTutorOverview token={activeToken} refresh={refresh} /> : null}
       {metrics ? (
         <section className="admin-content">
           {metrics.setupWarning ? (

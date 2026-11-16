@@ -1,3 +1,4 @@
+import { recordTutorActivity } from "../../lib/tutorAnalytics.ts";
 import {NextResponse} from "next/server.js";
 import {isAiAccessAllowed,aiAccessError} from "../../lib/aiAccess.ts";
 import {requestOwner,ticketClaims,takeBudget,releaseBudget} from "../../lib/webAiAccess.ts";
@@ -24,6 +25,7 @@ export async function POST(request:Request){
   failureStage="provider";const response=await fetch("https://api.openai.com/v1/images/generations",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},signal:AbortSignal.timeout(42000),body:JSON.stringify({model:process.env.OPENAI_VIDEO_IMAGE_MODEL||"gpt-image-2.5-flare",prompt,n:1,size:"1536x1024",quality:"medium",output_format:"jpeg",output_compression:60,moderation:"auto"})});
   const payload=await response.json(),image=payload.data?.[0]?.b64_json;if(!response.ok||typeof image!=="string"||image.length<100||image.length>6000000||!/^[A-Za-z0-9+/=]+$/.test(image))throw new Error("Illustration unavailable");
   failureStage="image-processing";const dataUrl=await boundedVideoImage(image);failureStage="cache";await saveVideoImage(ticket.responseId!,owner,body.sceneIndex,dataUrl,ticket.exp);reservation=null;
+  await recordTutorActivity("illustrations",ticket.responseId+":"+body.sceneIndex);
   return NextResponse.json({dataUrl,cached:false},{headers:{"Cache-Control":"private, no-store"}});
  }catch(error){console.error("[video] Illustration failed",{stage:failureStage,type:error instanceof Error?error.name:"unknown"});if(reservation){try{await releaseBudget(reservation);}catch{console.error("[video] Illustration allowance restoration needs retry.");}}return NextResponse.json({error:"This illustration could not load. Try again; the diagram and narration still work."},{status:503});}
 }

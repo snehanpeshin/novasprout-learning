@@ -1,3 +1,4 @@
+import { recordTutorActivity } from "../../../lib/tutorAnalytics.ts";
 import { NextResponse } from "next/server.js";
 import { aiAccessError, isAiAccessAllowed } from "../../../lib/aiAccess.ts";
 import { extractAiLessonOutputText, parseAiLessonJson } from "../../../lib/aiLessonResponse.ts";
@@ -93,6 +94,7 @@ export async function GET(request: Request) {
         );
       }
 
+      await recordTutorActivity("lessons", responseId);
       return NextResponse.json(
         {
           lesson: bridgeVisualPlanIntoLesson(lesson),

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isAdminAllowed } from "../../../lib/adminAccess";
 import { getPayments, getSubscriptions } from "../../../lib/supabase";
 
 export const runtime = "nodejs";
@@ -40,10 +41,7 @@ function adminJson(body: object, init?: ResponseInit) {
 }
 
 export async function GET(request: Request) {
-  const expectedToken = process.env.ADMIN_DASHBOARD_TOKEN?.trim();
-  const providedToken = request.headers.get("x-admin-token")?.trim();
-
-  if (!expectedToken || providedToken !== expectedToken) {
+  if (!isAdminAllowed(request)) {
     return adminJson({ error: "Unauthorized" }, { status: 401 });
   }
 

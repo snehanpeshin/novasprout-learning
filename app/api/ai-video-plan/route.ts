@@ -1,3 +1,4 @@
+import { recordTutorActivity } from "../../lib/tutorAnalytics.ts";
 import {NextResponse} from "next/server.js";
 import {isAiAccessAllowed,aiAccessError} from "../../lib/aiAccess.ts";
 import {requestOwner,ticketClaims,takeBudget,releaseBudget} from "../../lib/webAiAccess.ts";
@@ -31,6 +32,7 @@ export async function POST(request:Request) {
    const winner=await cachedVideoLesson(responseId,owner);if(!validVideoLesson(winner))throw error;
    await releaseBudget(budget);reservation=null;return NextResponse.json({plan:winner,cached:true},{headers:{"Cache-Control":"private, no-store"}});
   }reservation=null;
+  await recordTutorActivity("videos",responseId);
   return NextResponse.json({plan,cached:false},{headers:{"Cache-Control":"private, no-store"}});
  }catch{if(reservation){try{await releaseBudget(reservation);}catch{console.error("[video] Planning allowance restoration needs retry.");}}return NextResponse.json({error:"The video could not be prepared. Try again; your written lesson is still available."},{status:503});}
 }

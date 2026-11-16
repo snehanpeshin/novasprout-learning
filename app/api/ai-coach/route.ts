@@ -1,3 +1,5 @@
+import { recordTutorActivity } from "../../lib/tutorAnalytics.ts";
+import crypto from "node:crypto";
 import { NextResponse } from "next/server.js";
 import { isAiAccessAllowed, aiAccessError } from "../../lib/aiAccess.ts";
 import { checkKidSafeContent } from "../../lib/curriculumGuard.ts";
@@ -41,6 +43,7 @@ export async function POST(request: Request) {
     if (!["reply", "hint", "checkQuestion"].every(key => typeof feedback[key] === "string" && feedback[key].trim() && feedback[key].length <= 1600)) throw new Error("Invalid tutor reply");
     const outputSafety = await checkKidSafeContent({ apiKey, topic: "Educational tutor reply", studentQuestion: Object.values(feedback).join("\n") });
     if (!outputSafety.allowed) throw new Error("Reply could not be shown safely");
+    await recordTutorActivity("replies", typeof payload.id === "string" ? payload.id : crypto.randomUUID());
     return NextResponse.json(feedback, { headers: { "Cache-Control": "no-store" } });
   } catch {
     if (reservedBudget) { try { await releaseBudget(reservedBudget); } catch { console.error("[coach] Question allowance restoration needs retry."); } }
