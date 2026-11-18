@@ -29,6 +29,7 @@ export default function SiteHeader() {
         <nav className={open ? "ns-nav is-open" : "ns-nav"} id="site-navigation" aria-label="Main navigation">
           <a href="/ai-lesson-generator" onClick={() => setOpen(false)}>AI Tutor</a>
           <a href="/#how-it-works" onClick={() => setOpen(false)}>How It Works</a>
+          <a href="/present" onClick={() => setOpen(false)}>Try the demos</a>
           <a href="/pricing" onClick={() => setOpen(false)}>AI Pricing</a>
           <a className="ns-nav-secondary" href="/human-tutoring" onClick={() => setOpen(false)}>Human Support</a>
           <a className="ns-button ns-button-primary ns-nav-cta" href="/ai-lesson-generator" onClick={() => setOpen(false)}>Start with AI Tutor</a>

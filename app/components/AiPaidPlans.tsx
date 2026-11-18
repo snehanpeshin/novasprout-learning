@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 type Access = { active: boolean; plan?: string; remaining?: number; renewalDate?: string; recoveryCode?: string };
-export default function AiPaidPlans({ onAccessChange }: { onAccessChange: (active: boolean, remaining?: number) => void }) {
+export default function AiPaidPlans({ onAccessChange, onBeforePurchase }: { onAccessChange: (active: boolean, remaining?: number) => void; onBeforePurchase?: () => void }) {
   const callback = useRef(onAccessChange); callback.current = onAccessChange;
   const [access, setAccess] = useState<Access>({ active: false });
   const [busy, setBusy] = useState(false);
@@ -40,6 +40,7 @@ export default function AiPaidPlans({ onAccessChange }: { onAccessChange: (activ
   async function purchase(productKey: string) {
     setBusy(true); setMessage("");
     try {
+      onBeforePurchase?.();
       const response = await fetch("/api/stripe/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productKey }) });
       const data = await response.json(); if (!response.ok || !data.url) throw new Error("Checkout is temporarily unavailable.");
       window.location.assign(data.url);

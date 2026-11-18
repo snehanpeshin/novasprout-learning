@@ -18,9 +18,9 @@ export default function AILessonGeneratorPage() {
     <main className="landing-page ns-site ns-ai-tutor-page">
       <SiteHeader />
 
-      <section className="ns-tutor-intro"><p className="eyebrow">NovaSprout Clear · Your AI tutor</p><h1>Press play. See the idea.</h1><p>Watch a short animation, then create a lesson on your own topic.</p></section>
+      <section className="ns-tutor-intro"><p className="eyebrow">NovaSprout Clear · Your AI tutor</p><h1>Press play. See the idea.</h1><p>Watch a short animation, then create a lesson on your own topic.</p><a className="ns-text-link" href="/present">Present ready-to-play examples <ArrowRight size={18}/></a></section>
       <section className="ns-feature-player" aria-label="Try the animated tutor"><LessonVideoPilot compact /></section>
-      <div id="generator">
+      <div>
         <AILessonGenerator />
       </div>
 

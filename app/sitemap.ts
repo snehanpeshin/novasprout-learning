@@ -13,6 +13,7 @@ const routes = [
   "/become-a-tutor",
   "/resources",
   "/ai-lesson-generator",
+  "/present",
   "/human-tutoring",
   "/privacy",
   "/terms",

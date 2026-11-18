@@ -55,7 +55,8 @@ export default function AdminTutorOverview({ token, refresh }: { token: string; 
       <p className="eyebrow">Present NovaSprout</p><h2>Show the AI tutor in action</h2>
       <p>Start with the sample, then demonstrate a lesson on your audience's topic.</p>
       <div className="admin-demo-actions">
-        <a className="button primary" href="/ai-lesson-generator?sample=1#generator" target="_blank" rel="noopener noreferrer">Open free sample</a>
+        <a className="button primary" href="/present" target="_blank" rel="noopener noreferrer">Launch presentation mode</a>
+        <a className="button secondary" href="/ai-lesson-generator?sample=1#generator" target="_blank" rel="noopener noreferrer">Open free sample</a>
         <a className="button secondary" href="/ai-lesson-generator#generator" target="_blank" rel="noopener noreferrer">Open live AI tutor</a>
       </div>
       <ol className="admin-demo-steps">

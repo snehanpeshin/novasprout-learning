@@ -1,5 +1,7 @@
 "use client";
 import AiPaidPlans from "./AiPaidPlans";
+import LessonStarter from "./LessonStarter";
+import { presentationDemos } from "../lib/presentationDemos";
 import LessonExperience from "./LessonExperience";
 
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
@@ -1580,17 +1582,19 @@ export default function AILessonGenerator() {
   const [currentLessonTicket, setCurrentLessonTicket] = useState("");
   const [accessToken, setAccessToken] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
+  const [accessExpanded, setAccessExpanded] = useState(false);
+  const accessPanel = useRef<HTMLDetailsElement>(null);
   const [grade, setGrade] = useState("Grades 6-8");
-  const [subject, setSubject] = useState("Science");
-  const [topic, setTopic] = useState("Digestive system");
+  const [subject, setSubject] = useState("Other / Interdisciplinary");
+  const [topic, setTopic] = useState("");
   const [level, setLevel] = useState("Teach at my grade level");
   const [goal, setGoal] = useState("Concept clarity");
-  const [mode, setMode] = useState("Comprehensive lesson");
-  const [duration, setDuration] = useState("45-minute comprehensive lesson");
+  const [mode, setMode] = useState("Quick explanation");
+  const [duration, setDuration] = useState("10-minute quick lesson");
   const [teachingStyle, setTeachingStyle] = useState("Visual");
   const [difficulty, setDifficulty] = useState("Adaptive");
   const [lessonLanguage, setLessonLanguage] = useState("English");
-  const [depth, setDepth] = useState("standard");
+  const [depth, setDepth] = useState("quick");
   const [visualEmphasis, setVisualEmphasis] = useState("high");
   const [practiceIntensity, setPracticeIntensity] = useState("standard");
   const [includeInLesson, setIncludeInLesson] = useState<string[]>(lessonIncludes);
@@ -1607,6 +1611,12 @@ export default function AILessonGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
+    try {
+      const draft = JSON.parse(window.sessionStorage.getItem("novasprout_lesson_starter") || "null");
+      if (draft && typeof draft.topic === "string" && draft.topic.trim().length >= 3 && draft.topic.length <= 180 && grades.includes(draft.grade) && goals.includes(draft.goal) && subjects.includes(draft.subject)) {
+        setTopic(draft.topic); setGrade(draft.grade); setGoal(draft.goal); setSubject(draft.subject);
+      }
+    } catch {}
     const savedToken = window.localStorage.getItem(accessStorageKey);
     if (savedToken) {
       setAccessToken(savedToken);
@@ -1674,6 +1684,10 @@ export default function AILessonGenerator() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("sample") === "1") openFreeSample();
+    else {
+      const starter = presentationDemos.find(item => item.id === params.get("starter"));
+      if (starter) { setTopic(starter.topic); setGrade(starter.level); setSubject(starter.id === "math" ? "Mathematics" : starter.id === "science" ? "Science" : "Computer Science"); setGoal("Concept clarity"); }
+    }
     if (params.get("promo") === "NovaSprout2026") {
       const promo = "NovaSprout2026";
       setNotice("Checking your demo code…");
@@ -1849,14 +1863,25 @@ Interested in: Free trial / Paid AI-generated lessons
     subject
   });
 
+  function saveStarterDraft() {
+    try { window.sessionStorage.setItem("novasprout_lesson_starter", JSON.stringify({ topic, grade, goal, subject })); } catch {}
+  }
+  const starterFields = <LessonStarter topic={topic} grade={grade} goal={goal} grades={grades} goals={goals} onTopicChange={setTopic} onGradeChange={setGrade} onGoalChange={setGoal} onSuggestion={(nextTopic, nextSubject) => { setTopic(nextTopic); setSubject(nextSubject); }} />;
+
   if (!isUnlocked) {
     return (
       <section className="section demo-generator-section" id="generator">
         <div className="section-heading">
           <p className="eyebrow">Start here</p>
-          <h2>Open NovaSprout Clear.</h2>
-          <p>Preview a real concept guide free, or use approved access to clarify the student's own topic.</p>
+          <h2>Start with one question.</h2>
+          <p>Choose a topic, learner level, and goal. You can customize the details after unlocking your lesson.</p>
         </div>
+        <form className="lesson-starter-card" onSubmit={event => { event.preventDefault(); saveStarterDraft(); setAccessExpanded(true); requestAnimationFrame(() => { accessPanel.current?.scrollIntoView({ behavior: "smooth", block: "start" }); accessPanel.current?.querySelector("summary")?.focus(); }); }}>
+          {starterFields}
+          <button className="button primary" type="submit" disabled={topic.trim().length < 3}>Choose lesson access <ArrowRight size={18}/></button>
+          <p className="generator-note">Choosing a topic does not start generation or make a purchase.</p>
+        </form>
+        <a className="lesson-presentation-link" href="/present">Present a ready-to-play example <ArrowRight size={18}/></a>
         <button
           className="ai-sample-preview"
           onClick={openFreeSample}
@@ -1864,12 +1889,13 @@ Interested in: Free trial / Paid AI-generated lessons
         >
           <FileText aria-hidden="true" size={28} />
           <span>
-            <strong>Try a concept guide free</strong>
+            <strong>Try a complete lesson free</strong>
             <small>See a visual explanation, practice, and a scored check</small>
           </span>
           <ArrowRight aria-hidden="true" size={20} />
         </button>
-        <AiPaidPlans onAccessChange={(active, remaining) => { setHasPaidAccess(active); setLessonAllowance(remaining ?? null); if (active) setIsUnlocked(true); }} />
+        <details ref={accessPanel} className="lesson-access-options" open={accessExpanded} onToggle={event => setAccessExpanded(event.currentTarget.open)}><summary>Plans, purchase restoration, and private access</summary>
+        <AiPaidPlans onBeforePurchase={saveStarterDraft} onAccessChange={(active, remaining) => { setHasPaidAccess(active); setLessonAllowance(remaining ?? null); if (active) setIsUnlocked(true); }} />
         <form className="ai-access-card" onSubmit={unlockTools}>
           <LockKeyhole aria-hidden="true" size={34} />
           <label>
@@ -1891,6 +1917,7 @@ Interested in: Free trial / Paid AI-generated lessons
           </div>
           {error ? <p className="form-error">{error}</p> : null}
         </form>
+        </details>
       </section>
     );
   }
@@ -1926,70 +1953,16 @@ Interested in: Free trial / Paid AI-generated lessons
         </div>
       ) : null}
 
-      <details className="ai-parent-tools" open={!lesson}><summary>For parents: plans and access</summary><AiPaidPlans onAccessChange={(active, remaining) => { setHasPaidAccess(active); setLessonAllowance(remaining ?? null); }} /></details>
+      <details className="ai-parent-tools"><summary>For parents: plans and access</summary><AiPaidPlans onBeforePurchase={saveStarterDraft} onAccessChange={(active, remaining) => { setHasPaidAccess(active); setLessonAllowance(remaining ?? null); }} /></details>
       <div className={lesson ? "ai-generator-layout has-lesson" : "ai-generator-layout"}>
         <details className="lesson-setup" open={!lesson}><summary>{lesson ? "Create another lesson" : "Choose your topic"}</summary>
         <form className="ai-generator-form" onSubmit={generateLesson}>
-          <label>
-            Grade or class
-            <select onChange={(event) => setGrade(event.target.value)} value={grade}>
-              {grades.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Subject area (choose the closest)
-            <select
-              onChange={(event) => {
-                const nextSubject = event.target.value;
-                setSubject(nextSubject);
-                const nextSuggestion = topicSuggestionsBySubject[nextSubject]?.[0];
-                if (nextSuggestion) {
-                  setTopic(nextSuggestion);
-                }
-              }}
-              value={subject}
-            >
-              {subjects.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Topic
-            <input
-              maxLength={180}
-              onChange={(event) => setTopic(event.target.value)}
-              placeholder="Any school, college, career, or enrichment topic"
-              required
-              value={topic}
-            />
-          </label>
-          <div className="topic-suggestions" aria-label="Topic suggestions">
-            {topicSuggestions.slice(0, 8).map((item) => (
-              <button
-                className={topic === item ? "selected" : ""}
-                key={item}
-                onClick={() => setTopic(item)}
-                type="button"
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-          <p className="generator-note">Interdisciplinary and advanced topics are welcome. The lesson adapts to the selected level.</p>
-          <label>
-            Goal
-            <select onChange={(event) => setGoal(event.target.value)} value={goal}>
-              {goals.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
+          {starterFields}
           <details className="lesson-advanced-settings">
             <summary>Customize this lesson</summary>
             <div>
+              <label>Subject area (choose the closest)<select value={subject} onChange={event=>setSubject(event.target.value)}>{subjects.map(item=><option key={item}>{item}</option>)}</select></label>
+              <div className="topic-suggestions" aria-label="More topic suggestions">{topicSuggestions.slice(0,8).map(item=><button type="button" key={item} onClick={()=>setTopic(item)}>{item}</button>)}</div>
               <label>Student level<select onChange={(event) => setLevel(event.target.value)} value={level}>{levels.map((item) => <option key={item}>{item}</option>)}</select></label>
               <label>Lesson length<select onChange={(event) => setDuration(event.target.value)} value={duration}>{durations.map((item) => <option key={item}>{item}</option>)}</select></label>
               <label>Teaching style<select onChange={(event) => setTeachingStyle(event.target.value)} value={teachingStyle}>{teachingStyles.map((item) => <option key={item}>{item}</option>)}</select></label>
@@ -2035,8 +2008,6 @@ Interested in: Free trial / Paid AI-generated lessons
               ))}
                 </div>
               </fieldset>
-            </div>
-          </details>
           <label>
             Student question or learning need
             <textarea
@@ -2046,6 +2017,8 @@ Interested in: Free trial / Paid AI-generated lessons
               value={studentQuestion}
             />
           </label>
+            </div>
+          </details>
           <button className="button primary full" disabled={isGenerating || topic.trim().length < 3 || (hasPaidAccess && lessonAllowance === 0)} type="submit">
             {isGenerating ? "Creating your lesson..." : "Create My Lesson"}
             <ArrowRight aria-hidden="true" size={18} />
@@ -2212,7 +2185,7 @@ Interested in: Free trial / Paid AI-generated lessons
             <div className="empty-generator-state">
               <Bot aria-hidden="true" size={42} />
               <h3>Your lesson will appear here.</h3>
-              <p>Choose a grade, subject, topic, and lesson type, then select Create My Lesson.</p>
+              <p>Choose a topic, learner level, and goal, then select Create My Lesson. Customize the details only when you need to.</p>
             </div>
           )}
         </article>
