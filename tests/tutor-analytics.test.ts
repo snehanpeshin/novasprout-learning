@@ -10,7 +10,7 @@ test("polling a completed lesson repeatedly, even after UTC midnight, counts onc
   const original = DynamoDBDocumentClient.prototype.send;
   const items = new Map<string, any>();
   DynamoDBDocumentClient.prototype.send = (async (command: any) => {
-    if (command instanceof GetCommand) return { Item: items.get(command.input.Key.id) };
+    if (command instanceof GetCommand) return { Item: items.get(command.input.Key!.id) };
     const [marker, counter, tracking] = command.input.TransactItems;
     if (items.has(marker.Put.Item.id)) throw Object.assign(new Error("duplicate"), { name: "TransactionCanceledException" });
     items.set(marker.Put.Item.id, marker.Put.Item);

@@ -27,6 +27,12 @@ frontend:
         - if [ -n "$AI_WEB_ACCESS_SECRET" ]; then printf "AI_WEB_ACCESS_SECRET=%s\n" "$AI_WEB_ACCESS_SECRET" >> .env.production; fi
         - if [ -n "$AI_USAGE_TABLE" ]; then printf "AI_USAGE_TABLE=%s\n" "$AI_USAGE_TABLE" >> .env.production; fi
         - if [ -n "$AI_USAGE_REGION" ]; then printf "AI_USAGE_REGION=%s\n" "$AI_USAGE_REGION" >> .env.production; fi
+        - if [ -n "$STUDENT_USER_POOL_ID" ]; then printf "STUDENT_USER_POOL_ID=%s\n" "$STUDENT_USER_POOL_ID" >> .env.production; fi
+        - if [ -n "$STUDENT_CLIENT_ID" ]; then printf "STUDENT_CLIENT_ID=%s\n" "$STUDENT_CLIENT_ID" >> .env.production; fi
+        - if [ -n "$STUDENT_AUTH_DOMAIN" ]; then printf "STUDENT_AUTH_DOMAIN=%s\n" "$STUDENT_AUTH_DOMAIN" >> .env.production; fi
+        - if [ -n "$STUDENT_AUTH_REGION" ]; then printf "STUDENT_AUTH_REGION=%s\n" "$STUDENT_AUTH_REGION" >> .env.production; fi
+        - if [ -n "$STUDENT_LIBRARY_TABLE" ]; then printf "STUDENT_LIBRARY_TABLE=%s\n" "$STUDENT_LIBRARY_TABLE" >> .env.production; fi
+        - if [ -n "$STUDENT_SESSION_SECRET" ]; then printf "STUDENT_SESSION_SECRET=%s\n" "$STUDENT_SESSION_SECRET" >> .env.production; fi
         - npm run build
   artifacts:
     baseDirectory: .next

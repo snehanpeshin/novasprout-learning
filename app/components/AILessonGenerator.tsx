@@ -2054,7 +2054,7 @@ Interested in: Free trial / Paid AI-generated lessons
               {lesson?.studentFit ? <p>{lesson.studentFit}</p> : null}
               {lesson ? (
                 <>
-                <LessonExperience key={isSampleMode ? "sample" : currentLessonTicket || lesson.title} lesson={lesson} accessToken={accessToken} lessonTicket={isSampleMode ? "" : currentLessonTicket} resources={<>
+                <LessonExperience key={isSampleMode ? "sample" : currentLessonTicket || lesson.title} lesson={lesson} context={{grade,subject,topic}} accessToken={accessToken} lessonTicket={isSampleMode ? "" : currentLessonTicket} resources={<>
                 <details className="lesson-plan-details"><summary>Preview the printable lesson</summary><LessonPlanPreview lesson={lesson} /></details>
                 <div className="lesson-launch-card">
                   <div>

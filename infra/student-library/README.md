@@ -1,0 +1,13 @@
+# Student library operations
+
+The website library is at /library. It uses the NovaSproutStudents Cognito user pool and a separate novasprout-student-library DynamoDB table in us-east-1. Sign-in uses the OAuth authorization-code flow with PKCE, verified email, and mandatory authenticator-app MFA. The Essentials tier supports refresh-token rotation. Tokens remain in HttpOnly, Secure, SameSite=Lax cookies; access and ID tokens last 15 minutes and refresh sessions last up to 30 days.
+
+The client never chooses the database owner: every request verifies the pool issuer, app client, token use, signature, expiry, verified email and matching subject. The request's account marker also detects stale tabs after an account switch. All storage keys are scoped to the verified subject. Runtime permission is limited to this table and its student-updated index. The role's existing usage-ledger policy is preserved.
+
+Lesson saving is explicit. It retains written lesson content and interactive practice. Videos and PDFs have separate download controls. Saving an identical written lesson is idempotent and does not reset its existing progress. Progress records the current learning part, revealed steps, written attempts, hint state and first/latest quiz choices. A version condition prevents stale writes; the UI offers reload after a conflict and retry after a network failure. No library endpoint grants paid AI access or extends lesson tickets.
+
+New runtime variables are STUDENT_USER_POOL_ID, STUDENT_CLIENT_ID, STUDENT_AUTH_DOMAIN, STUDENT_AUTH_REGION, STUDENT_LIBRARY_TABLE and STUDENT_SESSION_SECRET. These are emitted to the SSR runtime by amplify.yml. Do not print or commit the session secret or provider credentials. The setup.cjs script preserves existing Amplify variables and uses temporary files for CLI inputs. The user-pool and table have deletion protection.
+
+The runtime policy was derived using IAM Policy Autopilot against app/lib/studentLibraryStore.ts and narrowed to the exact table/index. Unneeded replication and customer-KMS permissions were omitted because this is a regional table with default AWS-owned encryption. Review runtime-policy.json before applying it. Setup does not attach IAM permissions automatically.
+
+Validation should include two separate accounts, cross-account reads/updates/deletes, duplicate saves, malformed snapshots, immutable first-choice history, stale-version rejection, CSRF, OAuth state and PKCE, session refresh, sign-out, and resuming from a fresh browser context. Use synthetic QA accounts with suppressed messages, then remove their test records and accounts. Never confirm or alter real student accounts as a test.

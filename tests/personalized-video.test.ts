@@ -17,8 +17,8 @@ function request(body:unknown={},ticketOwner=owner){const ticket=signClaims({kin
 async function mocked(action:(state:any)=>Promise<void>,options:{cached?:boolean;sourceOwner?:string;failed?:boolean;invalid?:boolean;quota?:boolean;audioCached?:boolean;saveConflict?:boolean;imageCached?:boolean;imageFailed?:boolean;imageTooLarge?:boolean}={}){
  const originalFetch=globalThis.fetch,originalSend=DynamoDBDocumentClient.prototype.send,state={saved:null as any,writes:[] as any[],speech:[] as string[],generations:[] as any[]};
  DynamoDBDocumentClient.prototype.send=(async(command:any)=>{
-  if(command instanceof GetCommand&&options.imageCached&&command.input.Key.id===hash(`video:image:v1:${responseId}:0`))return {Item:{owner,image:"data:image/jpeg;base64,"+jpeg.toString("base64"),expiresAt:Math.floor(Date.now()/1000)+100}};
-  if(command instanceof GetCommand&&options.audioCached&&command.input.Key.id!==hash("video:plan:v1:"+responseId))return {Item:{owner,audio:Buffer.from([73,68,51]).toString("base64"),expiresAt:Math.floor(Date.now()/1000)+100}};
+  if(command instanceof GetCommand&&options.imageCached&&command.input.Key!.id===hash(`video:image:v1:${responseId}:0`))return {Item:{owner,image:"data:image/jpeg;base64,"+jpeg.toString("base64"),expiresAt:Math.floor(Date.now()/1000)+100}};
+  if(command instanceof GetCommand&&options.audioCached&&command.input.Key!.id!==hash("video:plan:v1:"+responseId))return {Item:{owner,audio:Buffer.from([73,68,51]).toString("base64"),expiresAt:Math.floor(Date.now()/1000)+100}};
   if(command instanceof GetCommand)return (options.cached||(options.saveConflict&&state.writes.some(w=>w.Item?.plan)))?{Item:{owner,plan,expiresAt:Math.floor(Date.now()/1000)+100}}:{};
   state.writes.push(command.input);
   if(options.quota&&command instanceof TransactWriteCommand)throw {name:"TransactionCanceledException",CancellationReasons:[{Code:"ConditionalCheckFailed"}]};

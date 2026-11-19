@@ -21,7 +21,7 @@ export default function Footer() {
 
         <div>
           <h2>AI learning</h2>
-          <a href="/ai-lesson-generator">Open AI Tutor</a>
+          <a href="/library">My learning</a><a href="/ai-lesson-generator">Open AI Tutor</a>
           <a href="/ai-lesson-generator?sample=1#generator">Explore the free sample</a>
           {subjectTracks.map((subject) => <a key={subject.slug} href={`/${subject.slug}`}>{subject.navTitle}</a>)}
           <a href="/pricing">Pricing</a>

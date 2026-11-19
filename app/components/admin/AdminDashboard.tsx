@@ -46,7 +46,7 @@ const platformItems: Array<{
   { key: "aiAccess", label: "AI lesson access control" },
   { key: "lessonModes", label: "Visual lessons, custom plans, and timed exams" },
   { key: "paymentReporting", label: "Stripe payment and revenue reporting" },
-  { key: "studentRecords", label: "Student profiles, saved lessons, and exam scores" }
+  { key: "studentRecords", label: "Student sign-in, saved lessons, and practice progress" }
 ];
 
 const stateLabels: Record<PlatformState, string> = {

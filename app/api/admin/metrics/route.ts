@@ -8,7 +8,7 @@ type PlatformStatus = {
   aiAccess: "active" | "setup_required";
   lessonModes: "active";
   paymentReporting: "active" | "setup_required";
-  studentRecords: "planned";
+  studentRecords: "active" | "setup_required";
 };
 
 function getPlatformStatus(paymentDatabaseConnected: boolean): PlatformStatus {
@@ -26,7 +26,7 @@ function getPlatformStatus(paymentDatabaseConnected: boolean): PlatformStatus {
     lessonModes: "active",
     paymentReporting:
       stripeConfigured && paymentDatabaseConnected ? "active" : "setup_required",
-    studentRecords: "planned"
+    studentRecords: process.env.STUDENT_USER_POOL_ID && process.env.STUDENT_LIBRARY_TABLE ? "active" : "setup_required"
   };
 }
 

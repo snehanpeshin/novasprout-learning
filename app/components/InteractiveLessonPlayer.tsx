@@ -2,13 +2,23 @@
 import {useEffect,useMemo,useRef,useState} from "react";
 import {buildLearningMoments,narrationFor,practiceParts,type InteractiveLesson} from "../lib/interactiveLesson";
 import {recordCheck,checkComplete,summarizeChecks,type CheckRecord} from "../lib/masteryLearning";
-export default function InteractiveLessonPlayer({lesson,accessToken,lessonTicket,onAskTutor,active=true}:{lesson:InteractiveLesson;accessToken:string;lessonTicket:string;onAskTutor?:(question:string)=>void;active?:boolean}) {
+import {normalizeLessonProgress,type LessonProgress} from "../lib/lessonLibrary";
+export default function InteractiveLessonPlayer({lesson,accessToken,lessonTicket,onAskTutor,active=true,initialProgress,onProgressChange}:{lesson:InteractiveLesson;accessToken:string;lessonTicket:string;onAskTutor?:(question:string)=>void;active?:boolean;initialProgress?:LessonProgress;onProgressChange?:(progress:LessonProgress)=>void}) {
   const moments=useMemo(()=>buildLearningMoments(lesson),[lesson]);
-  const [index,setIndex]=useState(0), [beat,setBeat]=useState(0), [watching,setWatching]=useState(false), [playing,setPlaying]=useState(false), [busy,setBusy]=useState(false), [error,setError]=useState("");
-  const [attempts,setAttempts]=useState<Record<string,string>>({}), [revealed,setRevealed]=useState<Record<string,boolean>>({}), [choices,setChoices]=useState<Record<string,number>>({}), [hints,setHints]=useState<Record<string,boolean>>({});
-  const [checks,setChecks]=useState<Record<string,CheckRecord>>({});
+  const [starting]=useState(()=>normalizeLessonProgress(initialProgress,lesson));
+  const [completed,setCompleted]=useState<string[]>(starting.completed);
+  const progressCallback=useRef(onProgressChange);progressCallback.current=onProgressChange;
+  const [index,setIndex]=useState(starting.index), [beat,setBeat]=useState(starting.beat), [watching,setWatching]=useState(false), [playing,setPlaying]=useState(false), [busy,setBusy]=useState(false), [error,setError]=useState("");
+  const [attempts,setAttempts]=useState<Record<string,string>>(starting.attempts), [revealed,setRevealed]=useState<Record<string,boolean>>(starting.revealed), [choices,setChoices]=useState<Record<string,number>>(starting.choices), [hints,setHints]=useState<Record<string,boolean>>(starting.hints);
+  const [checks,setChecks]=useState<Record<string,CheckRecord>>(starting.checks);
   const audio=useRef<HTMLAudioElement|null>(null), cache=useRef(new Map<string,string>()), pending=useRef<AbortController|null>(null), generation=useRef(0);
   const current=moments[index];
+  useEffect(()=>{
+    if(!progressCallback.current||!active||!current)return;
+    const complete=current.prompt?(current.options?checkComplete(checks[current.id],current.answerIndex):Boolean((attempts[current.id]||"").trim()&&(!current.answer||revealed[current.id]))):beat>=current.beats.length-1;
+    if(complete)setCompleted(items=>items.includes(current.id)?items:[...items,current.id]);
+  },[active,current,beat,attempts,revealed,checks]);
+  useEffect(()=>{if(active)progressCallback.current?.({index,beat,attempts,revealed,choices,hints,checks,completed});},[active,index,beat,attempts,revealed,choices,hints,checks,completed]);
   function stop(){generation.current++;pending.current?.abort();audio.current?.pause(); if(typeof window!=="undefined"&&"speechSynthesis" in window) window.speechSynthesis.cancel();setPlaying(false);setBusy(false);setWatching(false);}
   useEffect(()=>{if(!active)stop();},[active]);
   useEffect(()=>()=>{generation.current++;pending.current?.abort();audio.current?.pause();window.speechSynthesis?.cancel();cache.current.forEach(url=>URL.revokeObjectURL(url));},[]);
@@ -43,7 +53,7 @@ export default function InteractiveLessonPlayer({lesson,accessToken,lessonTicket
   return <section className="interactive-tutor" aria-label="Interactive lesson studio">
     <header><p className="eyebrow">Listen · Explore · Try</p><h3>Let's try it together</h3><p>Try first, use a hint when needed, and correct a missed check before moving on. Written practice is a self-check, not a verified mastery score. Take your time.</p></header>
     <div className="studio-progress"><progress value={index+1} max={moments.length} aria-label="Lesson position"/><span>Part {index+1} of {moments.length}</span></div>
-    <div className="studio-controls"><button type="button" className="button secondary" onClick={listen} disabled={busy}>{busy?"Getting the voice ready...":playing?"Pause voice":"Read it to me"}</button><span>{lessonTicket?"AI-generated OpenAI voice":"Sample: your device’s synthetic voice"} · captions below</span></div>
+    <div className="studio-controls"><button type="button" className="button secondary" onClick={listen} disabled={busy}>{busy?"Getting the voice ready...":playing?"Pause voice":"Read it to me"}</button><span>{lessonTicket?"AI-generated OpenAI voice":"Your device’s synthetic voice"} · captions below</span></div>
     {current.beats.length>1&&<button type="button" className="button secondary studio-watch" onClick={()=>{if(watching){setWatching(false);}else{stop();if(beat>=current.beats.length-1)setBeat(0);setWatching(true);}}}>{watching?"Pause walkthrough":"Show me step by step"}</button>}
     {error&&<p role="status">{error}</p>}
     <article className="studio-scene" key={current.id}><p className="mini-label">{current.kind === "model" ? "I do: follow the reasoning" : current.kind === "practice" ? "You do: give it a try" : current.kind === "check" ? "Your turn" : "Explore the idea"}</p><h4>{current.title}</h4>

@@ -18,7 +18,7 @@ export default function PrivacyPolicy() {
         <p className="ns-eyebrow">Privacy Policy</p>
         <h1>How we protect student and parent information.</h1>
         <p>
-          Effective date: August 14, 2026. Updated October 12, 2026. NovaSprout Learning is a brand of Karigari
+          Effective date: August 14, 2026. Updated November 18, 2026. NovaSprout Learning is a brand of Karigari
           Home LLC. This Privacy Policy explains how NovaSprout Learning collects, uses,
           and protects information when families use our website, forms, booking links,
           mobile app, AI learning tools, online tutoring resources, and related services.
@@ -59,6 +59,13 @@ export default function PrivacyPolicy() {
             <li>Send service-related messages, reminders, and updates.</li>
             <li>Measure advertising performance and website activity.</li>
           </ul>
+        </article>
+
+        <article>
+          <h2>Saved Website Lessons and Student Accounts</h2>
+          <p>When you create a website learning account, Amazon Cognito manages your email verification, password, authenticator sign-in, and account sessions. NovaSprout stores your saved written lessons, learner level, topic, learning goal, written practice attempts, quiz choices, corrections, and lesson position in Amazon DynamoDB so you can continue on another device. For learners under 18, a parent or guardian should manage the account.</p>
+          <p>Saving is optional. Use Remove lesson in My learning to delete a saved lesson and its progress. Saved written lessons are retained until you remove them or request deletion. You can contact us about account deletion or other privacy requests. Videos and PDFs use separate download controls and are not added to the cloud lesson library. Progress is a record of practice and review, not a verified mastery score.</p>
+          <p>Website sign-in uses necessary session cookies. Authentication tokens are not placed in browser local storage. A learning account does not replace a purchase or extend an AI follow-up allowance.</p>
         </article>
 
         <article>
@@ -104,7 +111,7 @@ export default function PrivacyPolicy() {
           <h2>Third-Party Services</h2>
           <p>
             We use trusted third-party services to run the website and provide tutoring. These
-            may include AWS Amplify for hosting, Supabase for secure request and service records,
+            may include AWS Amplify for hosting, Amazon Cognito for website sign-in, Amazon DynamoDB for saved lessons and progress, Supabase for secure request and service records,
             Calendly for booking, Google Forms or similar
             tools for intake forms, Gmail or Google Workspace for email, Google Meet or Zoom
             for online sessions, YouTube for video resources, OpenAI for AI-assisted educational
