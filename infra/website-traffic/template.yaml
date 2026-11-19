@@ -1,0 +1,364 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Private website traffic totals and page reports for an existing Amplify site.
+Metadata:
+  com.aws.cloudformation.Context:
+    arch: Generate aggregate page reports daily. Check the existing site admin credential before reading traffic statistics.
+    must:
+      - Do not store raw logs or credentials.
+      - Restrict access to the app and aggregate object covered by this stack.
+Parameters:
+  AmplifyAppId:
+    Type: String
+    AllowedPattern: '[a-z0-9]+'
+  LogDomain:
+    Type: String
+    AllowedPattern: '[a-z0-9.-]+'
+  TrafficStart:
+    Type: String
+    AllowedPattern: '[0-9]{4}-[0-9]{2}-[0-9]{2}'
+  AdminCheckUrl:
+    Type: String
+    AllowedPattern: 'https://[^ ]+'
+Resources:
+  PageReportBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOlderSnapshots
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 7
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+  PageReportBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref PageReportBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !GetAtt PageReportBucket.Arn
+              - !Sub '${PageReportBucket.Arn}/*'
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+  PageTrafficRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: GeneratePageTrafficReport
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: amplify:GenerateAccessLogs
+                Resource: !Sub 'arn:${AWS::Partition}:amplify:${AWS::Region}:${AWS::AccountId}:apps/${AmplifyAppId}'
+              - Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub '${PageReportBucket.Arn}/page-traffic.json'
+  PageTrafficFunction:
+    Type: AWS::Lambda::Function
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: Produces recent per-page traffic from the hosting access logs before admins open the dashboard.
+        must: Save only aggregate counts and public paths. Discard raw log records.
+    Properties:
+      Runtime: nodejs22.x
+      Handler: index.handler
+      Role: !GetAtt PageTrafficRole.Arn
+      Timeout: 600
+      MemorySize: 384
+      ReservedConcurrentExecutions: 1
+      Environment:
+        Variables:
+          AMPLIFY_APP_ID: !Ref AmplifyAppId
+          DOMAIN: !Ref LogDomain
+          REPORT_BUCKET: !Ref PageReportBucket
+      Code:
+        ZipFile: |
+          const { AmplifyClient, GenerateAccessLogsCommand } = require('@aws-sdk/client-amplify');
+          const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+          const { Readable } = require('node:stream');
+          const { createInterface } = require('node:readline');
+
+          const amplify = new AmplifyClient({});
+          const s3 = new S3Client({});
+          const day = 86400000;
+          const needed = ['cs-method', 'cs-uri-stem', 'sc-status', 'sc-content-type', 'x-host-header'];
+
+          function csvFields(line) {
+            const fields = [];
+            const pattern = /(?:^|,)(?:"((?:[^"]|"")*)"|([^,]*))/g;
+            for (const entry of line.matchAll(pattern)) {
+              fields.push(entry[1] === undefined ? entry[2] : entry[1].replaceAll('""', '"'));
+            }
+            return fields;
+          }
+
+          function normalizePage(path) {
+            if (!/^\/[A-Za-z0-9_./-]*$/.test(path)) return null;
+            const clean = path.replace(/\/index\.html$/i, '/').replace(/\.html$/i, '').replace(/\/+$/, '') || '/';
+            return /^\/(?:admin|api|_next|assets)(?:\/|$)/i.test(clean) ? null : clean;
+          }
+
+          async function tallyWindow(start, end, counts) {
+            const { logUrl } = await amplify.send(new GenerateAccessLogsCommand({
+              appId: process.env.AMPLIFY_APP_ID,
+              domainName: process.env.DOMAIN,
+              startTime: new Date(start),
+              endTime: new Date(end - 1)
+            }));
+            if (!logUrl || new URL(logUrl).protocol !== 'https:') throw new Error('Missing HTTPS log export');
+            const response = await fetch(logUrl, { signal: AbortSignal.timeout(55000) });
+            if (!response.ok || !response.body) throw new Error('Log export HTTP ' + response.status);
+            const lines = createInterface({ input: Readable.fromWeb(response.body), crlfDelay: Infinity });
+            let indices;
+            for await (const line of lines) {
+              if (!line.trim()) continue;
+              const fields = csvFields(line);
+              if (!indices) {
+                indices = needed.map((name) => fields.indexOf(name));
+                if (indices.some((index) => index < 0)) throw new Error('Unexpected access log columns');
+                continue;
+              }
+              const [method, path, status, contentType, host] = indices.map((index) => fields[index]);
+              if (![process.env.DOMAIN, 'www.' + process.env.DOMAIN].includes(host) || method !== 'GET') continue;
+              const html = /^text\/html(?:;|$)/i.test(contentType ?? '');
+              const cachedHtml = status === '304' && (path?.endsWith('/') || /\.html$/i.test(path ?? '') || !/\.[^/]+$/.test(path ?? ''));
+              if (!(status === '200' && html) && !cachedHtml) continue;
+              const page = normalizePage(path ?? '');
+              if (page) counts.set(page, (counts.get(page) ?? 0) + 1);
+            }
+            if (!indices) throw new Error('Missing access log header');
+          }
+
+          exports.handler = async () => {
+            const end = Math.floor(Date.now() / day) * day;
+            const start = end - 30 * day;
+            const counts = new Map();
+            const windowSize = 2 * day;
+            const windows = Array.from({ length: 15 }, (_, index) => start + index * windowSize);
+            for (let index = 0; index < windows.length; index += 4) {
+              await Promise.all(windows.slice(index, index + 4).map((from) =>
+                tallyWindow(from, from + windowSize, counts)
+              ));
+            }
+            const report = {
+              start: new Date(start).toISOString(),
+              end: new Date(end).toISOString(),
+              pages: [...counts].sort(([pathA, a], [pathB, b]) => b - a || pathA.localeCompare(pathB))
+                .map(([path, requests]) => ({ path, requests }))
+            };
+            await s3.send(new PutObjectCommand({
+              Bucket: process.env.REPORT_BUCKET,
+              Key: 'page-traffic.json',
+              ContentType: 'application/json',
+              Body: JSON.stringify(report)
+            }));
+            return { pages: report.pages.length };
+          };
+  PageTrafficSchedule:
+    Type: AWS::Events::Rule
+    Properties:
+      ScheduleExpression: 'cron(0 12 * * ? *)'
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt PageTrafficFunction.Arn
+          Id: DailyPageTraffic
+          RetryPolicy:
+            MaximumRetryAttempts: 2
+            MaximumEventAgeInSeconds: 3600
+  PageTrafficInvocation:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref PageTrafficFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt PageTrafficSchedule.Arn
+  TrafficApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Ref AWS::StackName
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins:
+          - !Sub 'https://${LogDomain}'
+          - !Sub 'https://www.${LogDomain}'
+        AllowMethods: [GET]
+        AllowHeaders: [X-Admin-Token]
+  TrafficReadRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies:
+        - PolicyName: ReadTrafficMetrics
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: cloudwatch:GetMetricData
+                Resource: '*'
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub '${PageReportBucket.Arn}/page-traffic.json'
+  TrafficReadFunction:
+    Type: AWS::Lambda::Function
+    Metadata:
+      com.aws.cloudformation.Context:
+        why: Serves traffic separately from payment and usage reporting.
+        must: Require successful current admin validation before reading data. Do not follow auth endpoint redirects.
+    Properties:
+      Runtime: nodejs22.x
+      Handler: index.handler
+      Role: !GetAtt TrafficReadRole.Arn
+      Timeout: 15
+      ReservedConcurrentExecutions: 2
+      Environment:
+        Variables:
+          ADMIN_CHECK_URL: !Ref AdminCheckUrl
+          AMPLIFY_APP_ID: !Ref AmplifyAppId
+          LOG_DOMAIN: !Ref LogDomain
+          TRAFFIC_START: !Ref TrafficStart
+          REPORT_BUCKET: !Ref PageReportBucket
+      Code:
+        ZipFile: |
+          const { CloudWatchClient, GetMetricDataCommand } = require('@aws-sdk/client-cloudwatch');
+          const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
+
+          const cloudwatch = new CloudWatchClient({});
+          const s3 = new S3Client({});
+          const headers = { 'content-type': 'application/json', 'cache-control': 'private, no-store', vary: 'X-Admin-Token' };
+          const day = 86400000;
+
+          function reply(statusCode, body) {
+            return { statusCode, headers, body: JSON.stringify(body) };
+          }
+
+          async function readPageTraffic() {
+            try {
+              const { Body } = await s3.send(new GetObjectCommand({ Bucket: process.env.REPORT_BUCKET, Key: 'page-traffic.json' }));
+              return JSON.parse(await Body.transformToString());
+            } catch (error) {
+              console.error('Unable to read traffic snapshot', error.name);
+              return null;
+            }
+          }
+
+          exports.handler = async (event) => {
+            const token = event.headers?.['x-admin-token']?.trim();
+            if (!token || token.length > 1024) return reply(401, { error: 'Unauthorized' });
+
+            try {
+              // The existing site's admin endpoint remains the source of truth for token validation.
+              const check = await fetch(process.env.ADMIN_CHECK_URL, {
+                headers: { 'X-Admin-Token': token },
+                redirect: 'error',
+                signal: AbortSignal.timeout(7000)
+              });
+              if (check.body) await check.body.cancel();
+              if (check.status === 401 || check.status === 403) return reply(401, { error: 'Unauthorized' });
+              if (!check.ok) return reply(503, { error: 'Could not verify admin access' });
+
+              const now = Date.now();
+              const recentStart = new Date(Math.floor(now / day) * day - 29 * day).toISOString().slice(0, 10);
+              const [metrics, pageTraffic] = await Promise.all([
+                cloudwatch.send(new GetMetricDataCommand({
+                  StartTime: new Date(process.env.TRAFFIC_START),
+                  EndTime: new Date(now),
+                  MetricDataQueries: [{
+                    Id: 'requests',
+                    MetricStat: {
+                      Metric: {
+                        Namespace: 'AWS/AmplifyHosting', MetricName: 'Requests',
+                        Dimensions: [{ Name: 'App', Value: process.env.AMPLIFY_APP_ID }]
+                      },
+                      Period: 86400, Stat: 'Sum'
+                    }
+                  }]
+                })),
+                readPageTraffic()
+              ]);
+              const result = metrics.MetricDataResults?.[0];
+              if (result?.StatusCode !== 'Complete') return reply(503, { error: 'Traffic totals are temporarily unavailable' });
+
+              let allTimeRequests = 0;
+              let last30Requests = 0;
+              let allTimeStart = null;
+              for (const [index, timestamp] of result.Timestamps.entries()) {
+                const date = timestamp.toISOString().slice(0, 10);
+                const count = result.Values[index];
+                allTimeRequests += count;
+                if (date >= recentStart) last30Requests += count;
+                if (!allTimeStart || date < allTimeStart) allTimeStart = date;
+              }
+              return reply(200, { allTimeRequests, allTimeStart, last30Requests, pageTraffic, pageDomain: process.env.LOG_DOMAIN });
+            } catch (error) {
+              console.error('Could not load website traffic', error.name);
+              return reply(503, { error: 'Website traffic is temporarily unavailable' });
+            }
+          };
+  TrafficIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref TrafficApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt TrafficReadFunction.Arn
+      PayloadFormatVersion: '2.0'
+  TrafficRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref TrafficApi
+      RouteKey: GET /stats
+      Target: !Sub 'integrations/${TrafficIntegration}'
+  TrafficStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref TrafficApi
+      StageName: '$default'
+      AutoDeploy: true
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 4
+        ThrottlingRateLimit: 2
+  TrafficPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref TrafficReadFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${TrafficApi}/$default/GET/stats'
+Outputs:
+  StatsEndpoint:
+    Value: !Sub '${TrafficApi.ApiEndpoint}/stats'

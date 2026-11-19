@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import AdminTutorOverview from "./AdminTutorOverview";
+import AdminTraffic from "./AdminTraffic";
 
 type Metrics = {
   activeSubscriptions: Array<{
@@ -126,6 +127,7 @@ export default function AdminDashboard() {
       {activeToken ? <AdminTutorOverview token={activeToken} refresh={refresh} /> : null}
       {metrics ? (
         <section className="admin-content">
+          <AdminTraffic token={activeToken} refresh={refresh} />
           {metrics.setupWarning ? (
             <article className="admin-table setup-warning">
               <h2>Setup needed</h2>

@@ -4252,3 +4252,29 @@ body { background-color: var(--crayon-paper); background-image: radial-gradient(
 .save-lesson-panel{padding:22px 24px;background:#f0f6ec;border:1px solid #bfd6b9;border-radius:16px;margin:20px 0;color:var(--ink)}.save-lesson-panel h3{font-size:23px;margin:8px 0 12px}.save-lesson-panel p{line-height:1.75}.save-lesson-panel .button{display:inline-flex;white-space:normal;text-align:center;justify-content:center}.save-lesson-panel .library-small{margin:12px 0}
 .save-lesson-panel .text-button{display:block;margin:12px 0}.library-page .studio-scene,.library-page .interactive-tutor{min-width:0}.library-page .studio-attempt textarea{max-width:100%}
 @media(max-width:760px){.library-grid{grid-template-columns:1fr}.library-heading{display:block}.library-account{justify-items:start;margin-top:20px}.student-library{padding-top:30px}.library-toolbar .button{flex:1;text-align:center;white-space:normal}.save-lesson-panel{padding:18px}.library-heading>.button{margin-top:14px}.library-card{padding:20px}}
+
+.traffic-panel {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid currentColor;
+  border-color: color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 0.75rem;
+}
+.traffic-totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 1rem 0;
+}
+.traffic-totals dd {
+  margin: 0.15rem 0 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+.traffic-table-scroll { max-height: 30rem; overflow: auto; }
+.traffic-panel table { width: 100%; border-collapse: collapse; }
+.traffic-panel caption { text-align: left; font-weight: 700; padding-bottom: 0.4rem; }
+.traffic-panel th, .traffic-panel td { padding: 0.5rem; border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent); }
+.traffic-panel th:first-child { overflow-wrap: anywhere; text-align: left; }
+.traffic-panel th:last-child, .traffic-panel td:last-child { text-align: right; }
